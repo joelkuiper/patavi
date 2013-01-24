@@ -14,4 +14,7 @@
       (is (nil? (response :body)))))
   (testing "Not Found"
     (let [response (api-routes (request :get "/invalid"))]
-      (is (= (response :status) 404)))))
+      (is (= (response :status) 404))))
+  (testing "Analyze mtc file"
+    (let [response (api-routes (request :post "/api/mtc/analyze/file"))]
+      (is (= (response :status) 200)))))

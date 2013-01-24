@@ -1,11 +1,12 @@
 (ns cliniccio.handler
   (:use compojure.core
-        ring.util.response
         cliniccio.middleware
+        [cliniccio.mtc :as mtc]
         [cliniccio.http :as http]
         [ring.middleware.format-response :only [wrap-restful-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
+            [ring.middleware [multipart-params :as mp]]
             [compojure.route :as route]))
 
 (defroutes api-routes
@@ -27,6 +28,13 @@
         (http/not-implemented))
       (DELETE "/:id" [id]
         (http/not-implemented))
+      (context "/analyze" []
+        (mp/wrap-multipart-params 
+          (POST "/file" {params :params}
+            (let [analysis (mtc/analyze-file (get params "file"))]
+              (->
+                (resp/response nil)
+                (resp/status 200))))))
       (OPTIONS "/" []
         (http/options [:options :get :head :put :post :delete]))
       (ANY "/" []
