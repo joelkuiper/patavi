@@ -3,7 +3,7 @@
         cliniccio.middleware
         [cliniccio.mtc :as mtc]
         [cliniccio.http :as http]
-        [ring.middleware.format-response :only [wrap-restful-response]])
+        [ring.middleware.format-response :only [wrap-restful-response wrap-json-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [ring.middleware [multipart-params :as mp]]
@@ -31,9 +31,9 @@
       (context "/analyze" []
         (mp/wrap-multipart-params 
           (POST "/file" {params :params}
-            (let [analysis (mtc/analyze-file (get params "file"))]
+            (let [analysis (mtc/analyze-file (get params "qqfile"))]
               (->
-                (resp/response nil)
+                (resp/response analysis)
                 (resp/status 200))))))
       (OPTIONS "/" []
         (http/options [:options :get :head :put :post :delete]))
@@ -49,4 +49,5 @@
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)
+    (wrap-json-response)
     (wrap-restful-response)))

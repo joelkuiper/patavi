@@ -1,4 +1,5 @@
 (ns cliniccio.mtc
+  (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine.Rserve RConnection)))
            
@@ -16,5 +17,11 @@
         conn))))
 
 (defn analyze-file [file & args] 
-  (let [R (R-connection)] 
+  (let [R (R-connection)
+        networkFile (.createFile R (file :filename))]
+    (do 
+      (io/copy (file :tempfile) networkFile)
+      (.close networkFile))
+    (.voidEval R (str "network <- read.mtc.network('" (file :filename) "')"))
+    (-> (.eval R "network$description") (.asString))
 ))
