@@ -2,9 +2,10 @@
   (:use compojure.core
         ring.util.response
         cliniccio.middleware
-        cliniccio.http
+        [cliniccio.http :as http]
         [ring.middleware.format-response :only [wrap-restful-response]])
   (:require [compojure.handler :as handler]
+            [ring.util.response :as resp]
             [compojure.route :as route]))
 
 (defroutes api-routes
@@ -30,6 +31,8 @@
         (http/options [:options :get :head :put :post :delete]))
       (ANY "/" []
         (http/method-not-allowed [:options :get :head :put :post :delete]))))
+  (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
+  (route/resources "/")
   (route/not-found "Nothing to see here, move along now"))
 
 (def app
