@@ -23,5 +23,6 @@
       (io/copy (file :tempfile) networkFile)
       (.close networkFile))
     (.voidEval R (str "network <- read.mtc.network('" (file :filename) "')"))
-    (-> (.eval R "network$description") (.asString))
+    {:name (-> (.eval R "network$description") (.asString)) 
+     :success true}
 ))

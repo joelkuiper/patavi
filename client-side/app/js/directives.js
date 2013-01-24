@@ -39,8 +39,17 @@ angular.module('cliniccio.directives', []).
         },
         callbacks: {
           onComplete: function(id, fileName, responseJSON) {
-            console.log($scope.analysis)
-            $scope.analysis.push(responseJSON);
+           //duplicate the previous view value.
+           var copy = angular.copy(ngModel.$viewValue);
+
+           //add the new objects
+           copy.push(responseJSON);
+
+           //update the model and run form validation.
+           ngModel.$setViewValue(copy);
+
+           //queue a digest.
+           $scope.$apply();
           }}
       });
     }

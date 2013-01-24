@@ -14,7 +14,7 @@
 
       <div ng-view></div>
       <div ng-controller="Analysis"> 
-        <pre><li ng-repeat="a in analysis">{{ a }}</li></pre>
+        <pre>{{analysis | json}}</pre>
         <div ng-model="analysis" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>
       </div>
       
