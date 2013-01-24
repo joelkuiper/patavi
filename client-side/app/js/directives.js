@@ -9,3 +9,39 @@ angular.module('cliniccio.directives', []).
       elm.text(version);
     };
   }]);
+
+angular.module('cliniccio.directives', []).
+  directive('fineUploader', function() {
+  return {
+    restrict: 'A',
+    require: '?ngModel',
+    link: function($scope, element, attributes, ngModel) {
+      var uploader = new qq.FineUploader({
+        element: element[0],
+        request: {
+          endpoint: attributes.uploadDestination,
+        },
+        validation: {
+          allowedExtensions: attributes.uploadExtensions.split(',')
+        },
+        text: {
+            uploadButton: '<i class="icon-upload icon-white"></i> Upload File'
+        },
+        template: '<div class="qq-uploader">' +
+                    '<pre class="qq-upload-drop-area"><span>{dragZoneText}</span></pre>' +
+                    '<div class="qq-upload-button btn btn-info" style="width:auto;">{uploadButtonText}</div>' +
+                    '<span class="qq-drop-processing"><span>{dropProcessingText}</span></span>' +
+                    '<ul class="qq-upload-list" style="margin-top: 10px; text-align: center;"></ul>' +
+                  '</div>',
+        classes: {
+          success: 'alert alert-success',
+          fail: 'alert alert-error'
+        },
+        callbacks: {
+          onComplete: function(id, fileName, responseJSON) {
+            console.log($scope.analysis)
+            $scope.analysis.push(responseJSON);
+          }}
+      });
+    }
+  }});
