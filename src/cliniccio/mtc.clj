@@ -7,13 +7,13 @@
 )
 
 (defn R-connection [] 
-  (let [conn (RConnection.)]
+  (let [conn (try 
+               (RConnection.)
+               (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
     (if (.isConnected conn) 
       (do 
         (load-mtc! conn)
-        conn  
-      )
-      (throw (Exception. "Could not connect to RServe")))))
+        conn))))
 
 (defn analyze-file [file & args] 
   (let [R (R-connection)] 
