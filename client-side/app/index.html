@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Cliniccio &mdash; a webservice for GeMTC </title>
     <link rel="stylesheet" href="css/app.css"/>
-    <link rel="stylesheet" href="css/fineuploader-3.2.css"/>
+    <link rel="stylesheet" href="css/fineuploader-3.2.css" media="screen" />
     <link rel="stylesheet" href="css/bootstrap.min.css" media="screen" />
   </head>
   <body>
@@ -13,9 +13,11 @@
 
 
       <div ng-view></div>
-      <div ng-controller="Analysis"> 
+      <div ng-controller="Analyses"> 
+        <li ng-repeat="analysis in analyses"> 
         <pre>{{analysis | json}}</pre>
-        <div ng-model="analysis" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>
+        </li>
+        <div ng-model="analyses" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>
       </div>
       
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>

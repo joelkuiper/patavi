@@ -18,6 +18,7 @@ angular.module('cliniccio.directives', []).
     link: function($scope, element, attributes, ngModel) {
       var uploader = new qq.FineUploader({
         element: element[0],
+        multiple: false,
         request: {
           endpoint: attributes.uploadDestination,
         },

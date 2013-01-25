@@ -11,6 +11,6 @@ function MyCtrl2() {
 }
 MyCtrl2.$inject = [];
 
-function Analysis($scope){
-    $scope.analysis = [];
+function Analyses($scope){
+    $scope.analyses = [];
 }
