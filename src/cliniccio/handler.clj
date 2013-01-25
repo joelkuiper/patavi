@@ -31,7 +31,7 @@
       (context "/analyze" []
         (mp/wrap-multipart-params 
           (POST "/file" {params :params}
-            (let [analysis (mtc/analyze-file (get params "qqfile"))]
+            (let [analysis (mtc/convert-network (get params "qqfile"))]
               (->
                 (resp/response analysis)
                 (resp/status 200))))))

@@ -16,13 +16,19 @@
         (load-mtc! conn)
         conn))))
 
-(defn analyze-file [file & args] 
-  (let [R (R-connection)
-        networkFile (.createFile R (file :filename))]
+(defn load-network [R file] 
+  (let [networkFile (.createFile R (file :filename))]
     (do 
       (io/copy (file :tempfile) networkFile)
-      (.close networkFile))
-    (.voidEval R (str "network <- read.mtc.network('" (file :filename) "')"))
-    {:name (-> (.eval R "network$description") (.asString)) 
-     :success true}
-))
+      (.close networkFile)
+      (.voidEval R (str "network <- read.mtc.network('" (file :filename) "')")))
+    R))
+
+(defn convert-network [file & args] 
+  (let [R (load-network (R-connection) file)
+        description (.eval R "network$description")
+        data (.asList (.eval R "network$data"))]
+    {:description (if-not (.isNull description) (.asString description) "")
+     :data {:study (seq (.asStrings (.asFactor (.at data "study" ))))
+            :sampleSize (seq (.asIntegers (.at data "sampleSize" )))}
+     :success true}))
