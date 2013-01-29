@@ -1,4 +1,5 @@
 (ns cliniccio.mtc
+  (:use     [cliniccio.util]) 
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log])
   (:import (org.rosuda.REngine)
@@ -29,10 +30,6 @@
     (if-not (nil? members)
       (seq (convert-fn members))
       nil))) 
-
-(defn transpose-map [maps]
-  (let [x (into {} (filter second maps))] ;; Second is false when nil, so this removes nil values
-    (map (fn [m] (zipmap (keys x) m)) (apply map vector (vals x)))))
 
 (defn convert-network [file & args] 
   (let [R (load-network (R-connection) file)
