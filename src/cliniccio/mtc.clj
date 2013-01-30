@@ -33,7 +33,7 @@
  
 (defn consistency [R & args] 
   (do 
-    (.voidEval R "model <- mtc.model(network)"))
+    (.voidEval R "model <- mtc.model(network)")
     ;(R/plot R "model")
     ;(R/plot R "network"))
-  {:network (read-network R)})
+  {:network (read-network R)}))
