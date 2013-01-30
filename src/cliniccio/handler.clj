@@ -7,6 +7,7 @@
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [ring.middleware [multipart-params :as mp]]
+            [clojure.tools.logging :as log]
             [compojure.route :as route]))
 
 (defroutes api-routes
@@ -31,10 +32,11 @@
       (context "/analyze" []
         (mp/wrap-multipart-params 
           (POST "/file" {params :params}
-            (let [analysis (mtc/convert-network (get params "qqfile"))]
               (->
-                (resp/response analysis)
-                (resp/status 200))))))
+                (resp/response 
+                  (with-open [R (mtc/R-connection)]
+                    (mtc/consistency (mtc/load-network-file R (get params "qqfile")))))
+                (resp/status 200)))))
       (OPTIONS "/" []
         (http/options [:options :get :head :put :post :delete]))
       (ANY "/" []
