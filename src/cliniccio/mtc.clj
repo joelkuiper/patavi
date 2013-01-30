@@ -5,7 +5,11 @@
             [cliniccio.R.util :as R])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine.Rserve RConnection)))
-           
+
+
+(defn load-mtc! [R] 
+  (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
+
 (defn load-network-file [R file] 
   (let [networkFile (.createFile R (file :filename))]
     (do 

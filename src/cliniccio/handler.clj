@@ -36,7 +36,9 @@
               (->
                 (resp/response 
                   (with-open [R (R/connect)]
-                    (mtc/consistency (mtc/load-network-file R (get params "qqfile")))))
+                    (do 
+                      (mtc/load-mtc! R)
+                      (mtc/consistency (mtc/load-network-file R (get params "qqfile"))))))
                 (resp/status 200)))))
       (OPTIONS "/" []
         (http/options [:options :get :head :put :post :delete]))
