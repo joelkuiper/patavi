@@ -3,6 +3,7 @@
         cliniccio.middleware
         [cliniccio.mtc :as mtc]
         [cliniccio.http :as http]
+        [cliniccio.R.util :as R]
         [ring.middleware.format-response :only [wrap-restful-response wrap-json-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
@@ -34,7 +35,7 @@
           (POST "/file" {params :params}
               (->
                 (resp/response 
-                  (with-open [R (mtc/R-connection)]
+                  (with-open [R (R/connect)]
                     (mtc/consistency (mtc/load-network-file R (get params "qqfile")))))
                 (resp/status 200)))))
       (OPTIONS "/" []
