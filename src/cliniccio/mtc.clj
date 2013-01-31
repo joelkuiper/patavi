@@ -39,12 +39,11 @@
 (defn parse-results-list [lst] 
   (let [names (.keys lst)
         conv {"matrix" #(R/parse-matrix %)}]
-    (map (fn [k] (let [itm (.asList (.at lst k))
-                       data (.at itm "data")
-                       data-type (.asString (.at itm "type"))]
-                    (log/debug "got results for" k " with " data " as " data-type)
-                    ((get conv data-type) data)
-                   )) names)))
+    (into {} (mapcat (fn [k] (let [itm (.asList (.at lst k))
+                                   data (.at itm "data")
+                                   data-type (.asString (.at itm "type"))]
+                               (log/debug "got results for" k " with " data " as " data-type)
+                               {k ((get conv data-type) data)})) names))))
 
 (defn parse-results [^REXP results]
   (let [data (.asList results)]
