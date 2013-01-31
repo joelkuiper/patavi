@@ -7,6 +7,7 @@
                  [ring-middleware-format "0.2.3"]
                  [local/RserveEngine "1.7.0"]
                  [org.clojure/tools.logging "0.2.4"]
+                 [overtone/at-at "1.1.1"]
                  [log4j/log4j "1.2.17"]
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]]
