@@ -44,7 +44,9 @@
         (http/options [:options :get :head :put :post :delete]))
       (ANY "/" []
         (http/method-not-allowed [:options :get :head :put :post :delete]))))
+
   (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
+  (route/resources "/generated" {:root "generated"})
   (route/resources "/")
   (route/not-found "Nothing to see here, move along now"))
 
