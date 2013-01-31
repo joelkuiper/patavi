@@ -3,7 +3,7 @@ mtc.consistency <- function(network, factor = 2.5 , n.chain = 4, n.adapt = 5000,
   run <- mtc.run(model, sampler="YADAS", n.adapt=n.adapt, n.iter=n.iter, thin=thin) 
   
   wrap.result <- function(result) { 
-    list(data=result, type= class(result))
+    list(data=result, type=class(result))
   }
   quantiles <- summary(run)$quantiles 
   psrf <- gelman.diag(run)$psrf 
@@ -20,7 +20,7 @@ mtc.consistency <- function(network, factor = 2.5 , n.chain = 4, n.adapt = 5000,
   plots <- list("forest" = (function() forest(run)),
                 "model" = (function() plot(model)),
                 "network" = (function() plot(network)), 
-                "ranks" = (function() barplot(t(rank.prob), col=rainbow(20), beside=T, legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]])))))
+                "ranks" = (function() barplot(t(rank.prob), col=rainbow(dim(rank.prob)[[1]]), beside=T, legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]])))))
 
   results <- list("quantiles" = quantiles, 
                   "psrf" = psrf, 
