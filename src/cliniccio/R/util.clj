@@ -25,3 +25,11 @@
     (if (.inherits img-dev "try-error")
       (throw (Exception. (str "Could not initiate image device: " (.asString img-dev))))
       (.voidEval R (str "plot(" item "); dev.off()")))))
+
+(defn parse-matrix [matrix] 
+  (let [dimnames (.getAttribute matrix "dimnames")
+        labels  (map (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
+        data (map seq (.asDoubleMatrix matrix))]
+    (into {} 
+      (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
+              (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
