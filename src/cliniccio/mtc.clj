@@ -3,7 +3,8 @@
         [clojure.string :only [upper-case join split]]) 
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [cliniccio.R.util :as R])
+            [cliniccio.R.util :as R]
+            [cliniccio.http :as http])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP
                                RList)
@@ -36,24 +37,31 @@
      :treatments (map-cols-to-rows {:id (R/in-list treatments "id" (comp #(.asStrings %) #(.asFactor %)))
                                  :description (R/in-list treatments "description" (comp #(.asStrings %) #(.asFactor %)))})}))
 
-(defn parse-results-list [lst] 
+(defn parse-results-list [^RList lst] 
   (let [names (.keys lst)
         conv {"matrix" #(R/parse-matrix %)}]
-    (into {} (mapcat (fn [k] (let [itm (.asList (.at lst k))
+    (into {} (map (fn [k] (let [itm (.asList (.at lst k))
                                    data (.at itm "data")
                                    data-type (.asString (.at itm "type"))]
-                               (log/debug "got results for" k " with " data " as " data-type)
                                {k ((get conv data-type) data)})) names))))
 
-(defn parse-results [^REXP results]
+(defn url-for-img-path [req path]
+ (let [location {:scheme (req :scheme) :server-name (req :server-name) :server-port (req :server-port)}
+       exploded (split path #"\/")
+       workspace (first (filter #(re-matches #"conn[0-9]*" %) exploded))
+       img (last exploded)]
+   (str (http/url-from location) "/generated/" workspace "/" img)))
+
+
+(defn parse-results [req ^REXP results]
   (let [data (.asList results)]
-    {:images (R/in-list data "images" #(.asStrings %))
+    {:images (map #(url-for-img-path req %) (R/in-list data "images" #(.asStrings %)))
      :results (parse-results-list (.asList (.at data "results")))}))
  
-(defn consistency [R & args] 
+(defn consistency [req R & args] 
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 
       (io/copy (io/as-file (io/resource (str "R/" script-file))) script))
     (.voidEval R (str "source('"script-file"')"))
     (.removeFile R script-file)
-    {:results (parse-results (R/parse R "mtc.consistency(network)"))}))
+    {:results (parse-results req (R/parse R "mtc.consistency(network)"))}))
