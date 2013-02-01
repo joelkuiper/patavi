@@ -8,18 +8,13 @@
     <link rel="stylesheet" href="css/bootstrap.min.css" media="screen" />
   </head>
   <body>
-    <div class="container-fluid"> 
-      <h1>Cliniccio</h1>
-
+    <div class="container-fluid">
+      <div class="page-header">
+        <h1>Cliniccio <small>a webservice for GeMTC</small></h1>
+      </div>
 
       <div ng-view></div>
-      <div ng-controller="Analyses"> 
-        <li ng-repeat="analysis in analyses"> 
-        <pre>{{analysis | json}}</pre>
-        </li>
-        <div ng-model="analyses" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>
-      </div>
-      
+
       <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
       <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.2.2/bootstrap.min.js"></script>
       <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.3/angular.min.js"></script>

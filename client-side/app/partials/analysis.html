@@ -1,0 +1,33 @@
+<div ng-repeat="data in analyses.results.results" class="row">
+  <div class="span8">
+    <h2>{{data.name | uppercase}}</h2>
+    <p>{{data.description}}</p>
+    <table class="table table-bordered table-striped">
+      <thead>
+        <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
+          <td>&nbsp;</td>
+          <td ng-repeat="(name, col) in cols">{{name}}</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="(row, cols) in data.data">
+          <td>{{row}}</td>
+          <td ng-repeat="(name, col) in cols">{{col}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row">
+  <div class="span8">
+    <ul class="thumbnails">
+      <li class="span4"  ng-repeat="img in analyses.results.images">
+        <img ng-src="{{img.url}}" style="width:360px; height: 270px">
+      <p>{{img.description}}</p>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div ng-model="analyses" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>

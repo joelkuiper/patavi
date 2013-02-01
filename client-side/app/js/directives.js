@@ -41,13 +41,13 @@ angular.module('cliniccio.directives', []).
         callbacks: {
           onComplete: function(id, fileName, responseJSON) {
            //duplicate the previous view value.
-           var copy = angular.copy(ngModel.$viewValue);
+           //var copy = angular.copy(ngModel.$viewValue);
 
            //add the new objects
-           copy.push(responseJSON);
+           //copy.push(responseJSON);
 
            //update the model and run form validation.
-           ngModel.$setViewValue(copy);
+           ngModel.$setViewValue(responseJSON);
 
            //queue a digest.
            $scope.$apply();
