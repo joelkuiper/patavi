@@ -29,21 +29,24 @@
         treatments (.asList (.at network "treatments"))]
     {:description (if-not (.isNull description) (.asString description) "")
      :data (map-cols-to-rows {:study (R/in-list data "study" (comp #(.asStrings %) #(.asFactor %)))
-                           :treatment (R/in-list data "treatment" (comp #(.asStrings %) #(.asFactor %)))
-                           :sampleSize (R/in-list data "sampleSize" #(.asIntegers %))
-                           :responders (R/in-list data "responders" #(.asIntegers %))
-                           :mean (R/in-list data "mean" #(.asDoubles %))
-                           :std.dev (R/in-list data "std.dev" #(.asDoubles %))})
+                              :treatment (R/in-list data "treatment" (comp #(.asStrings %) #(.asFactor %)))
+                              :sampleSize (R/in-list data "sampleSize" #(.asIntegers %))
+                              :responders (R/in-list data "responders" #(.asIntegers %))
+                              :mean (R/in-list data "mean" #(.asDoubles %))
+                              :std.dev (R/in-list data "std.dev" #(.asDoubles %))})
      :treatments (map-cols-to-rows {:id (R/in-list treatments "id" (comp #(.asStrings %) #(.asFactor %)))
-                                 :description (R/in-list treatments "description" (comp #(.asStrings %) #(.asFactor %)))})}))
+                                    :description (R/in-list treatments "description" (comp #(.asStrings %) #(.asFactor %)))})}))
 
 (defn parse-results-list [^RList lst] 
   (let [names (.keys lst)
         conv {"matrix" #(R/parse-matrix %)}]
-    (into {} (map (fn [k] (let [itm (.asList (.at lst k))
+    (map (fn [k] (let [itm (.asList (.at lst k))
                                    data (.at itm "data")
+                                   desc (.asString (.at itm "description"))
                                    data-type (.asString (.at itm "type"))]
-                               {k ((get conv data-type) data)})) names))))
+                               {:name k 
+                                :description  desc
+                                :data ((get conv data-type) data)})) names)))
 
 (defn url-for-img-path [req path]
  (let [location {:scheme (req :scheme) :server-name (req :server-name) :server-port (req :server-port)}
@@ -52,11 +55,13 @@
        img (last exploded)]
    (str (http/url-from location) "/generated/" workspace "/" img)))
 
-
 (defn parse-results [req ^REXP results]
-  (let [data (.asList results)]
-    {:images (map #(url-for-img-path req %) (R/in-list data "images" #(.asStrings %)))
-     :results (parse-results-list (.asList (.at data "results")))}))
+  (let [data (.asList results)
+        images (.asList (.at data "images"))
+        results (.asList (.at data "results"))]
+    {:images (map-cols-to-rows {:url (map #(url-for-img-path req %) (map #(.asString (.at (.asList %) "url")) images))
+                                :description (map #(.asString (.at (.asList %) "description")) images)})
+     :results (parse-results-list results)}))
  
 (defn consistency [req R & args] 
   (let [script-file "consistency.R"] 
