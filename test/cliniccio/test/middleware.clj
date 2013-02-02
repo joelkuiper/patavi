@@ -1,7 +1,9 @@
 (ns cliniccio.test.middleware
   (:use clojure.test
-        ring.mock.request  
-        cliniccio.middleware))
+        ring.mock.request
+        ring.middleware.session  
+        cliniccio.middleware)
+  (:import [java.util Date]))
 
 (deftest test-wrap-exception-handler
   (testing "Exception Handling"

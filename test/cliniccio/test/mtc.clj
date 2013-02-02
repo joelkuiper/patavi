@@ -1,10 +1,11 @@
 (ns cliniccio.test.mtc
   (:use clojure.test
-        cliniccio.mtc))
+        cliniccio.mtc)
+  (:require [cliniccio.R.util :as R]))
 
 (deftest test-has-r-connection
   (testing "Connection to RServe"
-    (let [R (R-connection)]
+    (let [R (R/connect)]
       (is (.isConnected R))
       (is (-> (.eval R "'package:gemtc' %in% search()") (.isTRUE)))
       (is (-> (.eval R "'package:foo' %in% search()") (.isFALSE)))
