@@ -1,0 +1,16 @@
+<p>{{network.description}}</p>
+<div class="row" ng-show="hasNetwork()">
+  <div ng-grid="networkGrid" class="span12" style="height: 400px; overflow-y: auto"></div>
+</div>
+
+<div class="row">
+  <form enctype="multipart/form-data" async="/api/network/" class="span4" ng-model="network">
+    <fieldset>
+      <legend>Upload a GeMTC file</legend>
+      <label>File</label>
+      <input name="file" type="file">
+      <br><br>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </fieldset> 
+  </form>
+</div>

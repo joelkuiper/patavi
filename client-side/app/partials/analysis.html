@@ -30,4 +30,14 @@
   </div>
 </div>
 
-<div ng-model="analyses" fine-uploader upload-destination="/api/mtc/analyze/file" upload-extensions="gemtc"></div>
+<form enctype="multipart/form-data" async="/api/mtc/analyze/file" ng-model="analyses">
+  <fieldset>
+    <legend>Upload a GeMTC file</legend>
+    <label>Name</label>
+    <input name="name" type="text">
+    <label>File</label>
+    <input name="file" type="file">
+    <br><br>
+    <button type="submit" class="btn btn-primary">Upload</button>
+  </fieldset> 
+</form>
