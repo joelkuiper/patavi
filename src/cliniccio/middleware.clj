@@ -78,6 +78,8 @@
               (assoc response :session (assoc req-session :session_timestamp (Date.))))))))))
 
 (defn wrap-R-session 
+  ;; Adds an Rserv connection to the current session
+  ;; This connection is closed after the session expires
   [handler] 
   (fn [req]
     (let [curr (:session req)

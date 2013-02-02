@@ -13,7 +13,7 @@
 (defn load-mtc! [R] 
   (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
 
-(defn load-network-file [R file] 
+(defn load-network-file! [R file] 
   (let [networkFile (.createFile R (file :filename))]
     (do 
       (io/copy (file :tempfile) networkFile)
@@ -28,14 +28,9 @@
         data (.asList (.at network "data"))
         treatments (.asList (.at network "treatments"))]
     {:description (if-not (.isNull description) (.asString description) "")
-     :data (map-cols-to-rows {:study (R/in-list data "study" (comp #(.asStrings %) #(.asFactor %)))
-                              :treatment (R/in-list data "treatment" (comp #(.asStrings %) #(.asFactor %)))
-                              :sampleSize (R/in-list data "sampleSize" #(.asIntegers %))
-                              :responders (R/in-list data "responders" #(.asIntegers %))
-                              :mean (R/in-list data "mean" #(.asDoubles %))
-                              :std.dev (R/in-list data "std.dev" #(.asDoubles %))})
-     :treatments (map-cols-to-rows {:id (R/in-list treatments "id" (comp #(.asStrings %) #(.asFactor %)))
-                                    :description (R/in-list treatments "description" (comp #(.asStrings %) #(.asFactor %)))})}))
+     :data (map-cols-to-rows (R/list-to-map data))
+     :treatments (map-cols-to-rows {:id (R/in-list treatments "id")
+                                    :description (R/in-list treatments "description")})}))
 
 (defn parse-results-list [^RList lst] 
   (let [names (.keys lst)
@@ -49,7 +44,9 @@
                                 :data ((get conv data-type) data)})) names)))
 
 (defn url-for-img-path [req path]
- (let [location {:scheme (req :scheme) :server-name (req :server-name) :server-port (req :server-port)}
+ (let [location {:scheme (req :scheme) 
+                 :server-name (req :server-name) 
+                 :server-port (req :server-port)}
        exploded (split path #"\/")
        workspace (first (filter #(re-matches #"conn[0-9]*" %) exploded))
        img (last exploded)]
@@ -63,7 +60,7 @@
                                 :description (map #(.asString (.at (.asList %) "description")) images)})
      :results (parse-results-list results)}))
  
-(defn consistency [req R & args] 
+(defn analyze-consistency! [req R & args] 
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 
       (io/copy (io/as-file (io/resource (str "R/" script-file))) script))
