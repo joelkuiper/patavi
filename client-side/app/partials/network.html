@@ -1,10 +1,10 @@
-<p>{{network.description}}</p>
 <div class="row" ng-show="hasNetwork()">
+  <p>{{network.description}}</p>
   <div ng-grid="networkGrid" class="span12" style="height: 400px; overflow-y: auto"></div>
 </div>
 
 <div class="row">
-  <form enctype="multipart/form-data" async="/api/network/" class="span4" ng-model="network">
+  <form enctype="multipart/form-data" async="/api/analysis/consistency" class="span4" ng-model="network">
     <fieldset>
       <legend>Upload a GeMTC file</legend>
       <label>File</label>

@@ -1,5 +1,8 @@
 (ns cliniccio.util
+  (:use clojure.java.io)
   (:import (java.util Date)))
+
+(def not-nil? (complement nil?))
 
 (defn map-cols-to-rows [maps]
   (let [x (into {} (filter second maps))] ;; nil is falsey, so this removes nil values
@@ -15,3 +18,5 @@
 (defn expire? [date expire-ms]
   (< expire-ms
      (- (.getTime (Date.)) (.getTime date))))
+
+

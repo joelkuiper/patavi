@@ -6,8 +6,8 @@ function AnalysesCtrl($scope){
 }
 AnalysesCtrl.$inject = ['$scope']
 
-function NetworkCtrl($scope){
-    $scope.network =  {};
+function NetworkCtrl($scope, $http) {
+		$scope.network = {};
     $scope.colDefs = [];
 
     $scope.hasNetwork = function() { 
@@ -24,7 +24,7 @@ function NetworkCtrl($scope){
         }
       }
       return colDefs;
-    }
+    };
     
     $scope.$watch('network', function(newVal, oldVal) {
       if(newVal.data) { 
@@ -39,4 +39,4 @@ function NetworkCtrl($scope){
                           columnDefs: 'colDefs'};
 
 }
-NetworkCtrl.$inject = ['$scope']
+NetworkCtrl.$inject = ['$scope', '$http']
