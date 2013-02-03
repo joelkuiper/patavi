@@ -13,21 +13,20 @@
             [clojure.tools.logging :as log]
             [compojure.route :as route]))
 
-(defn main [] 
-  (job/run))
+(defn main [] ())
 
 (defroutes api-routes
   (context "/api" []
-    (mp/wrap-multipart-params 
-      (POST "/analysis/consistency" [:as req]
-        (-> 
-          (resp/response 
-            (job/schedule! (fn [] (mtc/consistency {:file (get-in req [:params "file"])} {}))))
-          (resp/status 201))))
-      (GET "/job/:uuid" [uuid]
-        (-> 
-          (resp/response (job/status uuid))
-          (resp/status 200))))   
+     (mp/wrap-multipart-params 
+       (POST "/analysis/consistency" [& params]
+             (let [analysis (fn [] (mtc/consistency {:file (get params "file")} {}))
+                   id (submit-job analysis)]
+               {:status 201 :headers {"Location" (str "/jobs/" id)}})))
+     (GET "/jobs/:id" [id]
+          (let [job-future (@jobs id)]
+            (if (.isDone job-future)
+              (.get job-future)
+              {:status 404}))))
 
   ;; These routes should be handled by a webserver (e.g. nginx or apache)
   (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
