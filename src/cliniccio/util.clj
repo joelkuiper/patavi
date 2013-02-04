@@ -1,5 +1,7 @@
 (ns cliniccio.util
-  (:use clojure.java.io)
+  (:use   clojure.java.io
+          clojure.walk)
+  (:require [clojure.string :as s])
   (:import (java.util Date)))
 
 (def not-nil? (complement nil?))
@@ -15,8 +17,10 @@
 
 (defn uuid [] (str (java.util.UUID/randomUUID)))
 
-(defn expire? [date expire-ms]
-  (< expire-ms
-     (- (.getTime (Date.)) (.getTime date))))
-
-
+(defn sanitize-keys
+  "Recursively removes all non-word characters from map keys."
+  [m]
+  (let [sanitze #(s/replace % #"\W" "")
+        f (fn [[k v]] (if (keyword k) [(keyword (sanitze k)) v] [(sanitze k) v]))]
+    ;; only apply to maps
+    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))

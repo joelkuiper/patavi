@@ -1,6 +1,6 @@
 (ns cliniccio.test.mtc
   (:use clojure.test
-        cliniccio.mtc)
+        cliniccio.mtc.mtc)
   (:require [cliniccio.R.util :as R]))
 
 (deftest test-has-r-connection

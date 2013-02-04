@@ -21,11 +21,14 @@
     (.writeString jg (.getMessage e))
     (.writeEndObject jg))})
 
-(defn wrap-exception-handler
-  [handler]
+(defn wrap-exception-handler [handler]
   (fn [req]
     (try
       (handler req)
+      (catch IllegalArgumentException e
+        (->
+          (response e)
+          (status 400)))
       (catch Exception e
         (->
           (response e)

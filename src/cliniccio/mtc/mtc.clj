@@ -1,4 +1,4 @@
-(ns cliniccio.mtc
+(ns cliniccio.mtc.mtc
   (:use [cliniccio.util]
         [cliniccio.config]
         [clojure.string :only [upper-case join split]]) 
@@ -22,7 +22,7 @@
      :data (map-cols-to-rows (R/list-to-map data))
      :treatments (map-cols-to-rows (R/list-to-map treatments))}))
 
-(defn- load-network-file! [R file] 
+(defn load-network-file! [R file] 
   (let [networkFile (.createFile R (file :filename))]
     (do 
       (io/copy (file :tempfile) networkFile)
@@ -55,13 +55,13 @@
                                 :description (map #(.asString (.at (.asList %) "description")) images)})
      :results (parse-results-list results)}))
  
-(defn- analyze-consistency! [R options] 
+(defn analyze-consistency! [R options] 
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 
       (io/copy (io/as-file (io/resource (str "R/" script-file))) script))
     (.voidEval R (str "source('"script-file"')"))
     (.removeFile R script-file)
-    (parse-results (R/parse R "mtc.consistency(network)"))))
+    {:consistency (parse-results (R/parse R "mtc.consistency(network)"))}))
 
 (defn consistency 
   ([{file :file} options]
