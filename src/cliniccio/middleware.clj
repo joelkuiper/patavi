@@ -6,8 +6,7 @@
         [clojure.string :only [upper-case]])
   (:require [cliniccio.R.util :as R]
             [clojure.tools.logging :as log])
-  (:import (com.fasterxml.jackson.core JsonGenerator)
-           (java.util Date)))
+  (:import (com.fasterxml.jackson.core JsonGenerator)))
 
 
 ;; Make Exeptions JSONable
@@ -25,6 +24,10 @@
   (fn [req]
     (try
       (handler req)
+      (catch cliniccio.ResourceNotFound e
+        (->
+          (response e) 
+          (status 404)))
       (catch IllegalArgumentException e
         (->
           (response e)

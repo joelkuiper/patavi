@@ -12,7 +12,7 @@
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]]
-
+  :aot [cliniccio.ResourceNotFound]
   :ring {:handler cliniccio.handler/app
          :init cliniccio.handler/main}
   :profiles

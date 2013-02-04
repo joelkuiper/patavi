@@ -1,14 +1,14 @@
 'use strict';
 
 /* Controllers */
-function AnalysesCtrl($scope, $timeout, $http){
+function AnalysesCtrl($scope, $http){
   $scope.job = {};
   $scope.results = {};
   $scope.network = {};
   $scope.colDefs = [];
 
-  $scope.hasNetwork = function() { 
-    return !($scope.network.data === undefined)
+  $scope.hasResults = function() { 
+    return !(jQuery.isEmptyObject($scope.results));
   };
 
   var colDefs = function(x) { 
@@ -41,11 +41,15 @@ function AnalysesCtrl($scope, $timeout, $http){
         setTimeout(function() {
           $http.get(newVal.job)
           .success(function(data, status) {
-            if(status === 204) {
-              poll()
+            if(data.results) {
+              $http.get(data.results).success(function(data) {
+                $scope.network = data.network;
+                $scope.results = data.results.consistency;
+              });
+            } else if (data.status === "failed") {
+              console.log("failed");
             } else {
-              $scope.network = data.network;
-              $scope.results = data.results.consistency;
+              poll()
             }
           })
         .error(function(data, status) { 
@@ -56,5 +60,5 @@ function AnalysesCtrl($scope, $timeout, $http){
     }
   });
 }
-AnalysesCtrl.$inject = ['$scope', '$timeout', '$http']
+AnalysesCtrl.$inject = ['$scope', '$http']
 

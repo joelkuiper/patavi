@@ -13,4 +13,4 @@ mvn deploy:deploy-file -DgroupId=local -DartifactId=REngine \
   -Dversion=1.7.0 -Dpackaging=jar -Dfile=REngine.jar \
   -Durl=file:repo
 
-ln -s /tmp/Rserv user
+ln -s /tmp/Rserv /resources/generated
