@@ -38,11 +38,11 @@
 
 (defn save-results [result]
   (let [new-result (created-now 
-                     (modified-now (with-oid (sanitize-keys result))))]
+                     (modified-now (with-oid result)))]
     (if (valid? result-validator new-result)
       (if (ok? 
             (collection/insert 
-              (mongo-options :results-collection) (conv/to-db-object (walk/keywordize-keys new-result))))
+              (mongo-options :results-collection) (conv/to-db-object (stringify-keys* new-result))))
         {:results (str base-url "/api/results/" (str (new-result :_id)))} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException.)))))  

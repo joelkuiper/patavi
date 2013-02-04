@@ -24,3 +24,10 @@
         f (fn [[k v]] (if (keyword k) [(keyword (sanitze k)) v] [(sanitze k) v]))]
     ;; only apply to maps
     (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+
+(defn stringify-keys*
+  "Recursively transforms all map keys from keywords to strings."
+  [m]
+  (let [f (fn [[k v]] (if (keyword? k) [(name k) v] [(str k) v]))]
+    ;; only apply to maps
+    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
