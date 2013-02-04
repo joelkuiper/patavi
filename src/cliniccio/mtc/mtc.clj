@@ -7,6 +7,7 @@
             [cliniccio.R.util :as R])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP
+                               REXPList
                                RList)
            (org.rosuda.REngine.Rserve RConnection)))
 
@@ -22,25 +23,32 @@
      :data (map-cols-to-rows (R/list-to-map data))
      :treatments (map-cols-to-rows (R/list-to-map treatments))}))
 
-(defn load-network [R {network :network}]
-  (let [description (:description network)
-        data (:data network) 
-        treatments (:treatments network)]
-    (do
-      (.assign R "description" (R/to-REXPVector description))
-      (.assign R "data" (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
-      (.assign R "treatments" (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols treatments))))
-      (R/parse R "print(treatments)")
-      (R/parse R "print(data)")
-      (.assign R "network" (R/parse R (str "mtc.network(description=description, data=data, treatments=treatments)"))))))
-
-(defn load-network-file! [R file] 
+(defn- load-network-file 
+  [R file] 
   (let [networkFile (.createFile R (file :filename))]
     (do 
       (io/copy (file :tempfile) networkFile)
       (.close networkFile)
       (.assign R "network" (R/parse R (str "read.mtc.network('" (file :filename) "')"))))
-      (.removeFile R (file :filename))))
+    (.removeFile R (file :filename))))
+
+(defn- load-network-json 
+  ([R network]
+   (let [description (:description network)
+         data (:data network) 
+         treatments (:treatments network)]
+     (do
+       (.assign R "description" (R/to-REXPVector description))
+       (.assign R "data" (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
+       (.assign R "treatments" (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+       (.assign R "network" (R/parse R (str "mtc.network(data, description, treatments)")))))))
+
+(defn load-network! 
+  [R params]
+  (cond 
+    (contains? params "file") (load-network-file R (get params "file"))
+    (contains? params "network") (load-network-json R (get params "network"))
+    :else (throw (IllegalArgumentException. "Could not load network for data " params))))
 
 (defn- parse-results-list [^RList lst] 
   (let [names (.keys lst)
@@ -76,9 +84,9 @@
     {:consistency (parse-results (R/parse R "mtc.consistency(network)"))}))
 
 (defn consistency 
-  ([{file :file} options]
+  ([params]
    (with-open [R (R/connect)]
      (load-mtc! R) 
-     (load-network-file! R file)
+     (load-network! R params)
      {:network (read-network R) 
-      :results (analyze-consistency! R options)}))) 
+      :results (analyze-consistency! R (get params "options"))})))

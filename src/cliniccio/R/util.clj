@@ -2,6 +2,8 @@
   (:use     [cliniccio.util]) 
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
+           (org.rosuda.REngine REXP RList)
+           (org.rosuda.REngine REXPDouble REXPLogical REXPFactor REXPInteger REXPString REXPGenericVector)
            (org.rosuda.REngine.Rserve RConnection)))
 
 (defn connect [] 
@@ -13,25 +15,25 @@
 
 (defn- convert-fn [field] 
   (cond 
-    (instance? org.rosuda.REngine.REXPFactor field) (comp #(.asStrings %) #(.asFactor ^org.rosuda.REngine.REXPFactor %))
-    (instance? org.rosuda.REngine.REXPInteger field) #(.asIntegers ^org.rosuda.REngine.REXPInteger %)
-    (instance? org.rosuda.REngine.REXPDouble field) #(.asDoubles ^org.rosuda.REngine.REXPDouble %)
+    (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
+    (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
+    (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
     :else (throw (Exception. (str "Could not convert field " field)))))
 
 (defn as-list 
-  ([data] (.asList ^org.rosuda.REngine.REXPGenericVector data))
-  ([data $field] (as-list (.at ^org.rosuda.REngine.RList data $field))))
+  ([data] (.asList ^REXPGenericVector data))
+  ([data $field] (as-list (.at ^RList data $field))))
 
 (defn in-list  [data $field]
-  (let [members (.at ^org.rosuda.REngine.RList data $field)]
+  (let [members (.at ^RList data $field)]
     (if-not (nil? members)
       (seq ((convert-fn members) members))
       nil)))
 
-(defn parse [R cmd] 
+(defn parse [^RConnection R cmd] 
   (.parseAndEval R cmd nil true))
 
-(defn plot [R item] 
+(defn plot [^RConnection R item] 
   (let [img-dev (parse R (str "try(png('"item".png'))"))]
     (if (.inherits img-dev "try-error")
       (throw (Exception. (str "Could not initiate image device: " (.asString img-dev))))
@@ -46,26 +48,36 @@
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
 
 (defn list-to-map [data]
-  (let [ks (.keys ^org.rosuda.REngine.RList data)] 
+  (let [ks (.keys ^RList data)] 
     (zipmap ks 
             (map (fn [k] 
-                   (let [field (.at ^org.rosuda.REngine.RList data k)]
+                   (let [field (.at ^RList data k)]
                      (seq ((convert-fn field) field)))) ks))))
+
+(defn- factor-indexes [lst] 
+  (let [levels (sort (distinct lst))]
+    (map #(inc (.indexOf levels %)) lst)))
 
 (defn to-REXPVector
   [data-seq]
   (let [is-seq (sequential? data-seq)
         el (if is-seq (first data-seq) data-seq)]
     (cond 
-      (instance? Integer el) (org.rosuda.REngine.REXPInteger. (if is-seq (int-array data-seq) (int el))) 
-      (instance? Boolean el) (org.rosuda.REngine.REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
-      (instance? Double el) (org.rosuda.REngine.REXPDouble. (if is-seq (double-array data-seq) (double el))) 
-      (instance? String el) (org.rosuda.REngine.REXPString. (if is-seq (into-array String data-seq) el)) 
+      (instance? Integer el) 
+        (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
+      (instance? Boolean el) 
+        (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
+      (instance? Double el) 
+        (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
+      (and (instance? String el) is-seq (every? #(re-matches #"\w*" %) data-seq)) 
+        (REXPFactor. (int-array (factor-indexes data-seq)) (into-array String (sort (distinct data-seq)))) 
+      (instance? String el) 
+        (REXPString. (if is-seq (into-array String data-seq) el)) 
       :else (throw (IllegalArgumentException. (str "Don't know how to parse " (class el)))))))
 
 (defn map-to-RList [data]
-  (org.rosuda.REngine.RList. 
+  (RList. 
     (map to-REXPVector (vals data)) (into-array String (keys data))))
 
 (defn RList-as-dataframe [RList] 
-  (org.rosuda.REngine.REXP/createDataFrame RList))
+  (REXP/createDataFrame RList))

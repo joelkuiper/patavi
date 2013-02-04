@@ -23,15 +23,15 @@
                     (http/options [:options] {:version "0.3.0-SNAPSHOT"}))
            (mp/wrap-multipart-params
              (POST "/analysis/consistency" [& params]
-                   (let [analysis (fn [] (db/save-result (mtc/consistency {:file (get params "file")} {})))
+                   (let [analysis (fn [] (db/save-result (mtc/consistency params)))
                          id (job/submit analysis)
                          job (str base-url "api/job/" id)]
                      (http/created job (job/status id)))))
            (context "/result" []
                     (GET "/:id" [id] (http/no-content? (db/get-result id))))
            (context "/job" [] 
-                    (GET "/:uuid" [uuid] 
-                      (-> (resp/response (job/status uuid))
+                    (GET "/:id" [uuid] 
+                      (-> (resp/response (job/status id))
                           (resp/status 200)))))
 
   ;; These routes should be handled by a webserver (e.g. nginx or apache)
