@@ -1,0 +1,23 @@
+<div class="row">
+  <form enctype="multipart/form-data" async="/api/analysis/consistency" class="span3" ng-model="jobs">
+    <fieldset>
+      <legend>Upload a GeMTC file</legend>
+      <label>File</label>
+      <input name="file" type="file">
+      <br><br>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </fieldset> 
+  </form>
+
+  <div class="span7 offset2">
+    <h3>Jobs</h3>
+      <ul class="unstyled">
+        <li ng-repeat="job in jobs" class="{{job.status}} well"> 
+        <p>
+        <strong>Job:</strong> {{job.job}}<br>
+        <strong>Status:</strong> {{job.status}}<br>
+        <strong>Position in queue:</strong> {{job.queuePosition}}<br>
+        <strong>Results:</strong><a href="#/result/{{job.uuid}}">{{job.results}}</a></span>
+        </li>
+  </div>
+</div>

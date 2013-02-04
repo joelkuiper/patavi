@@ -1,15 +1,60 @@
 'use strict';
 
 /* Controllers */
-function AnalysesCtrl($scope, $http){
-  $scope.job = {};
-  $scope.results = {};
-  $scope.network = {};
-  $scope.colDefs = [];
 
-  $scope.hasResults = function() { 
-    return !(jQuery.isEmptyObject($scope.results));
-  };
+function JobCtrl($scope, $http, $timeout) {
+  
+  var getUUID = function(path) { 
+    var parser = document.createElement('a');
+    parser.href = path;
+    return parser.pathname.split("/").pop();
+  }
+
+  $scope.jobs = [];
+  $http.get("/api/job/session").success(function(data) { 
+    $scope.jobs = data;
+    $scope.jobs.forEach(function(job) {
+      job.uuid = getUUID(job.results); 
+    });
+  });
+  
+  var poll = function() {
+    (function tick() {
+      $scope.jobs.forEach(function(job) { 
+        if(job.status !== "completed" && job.status !== "failed") {
+          $http.get(job.job).success(function(data) { 
+            job.status = data.status;
+            job.results = data.results;
+            job.uuid = getUUID(job.results);
+            job.queuePosition = data.queuePosition;
+          });
+        }});
+      $timeout(tick, 3000);
+    })();
+  }
+  poll();
+
+}
+
+JobCtrl.$inject = ['$scope', '$http', '$timeout']
+
+function ResultCtrl($scope, Result, $routeParams) {
+  $scope.uuid = $routeParams.uuid;
+  $scope.network = {};
+  $scope.colDefs = [];  
+  $scope.consistency = {};  
+ 
+  $scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
+    $scope.network = result.network;
+    $scope.consistency = result.results.consistency;
+    console.log(result);
+  });
+
+  $scope.networkGrid = {data: 'network.data',
+    displayFooter: false,
+    canSelectRows: false,
+    displaySelectionCheckbox: false,
+    columnDefs: 'colDefs'};
 
   var colDefs = function(x) { 
     var colDefs = [];
@@ -28,37 +73,5 @@ function AnalysesCtrl($scope, $http){
       $scope.colDefs = colDefs($scope.network.data);
     }
   });
-
-  $scope.networkGrid = {data: 'network.data',
-    displayFooter: false,
-    canSelectRows: false,
-    displaySelectionCheckbox: false,
-    columnDefs: 'colDefs'};
-
-  $scope.$watch('job', function(newVal, oldVal) { 
-    if(newVal.job) { 
-      (function poll(){
-        setTimeout(function() {
-          $http.get(newVal.job)
-          .success(function(data, status) {
-            if(data.results) {
-              $http.get(data.results).success(function(data) {
-                $scope.network = data.network;
-                $scope.results = data.results.consistency;
-              });
-            } else if (data.status === "failed") {
-              console.log("failed");
-            } else {
-              poll()
-            }
-          })
-        .error(function(data, status) { 
-          console.log("Error" + data + " " + status);
-        });
-        }, 1000);
-      })();
-    }
-  });
 }
-AnalysesCtrl.$inject = ['$scope', '$http']
-
+ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']

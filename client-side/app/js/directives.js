@@ -20,8 +20,17 @@ directive("async", function() {
           url: attributes.async, 
           type: 'POST',
           data: formData, 
-          success: function(data, textStatus, jqXHR) { 
-            ngModel.$setViewValue(data); 
+          success: function(responseJSON, textStatus, jqXHR) { 
+            //duplicate the previous view value.
+            var copy = angular.copy(ngModel.$viewValue);
+
+            //add the new objects
+            copy.push(responseJSON);
+
+            //update the model and run form validation.
+            ngModel.$setViewValue(copy);
+
+            //queue a digest.
             scope.$apply();
           },
           cache: false,

@@ -33,7 +33,7 @@
       (let [pos (.indexOf queue job-future)]
         (if (= pos -1) 
           {:status "running"} 
-          {:status "pending" :queue-position (inc pos)})))))
+          {:status "pending" :queuePosition (inc pos)})))))
 
 (defn status [id] 
   (let [job-future (@jobs id)]
