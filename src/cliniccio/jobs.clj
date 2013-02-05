@@ -1,5 +1,5 @@
-(ns cliniccio.jobs
-  (:use cliniccio.config) 
+(ns clinicico.jobs
+  (:use clinicico.config) 
   (:import [java.util.concurrent LinkedBlockingQueue 
                                  Callable Executors TimeUnit ThreadPoolExecutor])
   (:require [clojure.tools.logging :as log]))
@@ -45,4 +45,4 @@
         (-> {} 
             (assoc :job (job-url id))
             (merge (with-queued id))))
-      (throw (cliniccio.ResourceNotFound. (str "Could not find job: " id))))))
+      (throw (clinicico.ResourceNotFound. (str "Could not find job: " id))))))

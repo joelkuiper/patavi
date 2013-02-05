@@ -1,16 +1,16 @@
-(ns cliniccio.handler
+(ns clinicico.handler
   (:use compojure.core
-        [cliniccio.config]
-        [cliniccio.util]
+        [clinicico.config]
+        [clinicico.util]
         [ring.middleware.session]
-        [cliniccio.middleware]
+        [clinicico.middleware]
         [ring.middleware.format-response :only [wrap-restful-response wrap-json-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
-            [cliniccio.http :as http]
-            [cliniccio.mtc.store :as db]
-            [cliniccio.jobs :as job]
-            [cliniccio.mtc.mtc :as mtc]
+            [clinicico.http :as http]
+            [clinicico.mtc.store :as db]
+            [clinicico.jobs :as job]
+            [clinicico.mtc.mtc :as mtc]
             [ring.middleware [multipart-params :as mp]]
             [ring.middleware.json :as ring-json]
             [clojure.tools.logging :as log]

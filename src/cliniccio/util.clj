@@ -1,4 +1,4 @@
-(ns cliniccio.util
+(ns clinicico.util
   (:use   clojure.java.io
           clojure.walk)
   (:require [clojure.string :as s]))

@@ -1,4 +1,4 @@
-(defproject cliniccio "0.1.0-SNAPSHOT"
+(defproject clinicico "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :repositories {"local" ~(str (.toURI (java.io.File. "third-party/repo")))}
@@ -12,8 +12,8 @@
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]]
-  :aot [cliniccio.ResourceNotFound]
-  :ring {:handler cliniccio.handler/app
-         :init cliniccio.handler/main}
+  :aot [clinicico.ResourceNotFound]
+  :ring {:handler clinicico.handler/app
+         :init clinicico.handler/main}
   :profiles
   {:dev {:dependencies [[ring-mock "0.1.3"]]}})

@@ -1,10 +1,10 @@
-(ns cliniccio.middleware
+(ns clinicico.middleware
   (:use compojure.core
         ring.util.response
-        cliniccio.util
+        clinicico.util
         [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
-  (:require [cliniccio.R.util :as R]
+  (:require [clinicico.R.util :as R]
             [clojure.tools.logging :as log])
   (:import (com.fasterxml.jackson.core JsonGenerator)))
 
@@ -24,7 +24,7 @@
   (fn [req]
     (try
       (handler req)
-      (catch cliniccio.ResourceNotFound e
+      (catch clinicico.ResourceNotFound e
         (->
           (response e) 
           (status 404)))

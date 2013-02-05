@@ -1,4 +1,4 @@
-# cliniccio
+# clinicico
 
 FIXME
 

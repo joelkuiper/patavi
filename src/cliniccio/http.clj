@@ -1,4 +1,4 @@
-(ns cliniccio.http
+(ns clinicico.http
   (:use ring.util.response
         [clojure.string :only [upper-case join]]))
 

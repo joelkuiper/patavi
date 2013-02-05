@@ -1,4 +1,4 @@
-(ns cliniccio.config
+(ns clinicico.config
   (:use clojure.java.io))
 
 (defn load-properties

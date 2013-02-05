@@ -1,5 +1,5 @@
-(ns cliniccio.test.handler
+(ns clinicico.test.handler
   (:use clojure.test
         ring.mock.request  
-        cliniccio.handler))
+        clinicico.handler))
 

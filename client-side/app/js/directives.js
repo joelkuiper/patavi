@@ -2,7 +2,7 @@
 
 /* Directives */
 
-angular.module('cliniccio.directives', []).
+angular.module('clinicico.directives', []).
 directive("async", function() { 
   return { 
     restrict: "A",

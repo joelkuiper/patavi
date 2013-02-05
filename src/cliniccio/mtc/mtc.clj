@@ -1,10 +1,10 @@
-(ns cliniccio.mtc.mtc
-  (:use [cliniccio.util]
-        [cliniccio.config]
+(ns clinicico.mtc.mtc
+  (:use [clinicico.util]
+        [clinicico.config]
         [clojure.string :only [upper-case join split]]) 
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [cliniccio.R.util :as R])
+            [clinicico.R.util :as R])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP
                                REXPList

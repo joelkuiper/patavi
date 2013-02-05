@@ -1,7 +1,7 @@
-(ns cliniccio.test.mtc
+(ns clinicico.test.mtc
   (:use clojure.test
-        cliniccio.mtc.mtc)
-  (:require [cliniccio.R.util :as R]))
+        clinicico.mtc.mtc)
+  (:require [clinicico.R.util :as R]))
 
 (deftest test-has-r-connection
   (testing "Connection to RServe"

@@ -1,5 +1,5 @@
-(ns cliniccio.R.util
-  (:use     [cliniccio.util]) 
+(ns clinicico.R.util
+  (:use     [clinicico.util]) 
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)

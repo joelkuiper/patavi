@@ -1,12 +1,12 @@
-(ns cliniccio.mtc.store
+(ns clinicico.mtc.store
   (:import [org.bson.types ObjectId]
            (com.fasterxml.jackson.core JsonGenerator))
   (:use [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
         [monger.conversion :only [from-db-object]]
         [cheshire.custom :only [JSONable]]
-        [cliniccio.config]
-        [cliniccio.util]
+        [clinicico.config]
+        [clinicico.util]
         [validateur.validation])
   (:require [clojure.walk :as walk]
             [monger.collection :as collection]
@@ -20,7 +20,7 @@
 (def mongo-options
   {:host "localhost"  
    :port 27017 
-   :db "cliniccio" 
+   :db "clinicico" 
    :results-collection "results"})
 
 (extend org.joda.time.DateTime
