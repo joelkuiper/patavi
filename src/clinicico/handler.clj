@@ -1,3 +1,23 @@
+;; ## Clinici.co 
+;; Clinici.co provides a way for exposing R scripts as a web service using [REST](http://en.wikipedia.org/wiki/Representational_state_transfer)
+;; Currently this framework handles the loading and running of GeMTC consistency
+;; models, but should eventually not be restricted to this. 
+;;
+;; The life time of a Clinici.co request is roughly as follows. 
+;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using POST. 
+;;    In this case for example a GeMTC file to /api/consistency for consistency
+;;    analysis.
+;; 2. The user recieves a job url.
+;; 3. The user can query the job for status using GET on /job/:id to see for
+;;    example the position in the job queue. 
+;; 4. When the results are available they are saved to a MongoDB instance as-is.
+;; 5. The results can be retrieve using a GET on /result/:id where the id was
+;;    provided by the job when the results became available.
+;; 
+;; For every session the list of submitted jobs is stored in a map, this allows
+;; the user to retrieve the jobs he or she submitted but not others. 
+;;
+
 (ns clinicico.handler
   (:use compojure.core
         [clinicico.config]
@@ -18,12 +38,67 @@
 
 (defn main [] ())
 
-(defroutes api-routes
+;; ### Consistency models 
+;; Consistency models can be created based on a GeMTC network file
+;; in a multi-part form submit, or alternatively by providing
+;; a network field in the following JSON format: 
+;; 
+;;     {"description":"",
+;;       "data":[
+;;         {
+;;           "study":"1",
+;;           "treatment":"A",
+;;           "mean":-1.22,
+;;           "std.dev":3.7,
+;;           "sampleSize":54
+;;         },
+;;         {
+;;           "study":"1",
+;;           "treatment":"B",
+;;           "mean":-1.2,
+;;           "std.dev":4.3,
+;;           "sampleSize":81
+;;         },
+;;         {
+;;           "study":"2",
+;;           "treatment":"B",
+;;           "mean":-1.8,
+;;           "std.dev":2.48,
+;;           "sampleSize":154
+;;         },
+;;         {
+;;           "study":"2",
+;;           "treatment":"B",
+;;           "mean":-2.1,
+;;           "std.dev":2.99,
+;;           "sampleSize":143
+;;         }
+;;       ],
+;;       "treatments":[
+;;         {
+;;           "id":"A",
+;;           "description":"Some medicine"
+;;         },
+;;         {
+;;           "id":"B",
+;;           "description":"Placebo"
+;;         },
+;;       ]
+;;     } 
+;;
+;; Where each of the treatments must be present in the data and
+;; vice-versa. Furthermore for dichotomous networks the mean and
+;; sampleSize van replaced by the field responders. The description
+;; is optional. The excerpt above specifies a network with
+;; continuous data for two two-armed studies comparing treatment
+;; A and B. 
+ 
+(defroutes routes
   (context "/api" []
            (OPTIONS "/" []
                     (http/options [:options] {:version "0.3.0-SNAPSHOT"}))
            (mp/wrap-multipart-params
-             (POST "/analysis/consistency" [:as req & params]
+            (POST "/analysis/consistency" [:as req & params]
                    (let [analysis (fn [] (db/save-result (mtc/consistency params)))
                          id (job/submit analysis)
                          jobs (get-in req [:session :jobs])
@@ -47,8 +122,9 @@
   (route/not-found "Nothing to see here, move along now"))
 
 (def app
+  "Main entry point for all requests"
   (->
-    (handler/api api-routes)
+    (handler/api routes)
     (ring-json/wrap-json-body)
     (wrap-request-logger)
     (wrap-session);

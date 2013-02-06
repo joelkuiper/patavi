@@ -2,6 +2,7 @@
   (:use clojure.java.io))
 
 (defn load-properties
+  "Reads a java properties file and parses it into a map"
   [file-name]
   (with-open [^java.io.Reader reader (reader file-name)] 
     (let [props (java.util.Properties.)]

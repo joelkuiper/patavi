@@ -11,10 +11,13 @@
                                RList)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(defn load-mtc! [R] 
+(defn load-mtc! 
+  "Loads the GeMTC library to the provided RConnection"
+  [R] 
   (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
 
 (defn read-network [R] 
+  "Reads the network present in the current RConnection and transforms it into a map"
   (let [network (R/as-list (.get R "network" nil true)) 
         description (.at network "description")
         data (R/as-list network "data")
@@ -44,6 +47,9 @@
        (.assign R "network" (R/parse R (str "mtc.network(data, description, treatments)")))))))
 
 (defn load-network! 
+  "Loads a GeMTC network into an RConnection, 
+   - If the params field contains a file it is assumed to be a GeMTC filed and proccessed accordingly. 
+   - If it is a network it should be in the network JSON format"
   [R params]
   (cond 
     (contains? params "file") (load-network-file R (get params "file"))
@@ -75,7 +81,10 @@
                                 :description (map #(.asString (.at (.asList %) "description")) images)})
      :results (parse-results-list results)}))
  
-(defn analyze-consistency! [R options] 
+(defn- analyze-consistency! [R options] 
+  "Runs a consistency model and returns the used network and results. 
+   To produce the relevant results and do other preprocessing please modify the loaded consistency.R script.
+   This script should return a list of results with descriptions and a list of images with associated descriptions"
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 
       (io/copy (io/as-file (io/resource (str "R/" script-file))) script))

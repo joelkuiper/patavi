@@ -16,21 +16,15 @@
             [clojure.tools.logging :as log]
             [monger.json]
             [clj-time.core :as time]))
+;; ## Store 
+;; A simple MongoDB storage for the produced results. 
+;; Takes any map that includes a network and a results field
 
 (def mongo-options
   {:host "localhost"  
    :port 27017 
    :db "clinicico" 
    :results-collection "results"})
-
-(extend org.joda.time.DateTime
-  JSONable
-  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
-    (.writeStartObject jg)
-    (.writeFieldName jg "date")
-    (.writeString jg (.toString date))
-    (.writeEndObject jg))})
-
 
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
