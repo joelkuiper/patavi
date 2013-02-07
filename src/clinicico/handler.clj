@@ -1,10 +1,10 @@
 ;; ## Clinici.co 
 ;; Clinici.co provides a way for exposing R scripts as a web service using 
-;; [REST](http://en.wikipedia.org/wiki/Representational_state_transfer)
+;; [REST](http://en.wikipedia.org/wiki/Representational_state_transfer).
 ;; Currently this framework handles the loading and running of GeMTC consistency
 ;; models, but should eventually not be restricted to this. 
 ;;
-;; The typical life time of a Clinici.co request is roughly as follows: 
+;; The typical life time of a Clinici.co session is roughly as follows: 
 ;;
 ;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using `POST`. 
 ;;    In this case for example a GeMTC file to `/api/consistency` for consistency
@@ -43,7 +43,7 @@
 
 ;; ### Consistency models 
 ;; Consistency models can be created based on a GeMTC network file
-;; in a multi-part form submit, or alternatively by providing
+;; in a multi-part form submit or, alternatively, by providing
 ;; a network field in the following JSON format: 
 ;; 
 ;;     {"description":"",

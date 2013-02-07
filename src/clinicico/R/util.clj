@@ -1,7 +1,7 @@
 ;; ## R 
 ;; R interoperability is provided by [Rserve](http://www.rforge.net/Rserve/). 
 ;; RServe provides both a TCP/IP server for calling R functionality as well as
-;; a Java library for convenient access to a Rserve.  
+;; a Java library for convenient access to an Rserve.  
 ;;
 ;; The functions below are mostly utilities for converting back and forth
 ;; between native Clojure representations (maps and vectors) and RServes'
@@ -51,7 +51,7 @@
         (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-        :else (throw (Exception. (str "Could not convert field " field)))))
+        :else (throw (Exception. field))))
 
 (defn in-list 
   "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
@@ -71,16 +71,21 @@
 
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map 
-   with the rows as a map between the labels and the values.
-   If not a named matrix substitutes the missing names 
-   with an incrementing index starting with." 
+   with the rows as a map between labels and values.
+   If not a named matrix it will substitute the missing names 
+   with an incrementing index starting with 1." 
   [matrix] 
   (let [dimnames (.getAttribute matrix "dimnames")
         labels  (map 
-                  (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
+                  (fn [ls] 
+                    (if-not (.isNull ls) 
+                      (seq (.asStrings ls)) 
+                      nil)) 
+                  (.asList dimnames))
         data (map seq (.asDoubleMatrix matrix))]
     (into {} 
-          (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
+          (mapcat (fn [[k v]] 
+                    {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
 
 (defn list-to-map 
@@ -114,7 +119,7 @@
                    (into-array String (sort (distinct data-seq)))) 
       (instance? String el) 
       (REXPString. (if is-seq (into-array String data-seq) el)) 
-      :else (throw (IllegalArgumentException. (str "Don't know how to parse " (class el)))))))
+      :else (throw (IllegalArgumentException. (str "Cannot parse " (class el)))))))
 
 (defn map-to-RList   
   "Converts a map to an RList, using the to-REXPVector 

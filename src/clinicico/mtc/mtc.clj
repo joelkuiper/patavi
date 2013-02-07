@@ -46,9 +46,12 @@
        (.assign R "description" 
                 (R/to-REXPVector description))
        (.assign R "data" 
-                (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
+                (R/RList-as-dataframe 
+                  (R/map-to-RList (map-rows-to-cols data))))
        (.assign R "treatments" 
-                (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+                (.eval R 
+                  (REXPList. 
+                    (R/map-to-RList (map-rows-to-cols treatments))) nil false))
        (.assign R "network" 
                 (R/parse R (str "mtc.network(data, description, treatments)"))))))
 

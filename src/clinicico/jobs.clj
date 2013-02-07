@@ -6,7 +6,7 @@
 ;; a [ThreadPoolExecutor](http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html)
 ;; which processes only one job at a time. The jobs can be queried for status.
 ;; The previous attempt at solving the problem can be found on 
-;; [StackOverflow](http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure)
+;; [StackOverflow](http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure).
 
 
 (ns clinicico.jobs
@@ -32,7 +32,7 @@
 
 (defn cancel
   "Cancels a queued job.
-   Due to the connection R it would be incredibly hard to cancel running jobs,
+   Due to the RConnection it would be hard to cancel running jobs,
    so this is not allowed."
   [id]
   (let [job-future (:future (@jobs id))]

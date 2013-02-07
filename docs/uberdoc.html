@@ -3076,7 +3076,7 @@ classes.  </p>
         (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-        :else (throw (Exception. (str &quot;Could not convert field &quot; field)))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
+        :else (throw (Exception. field))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
    Rough equivalent to R's data$field accessor.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn in-list 
   [data $field]
@@ -3090,17 +3090,22 @@ classes.  </p>
     (if (.inherits evaluation &quot;try-error&quot;)
       (throw (REngineException. R (.asString evaluation)))
       evaluation)))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
-   with the rows as a map between the labels and the values.
-   If not a named matrix substitutes the missing names 
-   with an incrementing index starting with.</p>
+   with the rows as a map between labels and values.
+   If not a named matrix it will substitute the missing names 
+   with an incrementing index starting with 1.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn parse-matrix 
   [matrix] 
   (let [dimnames (.getAttribute matrix &quot;dimnames&quot;)
         labels  (map 
-                  (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
+                  (fn [ls] 
+                    (if-not (.isNull ls) 
+                      (seq (.asStrings ls)) 
+                      nil)) 
+                  (.asList dimnames))
         data (map seq (.asDoubleMatrix matrix))]
     (into {} 
-          (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
+          (mapcat (fn [[k v]] 
+                    {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn list-to-map 
   [data]
@@ -3130,7 +3135,7 @@ classes.  </p>
                    (into-array String (sort (distinct data-seq)))) 
       (instance? String el) 
       (REXPString. (if is-seq (into-array String data-seq) el)) 
-      :else (throw (IllegalArgumentException. (str &quot;Don't know how to parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs"><p>Converts a map to an RList, using the to-REXPVector 
+      :else (throw (IllegalArgumentException. (str &quot;Cannot parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs"><p>Converts a map to an RList, using the to-REXPVector 
    to convert underlying elements to REXPVectors.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn map-to-RList   
   [data]
@@ -3392,7 +3397,7 @@ The previous attempt at solving the problem can be found on
     (swap! jobs assoc job-id {:future (.submit job-executor callable)
                               :created (time/now)})
     job-id))</pre></td></tr><tr><td class="docs"><p>Cancels a queued job.
-   Due to the connection R it would be incredibly hard to cancel running jobs,
+   Due to the RConnection it would be hard to cancel running jobs,
    so this is not allowed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cancel
   [id]
@@ -3552,9 +3557,12 @@ The previous attempt at solving the problem can be found on
        (.assign R &quot;description&quot; 
                 (R/to-REXPVector description))
        (.assign R &quot;data&quot; 
-                (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
+                (R/RList-as-dataframe 
+                  (R/map-to-RList (map-rows-to-cols data))))
        (.assign R &quot;treatments&quot; 
-                (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+                (.eval R 
+                  (REXPList. 
+                    (R/map-to-RList (map-rows-to-cols treatments))) nil false))
        (.assign R &quot;network&quot; 
                 (R/parse R (str &quot;mtc.network(data, description, treatments)&quot;))))))</pre></td></tr><tr><td class="docs"><p>Loads a GeMTC network into an <code>RConnection</code>.</p>
 
