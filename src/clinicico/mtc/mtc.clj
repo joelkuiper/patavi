@@ -16,8 +16,9 @@
   [R] 
   (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
 
-(defn read-network [R] 
+(defn read-network 
   "Reads the network present in the current RConnection and transforms it into a map"
+  [R]
   (let [network (R/as-list (.get R "network" nil true)) 
         description (.at network "description")
         data (R/as-list network "data")
@@ -47,8 +48,10 @@
        (.assign R "network" (R/parse R (str "mtc.network(data, description, treatments)")))))))
 
 (defn load-network! 
-  "Loads a GeMTC network into an RConnection, 
-   - If the params field contains a file it is assumed to be a GeMTC filed and proccessed accordingly. 
+  "Loads a GeMTC network into an RConnection.
+
+   - If the params field contains a file it is assumed to be a 
+     GeMTC filed and proccessed accordingly. 
    - If it is a network it should be in the network JSON format"
   [R params]
   (cond 
@@ -77,14 +80,19 @@
   (let [data (.asList results)
         images (.asList (.at data "images"))
         results (.asList (.at data "results"))]
-    {:images (map-cols-to-rows {:url (map #(url-for-img-path %) (map #(.asString (.at (.asList %) "url")) images))
-                                :description (map #(.asString (.at (.asList %) "description")) images)})
+    {:images (map-cols-to-rows 
+               {:url (map #(url-for-img-path %) (map #(.asString (.at (.asList %) "url")) images))
+                :description (map #(.asString (.at (.asList %) "description")) images)})
      :results (parse-results-list results)}))
  
-(defn- analyze-consistency! [R options] 
+(defn- analyze-consistency!
   "Runs a consistency model and returns the used network and results. 
-   To produce the relevant results and do other preprocessing please modify the loaded consistency.R script.
-   This script should return a list of results with descriptions and a list of images with associated descriptions"
+   To produce the relevant results and do other preprocessing 
+   please modify the loaded consistency.R script.
+
+   This script should return a list of results with 
+   descriptions and a list of images with associated descriptions"
+  [R options] 
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 
       (io/copy (io/as-file (io/resource (str "R/" script-file))) script))

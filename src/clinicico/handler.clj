@@ -3,7 +3,7 @@
 ;; Currently this framework handles the loading and running of GeMTC consistency
 ;; models, but should eventually not be restricted to this. 
 ;;
-;; The typical life time of a Clinici.co request is roughly as follows. 
+;; The typical life time of a Clinici.co request is roughly as follows: 
 ;;
 ;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using `POST`. 
 ;;    In this case for example a GeMTC file to `/api/consistency` for consistency
