@@ -22,6 +22,7 @@ function JobCtrl($scope, $http, $timeout) {
     for (var field in data) { 
       job[field] = data[field];
     }
+    job.uuid = getUUID(job.results);
   }
 
   $scope.cancel = function(job) { 
@@ -37,7 +38,6 @@ function JobCtrl($scope, $http, $timeout) {
         var nonPoll = ["completed", "failed", "canceled"];
         if(nonPoll.indexOf(job.status) == -1) {
           $http.get(job.job).success(function(data) { 
-           job.uuid = getUUID(job.results);
            pushToScope(job, data);
           });
         }});
