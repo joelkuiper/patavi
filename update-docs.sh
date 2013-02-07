@@ -1,5 +1,6 @@
 #!/bin/bash
 
+lein marg
 cp docs/uberdoc.html /tmp/index.html
 git stash
 git checkout gh-pages
