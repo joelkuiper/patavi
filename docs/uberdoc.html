@@ -3048,7 +3048,7 @@ classes.  </p>
            (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates it's own workspace
   and forks the existing R process, effectively sandboxing the R operations
   Returns an <a href="http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html">RConnection</a> 
-  which is referred to as R in the code</p>
+  which is referred to as R in the code.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn connect 
  [] 
   (let [conn (try 
@@ -3060,7 +3060,7 @@ classes.  </p>
    or a nested list, to an <a href="http://rforge.net/org/doc/org/rosuda/REngine/RList.html">RList</a>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn as-list 
   ([data] (.asList ^REXPGenericVector data))
-  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives</p>
+  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- convert-fn 
   ^{:todo &quot;make sure this is complete&quot;}
   [field] 
@@ -3068,8 +3068,8 @@ classes.  </p>
     (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %)) ;; REXPFactor is-a REXPInteger, so the order matters
     (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
     (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-    :else (throw (Exception. (str &quot;Could not convert field &quot; field)))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the convert-fn.
-   Rough equivalent to R's data$field accessor</p>
+    :else (throw (Exception. (str &quot;Could not convert field &quot; field)))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
+   Rough equivalent to R's data$field accessor.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn in-list 
   [data $field]
   (let [members (.at ^RList data $field)]
@@ -3086,7 +3086,7 @@ classes.  </p>
     (if (.inherits img-dev &quot;try-error&quot;)
       (throw (Exception. (str &quot;Could not initiate image device: &quot; (.asString img-dev))))
       (.voidEval R (str &quot;plot(&quot; item &quot;); dev.off()&quot;)))))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map with the rows as a map between the labels and the values.
-   If not a named matrix substitutes the missing names with an incrementing index starting with 1</p>
+   If not a named matrix substitutes the missing names with an incrementing index starting with.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn parse-matrix 
   [matrix] 
   (let [dimnames (.getAttribute matrix &quot;dimnames&quot;)
@@ -3103,7 +3103,8 @@ classes.  </p>
                      (seq ((convert-fn field) field)))) ks))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- factor-indexes [lst] 
   (let [levels (sort (distinct lst))]
-    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a></p>
+    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a 
+   subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn to-REXPVector
   [data-seq]
   (let [is-seq (sequential? data-seq)
@@ -3122,7 +3123,7 @@ classes.  </p>
       :else (throw (IllegalArgumentException. (str &quot;Don't know how to parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn map-to-RList [data]
   &quot;Converts a map to an RList, using the to-REXPVector 
-   to convert underlying elements to REXPVectors&quot;
+   to convert underlying elements to REXPVectors.&quot;
   (RList. 
     (map to-REXPVector (vals data)) (into-array String (keys data))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn RList-as-dataframe [RList] 
@@ -3130,7 +3131,7 @@ classes.  </p>
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.ResourceNotFound
   (:gen-class :extends java.lang.Exception))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.config" name="clinicico.config"><h1 class="project-name">clinicico.config</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.config
-  (:use clojure.java.io))</pre></td></tr><tr><td class="docs"><p>Reads a java properties file and parses it into a map</p>
+  (:use clojure.java.io))</pre></td></tr><tr><td class="docs"><p>Reads a java properties file and parses it into a map.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-properties
   [file-name]
   (with-open [^java.io.Reader reader (reader file-name)] 
@@ -3260,7 +3261,7 @@ A and B. </p>
   (GET &quot;/&quot; [] (resp/resource-response &quot;index.html&quot; {:root &quot;public&quot;}))
   (route/resources &quot;/generated&quot; {:root &quot;generated&quot;})
   (route/resources &quot;/&quot;)
-  (route/not-found &quot;Nothing to see here, move along now&quot;))</pre></td></tr><tr><td class="docs"><p>Main entry point for all requests</p>
+  (route/not-found &quot;Nothing to see here, move along now&quot;))</pre></td></tr><tr><td class="docs"><p>Main entry point for all requests.</p>
 </td><td class="codes"><pre class="brush: clojure">(def app
   (-&gt;
     (handler/api routes)
@@ -3349,7 +3350,7 @@ which processes only one job at a time. The jobs can be queried for status.</p>
   (:require [clojure.tools.logging :as log]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def job-executor (ThreadPoolExecutor.
                     1 1 0 TimeUnit/MILLISECONDS (LinkedBlockingQueue.)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def jobs (atom {}))</pre></td></tr><tr><td class="docs"><p>Add a function (job) to the job queue</p>
+</td><td class="codes"><pre class="brush: clojure">(def jobs (atom {}))</pre></td></tr><tr><td class="docs"><p>Add a function (job) to the job queue.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn submit 
   [func]
   (let [job-id   (str (java.util.UUID/randomUUID))
@@ -3377,7 +3378,7 @@ which processes only one job at a time. The jobs can be queried for status.</p>
           {:status &quot;running&quot;} 
           {:status &quot;pending&quot; :queuePosition (inc pos)})))))</pre></td></tr><tr><td class="docs"><p>Returns the status of the job associated with id as a map.
    The status can either be <code>running</code>, <code>pending</code>, <code>completed</code>, <code>failed</code> or <code>canceled</code>
-   When the status is <code>pending</code> the map will contain a key for the position in the queue</p>
+   When the status is <code>pending</code> the map will contain a key for the position in the queue.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn status 
   [id] 
   (let [job-future (@jobs id)]

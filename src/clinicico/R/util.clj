@@ -20,7 +20,7 @@
  "Connect to an RServe instance. Each connection creates it's own workspace
   and forks the existing R process, effectively sandboxing the R operations
   Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html) 
-  which is referred to as R in the code.§"
+  which is referred to as R in the code."
  [] 
   (let [conn (try 
                (RConnection.)
