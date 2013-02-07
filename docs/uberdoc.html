@@ -3608,6 +3608,13 @@ Takes any map that includes a network and a results field.</p>
    :port 27017 
    :db &quot;clinicico&quot; 
    :results-collection &quot;results&quot;})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(extend org.joda.time.DateTime
+  JSONable
+  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg &quot;date&quot;)
+    (.writeString jg (.toString date))
+    (.writeEndObject jg))})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- with-oid [results]

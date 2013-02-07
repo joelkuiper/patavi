@@ -13,7 +13,8 @@
   (:use clinicico.config) 
   (:import [java.util.concurrent LinkedBlockingQueue 
             Callable Executors TimeUnit ThreadPoolExecutor])
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [clj-time.core :as time]))
 
 (def job-executor (ThreadPoolExecutor.
                     1 1 0 TimeUnit/MILLISECONDS (LinkedBlockingQueue.)))
@@ -25,7 +26,8 @@
   [func]
   (let [job-id   (str (java.util.UUID/randomUUID))
         callable (reify Callable (call [_] (func)))]
-    (swap! jobs assoc job-id (.submit job-executor callable))
+    (swap! jobs assoc job-id {:future (.submit job-executor callable)
+                              :created (time/now)})
     job-id))
 
 (defn- job-url 
@@ -35,9 +37,9 @@
 (defn- job-results 
   [id]
   (try
-    (-> {}
-        (merge (.get (@jobs id)))
-        (assoc :status "completed"))
+    (let [results (.get (:future (@jobs id)))]
+      (-> (merge results)
+          (assoc :status "completed")))
     (catch Exception e {:status "failed"})))
 
 (defn- with-queued 
@@ -51,18 +53,23 @@
           {:status "running"} 
           {:status "pending" :queuePosition (inc pos)})))))
 
+(defn- with-base-status 
+  [id job] 
+  (-> {}
+      (assoc :job (job-url id))
+      (assoc :created (get-in job [:created]))))
+
 (defn status 
   "Returns the status of the job associated with id as a map.
    The status can either be `running`, `pending`, `completed`, `failed` or `canceled`
    When the status is `pending` the map will contain a key for the position in the queue."
   [id] 
-  (let [job-future (@jobs id)]
+  (let [job (@jobs id)
+        job-future (:future job)]
     (if-not (nil? job-future) 
       (if (.isDone job-future)
-        (-> {}
-            (merge (job-results id))
-            (assoc :job (job-url id)))
-        (-> {} 
-            (assoc :job (job-url id))
+        (-> (with-base-status id job)
+            (merge (job-results id)))
+        (-> (with-base-status id job)
             (merge (with-queued id))))
       (throw (clinicico.ResourceNotFound. (str "Could not find job: " id))))))

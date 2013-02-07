@@ -23,10 +23,10 @@ function JobCtrl($scope, $http, $timeout) {
       $scope.jobs.forEach(function(job) { 
         if(job.status !== "completed" && job.status !== "failed") {
           $http.get(job.job).success(function(data) { 
-            job.status = data.status;
-            job.results = data.results;
+            for (var field in data) { 
+              job[field] = data[field];
+            }
             job.uuid = getUUID(job.results);
-            job.queuePosition = data.queuePosition;
           });
         }});
       $timeout(tick, 3000);

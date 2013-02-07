@@ -1,6 +1,9 @@
-(ns clinicico.util
+(ns clinicico.util.util
   (:use   clojure.java.io
-          clojure.walk)
+          clojure.walk
+          [cheshire.custom :only [JSONable]])
+  (:import (com.fasterxml.jackson.core JsonGenerator)
+           (org.joda.time.format.ISODateTimeFormat))
   (:require [clojure.string :as s]))
 
 (def not-nil? (complement nil?))
@@ -46,3 +49,13 @@
   (let [f (fn [[k v]] (if (keyword? k) [(name k) v] [(str k) v]))]
     ;; only apply to maps
     (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+
+;; Make joda.time JSONable
+(extend org.joda.time.DateTime
+  JSONable
+  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg "date")
+    (.writeString jg 
+                  (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))
+    (.writeEndObject jg))})

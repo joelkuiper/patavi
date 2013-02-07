@@ -3,22 +3,20 @@
 ;; Takes any map that includes a network and a results field.
 
 (ns clinicico.mtc.store
-  (:import [org.bson.types ObjectId]
-           (com.fasterxml.jackson.core JsonGenerator))
+  (:import [org.bson.types ObjectId])
   (:use [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
         [monger.conversion :only [from-db-object]]
-        [cheshire.custom :only [JSONable]]
         [clinicico.config]
-        [clinicico.util]
+        [clinicico.util.util]
         [validateur.validation])
   (:require [clojure.walk :as walk]
+            [clojure.tools.logging :as log]
             [monger.collection :as collection]
             [monger.conversion :as conv]
+            [monger.json]
             [monger.util :as util]
             [monger.joda-time]
-            [clojure.tools.logging :as log]
-            [monger.json]
             [clj-time.core :as time]))
 
 (def mongo-options
@@ -26,15 +24,6 @@
    :port 27017 
    :db "clinicico" 
    :results-collection "results"})
-
-(extend org.joda.time.DateTime
-  JSONable
-  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
-    (.writeStartObject jg)
-    (.writeFieldName jg "date")
-    (.writeString jg (.toString date))
-    (.writeEndObject jg))})
-
 
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
@@ -64,6 +53,7 @@
             (collection/insert 
               (mongo-options :results-collection) 
               (conv/to-db-object (stringify-keys* new-result))))
-        {:results (str base-url "api/result/" (str (new-result :_id)))} 
+        {:results (str base-url "api/result/" (str (new-result :_id)))
+         :completed (time/now)} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException.)))))  

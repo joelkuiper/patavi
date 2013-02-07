@@ -10,7 +10,7 @@
 (ns clinicico.middleware
   (:use compojure.core
         ring.util.response
-        clinicico.util
+        clinicico.util.util
         [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
   (:require [clinicico.R.util :as R]
@@ -32,7 +32,7 @@
    
    - Returns `HTTP/404` when `ResourceNotFound` exception was thrown. 
    - Returns `HTTP/400` when `InvalidArgumentException` was thrown, 
-      e.g. missing JSON arguments.
+     e.g. missing JSON arguments.
    - Returns `HTTP/500` for all unhandled thrown `Exception`.
     "
   [handler]

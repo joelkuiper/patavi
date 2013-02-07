@@ -16,6 +16,8 @@
         <p>
         <strong>Job:</strong> {{job.job}}<br>
         <strong>Status:</strong> {{job.status}}<br>
+        <strong>Created at:</strong> {{job.created.date}}<br>
+        <strong>Finished at:</strong> {{job.completed.date}}<br>
         <strong>Position in queue:</strong> {{job.queuePosition}}<br>
         <strong>Results:</strong><a href="#/result/{{job.uuid}}">{{job.results}}</a></span>
         </li>

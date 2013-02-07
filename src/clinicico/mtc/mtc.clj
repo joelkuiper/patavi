@@ -1,5 +1,5 @@
 (ns clinicico.mtc.mtc
-  (:use [clinicico.util]
+  (:use [clinicico.util.util]
         [clinicico.config]
         [clojure.string :only [upper-case join split]]) 
   (:require [clojure.java.io :as io]

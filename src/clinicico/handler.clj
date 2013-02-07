@@ -23,7 +23,7 @@
 (ns clinicico.handler
   (:use compojure.core
         [clinicico.config]
-        [clinicico.util]
+        [clinicico.util.util]
         [ring.middleware.session]
         [clinicico.middleware]
         [ring.middleware.format-response :only [wrap-restful-response 
@@ -96,7 +96,7 @@
 ;; continuous data for two two-armed studies comparing treatments
 ;; A and B. 
  
-(defroutes routes
+(defroutes routes-handler
   (context "/api" []
            (OPTIONS "/" []
                     (http/options [:options] {:version "0.3.0-SNAPSHOT"}))
@@ -127,7 +127,7 @@
 (def app
   "Main entry point for all requests."
   (->
-    (handler/api routes)
+    (handler/api routes-handler)
     (ring-json/wrap-json-body)
     (wrap-request-logger)
     (wrap-session);

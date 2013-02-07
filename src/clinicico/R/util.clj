@@ -8,7 +8,7 @@
 ;; classes.  
 
 (ns clinicico.R.util
-  (:use     [clinicico.util]) 
+  (:use     [clinicico.util.util]) 
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
@@ -61,18 +61,6 @@
 (defn parse [^RConnection R cmd] 
   (.parseAndEval R cmd nil true))
 
-(defn plot 
-  "Plots an existing R variable (must be present in the RConnection!).
-
-   Outputs the results to an equally named file in the current workdir. 
-
-   Requires Cairo package to be present and loaded."
-  [^RConnection R item] 
-  (let [img-dev (parse R (str "try(png('"item".png'))"))]
-    (if (.inherits img-dev "try-error")
-      (throw (Exception. (str "Could not initiate image device: " (.asString img-dev))))
-      (.voidEval R (str "plot(" item "); dev.off()")))))
-
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map 
    with the rows as a map between the labels and the values.
@@ -87,14 +75,16 @@
           (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
 
-(defn list-to-map [data]
+(defn list-to-map 
+  [data]
   (let [ks (.keys ^RList data)] 
     (zipmap ks 
             (map (fn [k] 
                    (let [field (.at ^RList data k)]
                      (seq ((convert-fn field) field)))) ks))))
 
-(defn- factor-indexes [lst] 
+(defn- factor-indexes 
+  [lst] 
   (let [levels (sort (distinct lst))]
     (map #(inc (.indexOf levels %)) lst)))
 
@@ -118,9 +108,10 @@
       (REXPString. (if is-seq (into-array String data-seq) el)) 
       :else (throw (IllegalArgumentException. (str "Don't know how to parse " (class el)))))))
 
-(defn map-to-RList [data]
+(defn map-to-RList   
   "Converts a map to an RList, using the to-REXPVector 
    to convert underlying elements to REXPVectors."
+  [data]
   (RList. 
     (map to-REXPVector (vals data)) (into-array String (keys data))))
 
