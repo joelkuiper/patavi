@@ -1,3 +1,7 @@
+;; ## Store 
+;; A simple MongoDB storage for the produced results. 
+;; Takes any map that includes a network and a results field.
+
 (ns clinicico.mtc.store
   (:import [org.bson.types ObjectId]
            (com.fasterxml.jackson.core JsonGenerator))
@@ -16,15 +20,21 @@
             [clojure.tools.logging :as log]
             [monger.json]
             [clj-time.core :as time]))
-;; ## Store 
-;; A simple MongoDB storage for the produced results. 
-;; Takes any map that includes a network and a results field
 
 (def mongo-options
   {:host "localhost"  
    :port 27017 
    :db "clinicico" 
    :results-collection "results"})
+
+(extend org.joda.time.DateTime
+  JSONable
+  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg "date")
+    (.writeString jg (.toString date))
+    (.writeEndObject jg))})
+
 
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
@@ -52,7 +62,8 @@
     (if (valid? result-validator new-result)
       (if (ok? 
             (collection/insert 
-              (mongo-options :results-collection) (conv/to-db-object (stringify-keys* new-result))))
+              (mongo-options :results-collection) 
+              (conv/to-db-object (stringify-keys* new-result))))
         {:results (str base-url "api/result/" (str (new-result :_id)))} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException.)))))  
