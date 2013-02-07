@@ -2,7 +2,8 @@
 ;; As the Ring authors themselves describe: 
 ;;
 ;; > Middleware are higher-level functions that add additional functionality to handlers. 
-;; > the first argument of a middleware function should be a handler, and its return value should be a new handler function.
+;; > the first argument of a middleware function should be a handler, 
+;; > and its return value should be a new handler function.
 ;;
 ;; See [ring documentation wiki](https://github.com/ring-clojure/ring/wiki/Concepts)
 
@@ -28,9 +29,12 @@
 
 (defn wrap-exception-handler 
    " Middleware to handle exceptions thrown by the underlying code.
-   - Returns HTTP/404 when `ResourceNotFound` exception was thrown, 
-   - Returns HTTP/400 when `InvalidArgumentException` was thrown (e.g. missing JSON arguments)
-   - Returns HTTP/500 for all unhandled thrown `Exception`."
+   
+   - Returns `HTTP/404` when `ResourceNotFound` exception was thrown. 
+   - Returns `HTTP/400` when `InvalidArgumentException` was thrown, 
+      e.g. missing JSON arguments.
+   - Returns `HTTP/500` for all unhandled thrown `Exception`.
+    "
   [handler]
   (fn [req]
     (try

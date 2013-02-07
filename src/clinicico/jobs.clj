@@ -3,8 +3,10 @@
 ;; When dealing with long running and CPU intensive tasks such as 
 ;; Monte Carlo Markov Chain needed for Bayesian inference we place the 
 ;; function (or lambda) into the job queue. The job queue is implemented using
-;; a [TreadPoolExecutor](http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html)
+;; a [ThreadPoolExecutor](http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html)
 ;; which processes only one job at a time. The jobs can be queried for status.
+;; The previous attempt at solving the problem can be found on 
+;; [StackOverflow](http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure)
 
 
 (ns clinicico.jobs

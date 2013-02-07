@@ -1,5 +1,6 @@
 ;; ## Clinici.co 
-;; Clinici.co provides a way for exposing R scripts as a web service using [REST](http://en.wikipedia.org/wiki/Representational_state_transfer)
+;; Clinici.co provides a way for exposing R scripts as a web service using 
+;; [REST](http://en.wikipedia.org/wiki/Representational_state_transfer)
 ;; Currently this framework handles the loading and running of GeMTC consistency
 ;; models, but should eventually not be restricted to this. 
 ;;
@@ -25,7 +26,8 @@
         [clinicico.util]
         [ring.middleware.session]
         [clinicico.middleware]
-        [ring.middleware.format-response :only [wrap-restful-response wrap-json-response]])
+        [ring.middleware.format-response :only [wrap-restful-response 
+                                                wrap-json-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [clinicico.http :as http]
@@ -88,10 +90,10 @@
 ;;     } 
 ;;
 ;; Where each of the treatments must be present in the data and
-;; vice-versa. Furthermore for dichotomous networks the mean and
-;; sampleSize van replaced by the field responders. The description
-;; is optional. The excerpt above specifies a network with
-;; continuous data for two two-armed studies comparing treatment
+;; vice-versa. Furthermore for dichotomous networks the `mean` and
+;; `sampleSize` can be replaced by the field `responders`. 
+;; The description is optional. The excerpt above specifies a network with
+;; continuous data for two two-armed studies comparing treatments
 ;; A and B. 
  
 (defroutes routes

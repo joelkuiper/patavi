@@ -1,12 +1,12 @@
-(ns clinicico.http
-  (:use ring.util.response
-        [clojure.string :only [upper-case join]]))
-
-;; HTTP 
+;; ## HTTP 
 ;; These functions provide helpers for creating Ring responses. 
 ;; They should only be used when appropriate, see associated HTTP Spec. for
 ;; detaills. Note that each of the Middleware handlers can abort the request
 ;; handling and can sent its own HTTP status.
+
+(ns clinicico.http
+  (:use ring.util.response
+        [clojure.string :only [upper-case join]]))
 
 (defn url-from 
   [{scheme :scheme server-name :server-name server-port :server-port uri :uri}

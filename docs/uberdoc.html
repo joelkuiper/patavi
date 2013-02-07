@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="A work-in-progress wrapper to create a RESTful webservice from a R script" name="description" /><style type="text/css">/**
+<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="A work-in-progress wrapper to create a RESTful webservice from an R script" name="description" /><style type="text/css">/**
  * SyntaxHighlighter
  * http://alexgorbatchev.com/SyntaxHighlighter
  *
@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from a R script</p>
+</script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from an R script</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.mtc.mtc">clinicico.mtc.mtc</a></li><li><a href="#clinicico.mtc.store">clinicico.mtc.store</a></li><li><a href="#clinicico.util">clinicico.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.util" name="clinicico.R.util"><h1 class="project-name">clinicico.R.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>R</h2>
 
 <p>R interoperability is provided by <a href="http://www.rforge.net/Rserve/">Rserve</a>. 
@@ -3036,7 +3036,7 @@ RServe provides both a TCP/IP server for calling R functionality as well as
 a Java library for convenient access to a Rserve.  </p>
 
 <p>The functions below are mostly utilities for converting back and forth
-between native Clojure reorientations (maps and vectors) and RServes'
+between native Clojure representations (maps and vectors) and RServes'
 classes.  </p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.R.util
@@ -3044,13 +3044,16 @@ classes.  </p>
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
-           (org.rosuda.REngine REXPDouble REXPLogical REXPFactor REXPInteger REXPString REXPGenericVector)
+           (org.rosuda.REngine REXPDouble REXPLogical 
+                               REXPFactor REXPInteger 
+                               REXPString REXPGenericVector)
            (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates it's own workspace
-  and forks the existing R process, effectively sandboxing the R operations
-  Returns an <a href="http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html">RConnection</a> 
-  which is referred to as R in the code.</p>
+   and forks the existing R process, effectively sandboxing the R operations.</p>
+
+<p>   Returns an <a href="http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html">RConnection</a> 
+   which is referred to as R in the code.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn connect 
- [] 
+  [] 
   (let [conn (try 
                (RConnection.)
                (catch Exception e (throw (Exception. &quot;Could not connect to RServe&quot; e))))]
@@ -3060,15 +3063,16 @@ classes.  </p>
    or a nested list, to an <a href="http://rforge.net/org/doc/org/rosuda/REngine/RList.html">RList</a>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn as-list 
   ([data] (.asList ^REXPGenericVector data))
-  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives.</p>
+  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a 
+   <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- convert-fn 
   ^{:todo &quot;make sure this is complete&quot;}
   [field] 
-  (cond 
-    (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %)) ;; REXPFactor is-a REXPInteger, so the order matters
-    (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
-    (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-    :else (throw (Exception. (str &quot;Could not convert field &quot; field)))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
+  (cond  ;; REXPFactor is-a REXPInteger, so the order matters
+        (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
+        (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
+        (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
+        :else (throw (Exception. (str &quot;Could not convert field &quot; field)))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
    Rough equivalent to R's data$field accessor.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn in-list 
   [data $field]
@@ -3077,20 +3081,25 @@ classes.  </p>
       (seq ((convert-fn members) members))
       nil)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn parse [^RConnection R cmd] 
-  (.parseAndEval R cmd nil true))</pre></td></tr><tr><td class="docs"><p>Plots an existing R variable (must be present in the RConnection!)
-   Outputs the results to an equally named file in the current workdir. 
-   Requires Cairo package to be present and loaded.</p>
+  (.parseAndEval R cmd nil true))</pre></td></tr><tr><td class="docs"><p>Plots an existing R variable (must be present in the RConnection!).</p>
+
+<p>   Outputs the results to an equally named file in the current workdir. </p>
+
+<p>   Requires Cairo package to be present and loaded.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn plot 
   [^RConnection R item] 
   (let [img-dev (parse R (str &quot;try(png('&quot;item&quot;.png'))&quot;))]
     (if (.inherits img-dev &quot;try-error&quot;)
       (throw (Exception. (str &quot;Could not initiate image device: &quot; (.asString img-dev))))
-      (.voidEval R (str &quot;plot(&quot; item &quot;); dev.off()&quot;)))))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map with the rows as a map between the labels and the values.
-   If not a named matrix substitutes the missing names with an incrementing index starting with.</p>
+      (.voidEval R (str &quot;plot(&quot; item &quot;); dev.off()&quot;)))))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
+   with the rows as a map between the labels and the values.
+   If not a named matrix substitutes the missing names 
+   with an incrementing index starting with.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn parse-matrix 
   [matrix] 
   (let [dimnames (.getAttribute matrix &quot;dimnames&quot;)
-        labels  (map (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
+        labels  (map 
+                  (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
         data (map seq (.asDoubleMatrix matrix))]
     (into {} 
           (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
@@ -3111,15 +3120,16 @@ classes.  </p>
         el (if is-seq (first data-seq) data-seq)]
     (cond 
       (instance? Integer el) 
-        (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
+      (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
       (instance? Boolean el) 
-        (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
+      (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
       (instance? Double el) 
-        (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
+      (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
       (and (instance? String el) is-seq (every? #(re-matches #&quot;\w*&quot; %) data-seq)) 
-        (REXPFactor. (int-array (factor-indexes data-seq)) (into-array String (sort (distinct data-seq)))) 
+      (REXPFactor. (int-array (factor-indexes data-seq)) 
+                   (into-array String (sort (distinct data-seq)))) 
       (instance? String el) 
-        (REXPString. (if is-seq (into-array String data-seq) el)) 
+      (REXPString. (if is-seq (into-array String data-seq) el)) 
       :else (throw (IllegalArgumentException. (str &quot;Don't know how to parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn map-to-RList [data]
   &quot;Converts a map to an RList, using the to-REXPVector 
@@ -3139,9 +3149,13 @@ classes.  </p>
       (.load props reader)
       (into {} (for [[k v] props] [(keyword k) (read-string v)])))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *config* (load-properties (resource &quot;config.properties&quot;)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def base-url (str (:scheme *config*) &quot;://&quot;  (:server-name *config*) &quot;:&quot; (:server-port *config*) &quot;/&quot;)) </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.handler" name="clinicico.handler"><h1 class="project-name">clinicico.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clinici.co</h2>
+</td><td class="codes"><pre class="brush: clojure">(def base-url (str 
+                (:scheme *config*) &quot;://&quot;  
+                (:server-name *config*) &quot;:&quot; 
+                (:server-port *config*) &quot;/&quot;)) </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.handler" name="clinicico.handler"><h1 class="project-name">clinicico.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clinici.co</h2>
 
-<p>Clinici.co provides a way for exposing R scripts as a web service using <a href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a>
+<p>Clinici.co provides a way for exposing R scripts as a web service using 
+<a href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a>
 Currently this framework handles the loading and running of GeMTC consistency
 models, but should eventually not be restricted to this. </p>
 
@@ -3168,7 +3182,8 @@ the user to retrieve the jobs he or she submitted but not others. </p>
         [clinicico.util]
         [ring.middleware.session]
         [clinicico.middleware]
-        [ring.middleware.format-response :only [wrap-restful-response wrap-json-response]])
+        [ring.middleware.format-response :only [wrap-restful-response 
+                                                wrap-json-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [clinicico.http :as http]
@@ -3230,10 +3245,10 @@ a network field in the following JSON format: </p>
 </code></pre>
 
 <p>Where each of the treatments must be present in the data and
-vice-versa. Furthermore for dichotomous networks the mean and
-sampleSize van replaced by the field responders. The description
-is optional. The excerpt above specifies a network with
-continuous data for two two-armed studies comparing treatment
+vice-versa. Furthermore for dichotomous networks the <code>mean</code> and
+<code>sampleSize</code> can be replaced by the field <code>responders</code>. 
+The description is optional. The excerpt above specifies a network with
+continuous data for two two-armed studies comparing treatments
 A and B. </p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defroutes routes
@@ -3271,15 +3286,16 @@ A and B. </p>
     (wrap-exception-handler)
     (wrap-response-logger)
     (wrap-json-response)
-    (wrap-restful-response)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.http" name="clinicico.http"><h1 class="project-name">clinicico.http</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns clinicico.http
-  (:use ring.util.response
-        [clojure.string :only [upper-case join]]))</pre></td></tr><tr><td class="docs"><p>HTTP 
-These functions provide helpers for creating Ring responses. 
+    (wrap-restful-response)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.http" name="clinicico.http"><h1 class="project-name">clinicico.http</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>HTTP</h2>
+
+<p>These functions provide helpers for creating Ring responses. 
 They should only be used when appropriate, see associated HTTP Spec. for
 detaills. Note that each of the Middleware handlers can abort the request
 handling and can sent its own HTTP status.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns clinicico.http
+  (:use ring.util.response
+        [clojure.string :only [upper-case join]]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn url-from 
   [{scheme :scheme server-name :server-name server-port :server-port uri :uri}
    &amp; path-elements]
@@ -3340,8 +3356,10 @@ handling and can sent its own HTTP status.</p>
 <p>When dealing with long running and CPU intensive tasks such as 
 Monte Carlo Markov Chain needed for Bayesian inference we place the 
 function (or lambda) into the job queue. The job queue is implemented using
-a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html">TreadPoolExecutor</a>
-which processes only one job at a time. The jobs can be queried for status.</p>
+a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html">ThreadPoolExecutor</a>
+which processes only one job at a time. The jobs can be queried for status.
+The previous attempt at solving the problem can be found on 
+<a href="http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure">StackOverflow</a></p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.jobs
   (:use clinicico.config) 
@@ -3396,7 +3414,8 @@ which processes only one job at a time. The jobs can be queried for status.</p>
 
 <blockquote>
   <p>Middleware are higher-level functions that add additional functionality to handlers. 
-  the first argument of a middleware function should be a handler, and its return value should be a new handler function.</p>
+  the first argument of a middleware function should be a handler, 
+  and its return value should be a new handler function.</p>
 </blockquote>
 
 <p>See <a href="https://github.com/ring-clojure/ring/wiki/Concepts">ring documentation wiki</a></p>
@@ -3418,10 +3437,14 @@ which processes only one job at a time. The jobs can be queried for status.</p>
     (.writeString jg (.getName (class e)))
     (.writeFieldName jg &quot;message&quot;)
     (.writeString jg (.getMessage e))
-    (.writeEndObject jg))})</pre></td></tr><tr><td class="docs"><p> Middleware to handle exceptions thrown by the underlying code.
-   - Returns HTTP/404 when <code>ResourceNotFound</code> exception was thrown, 
-   - Returns HTTP/400 when <code>InvalidArgumentException</code> was thrown (e.g. missing JSON arguments)
-   - Returns HTTP/500 for all unhandled thrown <code>Exception</code>.</p>
+    (.writeEndObject jg))})</pre></td></tr><tr><td class="docs"><p> Middleware to handle exceptions thrown by the underlying code.</p>
+
+<ul>
+<li>Returns <code>HTTP/404</code> when <code>ResourceNotFound</code> exception was thrown.</li>
+<li>Returns <code>HTTP/400</code> when <code>InvalidArgumentException</code> was thrown, 
+  e.g. missing JSON arguments.</li>
+<li>Returns <code>HTTP/500</code> for all unhandled thrown <code>Exception</code>.</li>
+</ul>
 </td><td class="codes"><pre class="brush: clojure">(defn wrap-exception-handler 
   [handler]
   (fn [req]
@@ -3466,10 +3489,11 @@ which processes only one job at a time. The jobs can be queried for status.</p>
            (org.rosuda.REngine REXP
                                REXPList
                                RList)
-           (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Loads the GeMTC library to the provided RConnection</p>
+           (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Loads the <a href="http://cran.r-project.org/web/packages/gemtc/index.html">GeMTC library</a> 
+   to the provided <code>RConnection</code>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn load-mtc! 
   [R] 
-  (.voidEval R &quot;suppressWarnings(require('gemtc',quietly=TRUE))&quot;))</pre></td></tr><tr><td class="docs"><p>Reads the network present in the current RConnection and transforms it into a map</p>
+  (.voidEval R &quot;suppressWarnings(require('gemtc',quietly=TRUE))&quot;))</pre></td></tr><tr><td class="docs"><p>Reads the network present in the current <code>RConnection</code> and transforms it into a map.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn read-network 
   [R]
   (let [network (R/as-list (.get R &quot;network&quot; nil true)) 
@@ -3488,20 +3512,24 @@ which processes only one job at a time. The jobs can be queried for status.</p>
       (.assign R &quot;network&quot; (R/parse R (str &quot;read.mtc.network('&quot; (file :filename) &quot;')&quot;))))
     (.removeFile R (file :filename))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- load-network-json 
-  ([R network]
+  [R network]
    (let [description (:description network)
          data (:data network) 
          treatments (:treatments network)]
      (do
-       (.assign R &quot;description&quot; (R/to-REXPVector description))
-       (.assign R &quot;data&quot; (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
-       (.assign R &quot;treatments&quot; (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
-       (.assign R &quot;network&quot; (R/parse R (str &quot;mtc.network(data, description, treatments)&quot;)))))))</pre></td></tr><tr><td class="docs"><p>Loads a GeMTC network into an RConnection.</p>
+       (.assign R &quot;description&quot; 
+                (R/to-REXPVector description))
+       (.assign R &quot;data&quot; 
+                (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
+       (.assign R &quot;treatments&quot; 
+                (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+       (.assign R &quot;network&quot; 
+                (R/parse R (str &quot;mtc.network(data, description, treatments)&quot;))))))</pre></td></tr><tr><td class="docs"><p>Loads a GeMTC network into an <code>RConnection</code>.</p>
 
 <ul>
 <li>If the params field contains a file it is assumed to be a 
- GeMTC filed and proccessed accordingly.</li>
-<li>If it is a network it should be in the network JSON format</li>
+ GeMTC file and proccessed accordingly.</li>
+<li>If it is a network it should be in the network JSON format.</li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn load-network! 
   [R params]
@@ -3529,14 +3557,15 @@ which processes only one job at a time. The jobs can be queried for status.</p>
         images (.asList (.at data &quot;images&quot;))
         results (.asList (.at data &quot;results&quot;))]
     {:images (map-cols-to-rows 
-               {:url (map #(url-for-img-path %) (map #(.asString (.at (.asList %) &quot;url&quot;)) images))
+               {:url (map #(url-for-img-path %) 
+                          (map #(.asString (.at (.asList %) &quot;url&quot;)) images))
                 :description (map #(.asString (.at (.asList %) &quot;description&quot;)) images)})
      :results (parse-results-list results)}))</pre></td></tr><tr><td class="docs"><p>Runs a consistency model and returns the used network and results. 
    To produce the relevant results and do other preprocessing 
    please modify the loaded consistency.R script.</p>
 
 <p>   This script should return a list of results with 
-   descriptions and a list of images with associated descriptions</p>
+   descriptions and a list of images with associated descriptions.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- analyze-consistency!
   [R options] 
   (let [script-file &quot;consistency.R&quot;] 
@@ -3551,7 +3580,11 @@ which processes only one job at a time. The jobs can be queried for status.</p>
      (load-mtc! R) 
      (load-network! R params)
      {:network (read-network R) 
-      :results (analyze-consistency! R (get params &quot;options&quot;))})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.mtc.store" name="clinicico.mtc.store"><h1 class="project-name">clinicico.mtc.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+      :results (analyze-consistency! R (get params &quot;options&quot;))})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.mtc.store" name="clinicico.mtc.store"><h1 class="project-name">clinicico.mtc.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Store</h2>
+
+<p>A simple MongoDB storage for the produced results. 
+Takes any map that includes a network and a results field.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.mtc.store
   (:import [org.bson.types ObjectId]
            (com.fasterxml.jackson.core JsonGenerator))
@@ -3569,11 +3602,7 @@ which processes only one job at a time. The jobs can be queried for status.</p>
             [monger.joda-time]
             [clojure.tools.logging :as log]
             [monger.json]
-            [clj-time.core :as time]))</pre></td></tr><tr><td class="docs"><h2>Store</h2>
-
-<p>A simple MongoDB storage for the produced results. 
-Takes any map that includes a network and a results field</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+            [clj-time.core :as time]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def mongo-options
   {:host &quot;localhost&quot;  
    :port 27017 
@@ -3599,7 +3628,8 @@ Takes any map that includes a network and a results field</p>
     (if (valid? result-validator new-result)
       (if (ok? 
             (collection/insert 
-              (mongo-options :results-collection) (conv/to-db-object (stringify-keys* new-result))))
+              (mongo-options :results-collection) 
+              (conv/to-db-object (stringify-keys* new-result))))
         {:results (str base-url &quot;api/result/&quot; (str (new-result :_id)))} 
         (throw (Exception. &quot;Write Failed&quot;)))
       (throw (IllegalArgumentException.)))))  </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.util" name="clinicico.util"><h1 class="project-name">clinicico.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">

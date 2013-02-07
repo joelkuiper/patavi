@@ -12,12 +12,13 @@
            (org.rosuda.REngine.Rserve RConnection)))
 
 (defn load-mtc! 
-  "Loads the GeMTC library to the provided RConnection"
+  "Loads the [GeMTC library](http://cran.r-project.org/web/packages/gemtc/index.html) 
+   to the provided `RConnection`."
   [R] 
   (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
 
 (defn read-network 
-  "Reads the network present in the current RConnection and transforms it into a map"
+  "Reads the network present in the current `RConnection` and transforms it into a map."
   [R]
   (let [network (R/as-list (.get R "network" nil true)) 
         description (.at network "description")
@@ -37,22 +38,26 @@
     (.removeFile R (file :filename))))
 
 (defn- load-network-json 
-  ([R network]
+  [R network]
    (let [description (:description network)
          data (:data network) 
          treatments (:treatments network)]
      (do
-       (.assign R "description" (R/to-REXPVector description))
-       (.assign R "data" (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
-       (.assign R "treatments" (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
-       (.assign R "network" (R/parse R (str "mtc.network(data, description, treatments)")))))))
+       (.assign R "description" 
+                (R/to-REXPVector description))
+       (.assign R "data" 
+                (R/RList-as-dataframe (R/map-to-RList (map-rows-to-cols data))))
+       (.assign R "treatments" 
+                (.eval R (REXPList. (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+       (.assign R "network" 
+                (R/parse R (str "mtc.network(data, description, treatments)"))))))
 
 (defn load-network! 
-  "Loads a GeMTC network into an RConnection.
+  "Loads a GeMTC network into an `RConnection`.
 
    - If the params field contains a file it is assumed to be a 
-     GeMTC filed and proccessed accordingly. 
-   - If it is a network it should be in the network JSON format"
+     GeMTC file and proccessed accordingly. 
+   - If it is a network it should be in the network JSON format."
   [R params]
   (cond 
     (contains? params "file") (load-network-file R (get params "file"))
@@ -81,7 +86,8 @@
         images (.asList (.at data "images"))
         results (.asList (.at data "results"))]
     {:images (map-cols-to-rows 
-               {:url (map #(url-for-img-path %) (map #(.asString (.at (.asList %) "url")) images))
+               {:url (map #(url-for-img-path %) 
+                          (map #(.asString (.at (.asList %) "url")) images))
                 :description (map #(.asString (.at (.asList %) "description")) images)})
      :results (parse-results-list results)}))
  
@@ -91,7 +97,7 @@
    please modify the loaded consistency.R script.
 
    This script should return a list of results with 
-   descriptions and a list of images with associated descriptions"
+   descriptions and a list of images with associated descriptions."
   [R options] 
   (let [script-file "consistency.R"] 
     (with-open [script (.createFile R script-file)] 

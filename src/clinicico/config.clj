@@ -11,4 +11,7 @@
 
 (def ^:dynamic *config* (load-properties (resource "config.properties")))
 
-(def base-url (str (:scheme *config*) "://"  (:server-name *config*) ":" (:server-port *config*) "/")) 
+(def base-url (str 
+                (:scheme *config*) "://"  
+                (:server-name *config*) ":" 
+                (:server-port *config*) "/")) 

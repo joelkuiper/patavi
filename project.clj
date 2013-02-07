@@ -1,5 +1,5 @@
 (defproject clinicico "0.1.0-SNAPSHOT"
-  :description "A work-in-progress wrapper to create a RESTful webservice from a R script"
+  :description "A work-in-progress wrapper to create a RESTful webservice from an R script"
   :url "http://clinici.co"
   :repositories {"local" ~(str (.toURI (java.io.File. "third-party/repo")))}
   :dependencies [[org.clojure/clojure "1.4.0"]
