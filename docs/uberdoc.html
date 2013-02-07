@@ -3046,17 +3046,21 @@ classes.  </p>
            (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine REXPDouble REXPLogical REXPFactor REXPInteger REXPString REXPGenericVector)
            (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates it's own workspace
-  and forks the existing R process, effectively sandboxing the R operations</p>
+  and forks the existing R process, effectively sandboxing the R operations
+  Returns an <a href="http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html">RConnection</a> 
+  which is referred to as R in the code</p>
 </td><td class="codes"><pre class="brush: clojure">(defn connect 
  [] 
   (let [conn (try 
                (RConnection.)
                (catch Exception e (throw (Exception. &quot;Could not connect to RServe&quot; e))))]
     (if (.isConnected conn) 
-      conn)))</pre></td></tr><tr><td class="docs"><p>Converts a REXPGenericFactor, or a nested list, to a RList.</p>
+      conn)))</pre></td></tr><tr><td class="docs"><p>Converts a 
+   <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html">REXPGenericVector</a>, 
+   or a nested list, to an <a href="http://rforge.net/org/doc/org/rosuda/REngine/RList.html">RList</a>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn as-list 
   ([data] (.asList ^REXPGenericVector data))
-  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a REXPVector to primitives</p>
+  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- convert-fn 
   ^{:todo &quot;make sure this is complete&quot;}
   [field] 
@@ -3099,7 +3103,7 @@ classes.  </p>
                      (seq ((convert-fn field) field)))) ks))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- factor-indexes [lst] 
   (let [levels (sort (distinct lst))]
-    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a REXPVector</p>
+    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a></p>
 </td><td class="codes"><pre class="brush: clojure">(defn to-REXPVector
   [data-seq]
   (let [is-seq (sequential? data-seq)
@@ -3140,16 +3144,19 @@ classes.  </p>
 Currently this framework handles the loading and running of GeMTC consistency
 models, but should eventually not be restricted to this. </p>
 
-<p>The life time of a Clinici.co request is roughly as follows. 
-1. The users submits JSON or a file with optional options to the appropriate analysis path using POST. 
-   In this case for example a GeMTC file to /api/consistency for consistency
-   analysis.
-2. The user recieves a job url.
-3. The user can query the job for status using GET on /job/:id to see for
-   example the position in the job queue. 
-4. When the results are available they are saved to a MongoDB instance as-is.
-5. The results can be retrieve using a GET on /result/:id where the id was
-   provided by the job when the results became available.</p>
+<p>The typical life time of a Clinici.co request is roughly as follows. </p>
+
+<ol>
+<li>The users submits JSON or a file with optional options to the appropriate analysis path using <code>POST</code>. 
+In this case for example a GeMTC file to <code>/api/consistency</code> for consistency
+analysis.</li>
+<li>The user recieves a job url.</li>
+<li>The user can query the job for status using <code>GET</code> on <code>/job/:id</code> to see for
+example the position in the job queue.</li>
+<li>When the results are available they are saved to a MongoDB instance as-is.</li>
+<li>The results can be retrieve using a <code>GET</code> on <code>/result/:id</code> where the id was
+provided by the job when the results became available.</li>
+</ol>
 
 <p>For every session the list of submitted jobs is stored in a map, this allows
 the user to retrieve the jobs he or she submitted but not others. </p>

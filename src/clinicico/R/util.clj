@@ -18,7 +18,9 @@
  
 (defn connect 
  "Connect to an RServe instance. Each connection creates it's own workspace
-  and forks the existing R process, effectively sandboxing the R operations"
+  and forks the existing R process, effectively sandboxing the R operations
+  Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html) 
+  which is referred to as R in the code"
  [] 
   (let [conn (try 
                (RConnection.)
@@ -27,12 +29,14 @@
       conn)))
 
 (defn as-list 
-  "Converts a REXPGenericFactor, or a nested list, to a RList."
+  "Converts a 
+   [REXPGenericVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html), 
+   or a nested list, to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
   ([data] (.asList ^REXPGenericVector data))
   ([data $field] (as-list (.at ^RList data $field))))
 
 (defn- convert-fn 
-  "Conditionally converts a REXPVector to primitives"
+  "Conditionally converts a [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives"
   ^{:todo "make sure this is complete"}
   [field] 
   (cond 
@@ -86,7 +90,7 @@
     (map #(inc (.indexOf levels %)) lst)))
 
 (defn to-REXPVector
-  "Converts a sequential or a primitive to a REXPVector"
+  "Converts a sequential or a primitive to a subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html)"
   [data-seq]
   (let [is-seq (sequential? data-seq)
         el (if is-seq (first data-seq) data-seq)]

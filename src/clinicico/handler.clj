@@ -3,15 +3,16 @@
 ;; Currently this framework handles the loading and running of GeMTC consistency
 ;; models, but should eventually not be restricted to this. 
 ;;
-;; The life time of a Clinici.co request is roughly as follows. 
-;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using POST. 
-;;    In this case for example a GeMTC file to /api/consistency for consistency
+;; The typical life time of a Clinici.co request is roughly as follows. 
+;;
+;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using `POST`. 
+;;    In this case for example a GeMTC file to `/api/consistency` for consistency
 ;;    analysis.
 ;; 2. The user recieves a job url.
-;; 3. The user can query the job for status using GET on /job/:id to see for
+;; 3. The user can query the job for status using `GET` on `/job/:id` to see for
 ;;    example the position in the job queue. 
 ;; 4. When the results are available they are saved to a MongoDB instance as-is.
-;; 5. The results can be retrieve using a GET on /result/:id where the id was
+;; 5. The results can be retrieve using a `GET` on `/result/:id` where the id was
 ;;    provided by the job when the results became available.
 ;; 
 ;; For every session the list of submitted jobs is stored in a map, this allows
