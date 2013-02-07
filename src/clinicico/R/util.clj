@@ -14,7 +14,8 @@
            (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
-                               REXPString REXPGenericVector)
+                               REXPString REXPGenericVector
+                               REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
 
@@ -59,7 +60,11 @@
       nil)))
 
 (defn parse [^RConnection R cmd] 
-  (.parseAndEval R cmd nil true))
+  (let [trycmd (str "try("cmd", silent=T)")
+        evaluation (.parseAndEval R trycmd nil true)]
+    (if (.inherits evaluation "try-error")
+      (throw (REngineException. R (.asString evaluation)))
+      evaluation)))
 
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map 
