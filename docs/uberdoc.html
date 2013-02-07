@@ -3029,7 +3029,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from an R script</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.mtc.mtc">clinicico.mtc.mtc</a></li><li><a href="#clinicico.mtc.store">clinicico.mtc.store</a></li><li><a href="#clinicico.util">clinicico.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.util" name="clinicico.R.util"><h1 class="project-name">clinicico.R.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>R</h2>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">joda-time/joda-time</td><td class="dotted"><hr /></td><td class="dep-version">2.1</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.mtc.mtc">clinicico.mtc.mtc</a></li><li><a href="#clinicico.mtc.store">clinicico.mtc.store</a></li><li><a href="#clinicico.util.util">clinicico.util.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.util" name="clinicico.R.util"><h1 class="project-name">clinicico.R.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>R</h2>
 
 <p>R interoperability is provided by <a href="http://www.rforge.net/Rserve/">Rserve</a>. 
 RServe provides both a TCP/IP server for calling R functionality as well as
@@ -3040,13 +3040,15 @@ between native Clojure representations (maps and vectors) and RServes'
 classes.  </p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.R.util
-  (:use     [clinicico.util]) 
+  (:use     [clinicico.util.util] 
+            [clinicico.config])
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
-                               REXPString REXPGenericVector)
+                               REXPString REXPGenericVector
+                               REngineException)
            (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates it's own workspace
    and forks the existing R process, effectively sandboxing the R operations.</p>
 
@@ -3055,7 +3057,9 @@ classes.  </p>
 </td><td class="codes"><pre class="brush: clojure">(defn connect 
   [] 
   (let [conn (try 
-               (RConnection.)
+               (RConnection. 
+                 (str (:rserve-host *config* &quot;localhost&quot;)) 
+                 (Integer. (:rserve-port *config* 6311)))
                (catch Exception e (throw (Exception. &quot;Could not connect to RServe&quot; e))))]
     (if (.isConnected conn) 
       conn)))</pre></td></tr><tr><td class="docs"><p>Converts a 
@@ -3081,17 +3085,11 @@ classes.  </p>
       (seq ((convert-fn members) members))
       nil)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn parse [^RConnection R cmd] 
-  (.parseAndEval R cmd nil true))</pre></td></tr><tr><td class="docs"><p>Plots an existing R variable (must be present in the RConnection!).</p>
-
-<p>   Outputs the results to an equally named file in the current workdir. </p>
-
-<p>   Requires Cairo package to be present and loaded.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn plot 
-  [^RConnection R item] 
-  (let [img-dev (parse R (str &quot;try(png('&quot;item&quot;.png'))&quot;))]
-    (if (.inherits img-dev &quot;try-error&quot;)
-      (throw (Exception. (str &quot;Could not initiate image device: &quot; (.asString img-dev))))
-      (.voidEval R (str &quot;plot(&quot; item &quot;); dev.off()&quot;)))))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
+  (let [trycmd (str &quot;try(&quot;cmd&quot;, silent=T)&quot;)
+        evaluation (.parseAndEval R trycmd nil true)]
+    (if (.inherits evaluation &quot;try-error&quot;)
+      (throw (REngineException. R (.asString evaluation)))
+      evaluation)))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
    with the rows as a map between the labels and the values.
    If not a named matrix substitutes the missing names 
    with an incrementing index starting with.</p>
@@ -3104,13 +3102,15 @@ classes.  </p>
     (into {} 
           (mapcat (fn [[k v]] {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn list-to-map [data]
+</td><td class="codes"><pre class="brush: clojure">(defn list-to-map 
+  [data]
   (let [ks (.keys ^RList data)] 
     (zipmap ks 
             (map (fn [k] 
                    (let [field (.at ^RList data k)]
                      (seq ((convert-fn field) field)))) ks))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- factor-indexes [lst] 
+</td><td class="codes"><pre class="brush: clojure">(defn- factor-indexes 
+  [lst] 
   (let [levels (sort (distinct lst))]
     (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a 
    subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a>.</p>
@@ -3130,10 +3130,10 @@ classes.  </p>
                    (into-array String (sort (distinct data-seq)))) 
       (instance? String el) 
       (REXPString. (if is-seq (into-array String data-seq) el)) 
-      :else (throw (IllegalArgumentException. (str &quot;Don't know how to parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn map-to-RList [data]
-  &quot;Converts a map to an RList, using the to-REXPVector 
-   to convert underlying elements to REXPVectors.&quot;
+      :else (throw (IllegalArgumentException. (str &quot;Don't know how to parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs"><p>Converts a map to an RList, using the to-REXPVector 
+   to convert underlying elements to REXPVectors.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn map-to-RList   
+  [data]
   (RList. 
     (map to-REXPVector (vals data)) (into-array String (keys data))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn RList-as-dataframe [RList] 
@@ -3149,10 +3149,21 @@ classes.  </p>
       (.load props reader)
       (into {} (for [[k v] props] [(keyword k) (read-string v)])))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:dynamic *config* (load-properties (resource &quot;config.properties&quot;)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def api-url (str (:scheme *config*) &quot;://&quot;
+                  (if (:api-subdomain *config*) 
+                    (str (:api-subdomain *config*) &quot;.&quot;))
+                  (:server-name *config*)
+                  (if-not (= (:server-port *config*) 80)
+                    (str &quot;:&quot; (:server-port *config*)))
+                  (if-not (:api-subdomain *config*)
+                   &quot;/api&quot;) 
+                  &quot;/&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def base-url (str 
                 (:scheme *config*) &quot;://&quot;  
-                (:server-name *config*) &quot;:&quot; 
-                (:server-port *config*) &quot;/&quot;)) </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.handler" name="clinicico.handler"><h1 class="project-name">clinicico.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clinici.co</h2>
+                (:server-name *config*)
+                (if-not (= (:server-port *config*) 80)
+                  (str &quot;:&quot; (:server-port *config*)))
+                &quot;/&quot;))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.handler" name="clinicico.handler"><h1 class="project-name">clinicico.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clinici.co</h2>
 
 <p>Clinici.co provides a way for exposing R scripts as a web service using 
 <a href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a>
@@ -3179,7 +3190,7 @@ the user to retrieve the jobs he or she submitted but not others. </p>
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.handler
   (:use compojure.core
         [clinicico.config]
-        [clinicico.util]
+        [clinicico.util.util]
         [ring.middleware.session]
         [clinicico.middleware]
         [ring.middleware.format-response :only [wrap-restful-response 
@@ -3251,7 +3262,7 @@ The description is optional. The excerpt above specifies a network with
 continuous data for two two-armed studies comparing treatments
 A and B. </p>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defroutes routes
+</td><td class="codes"><pre class="brush: clojure">(defroutes routes-handler
   (context &quot;/api&quot; []
            (OPTIONS &quot;/&quot; []
                     (http/options [:options] {:version &quot;0.3.0-SNAPSHOT&quot;}))
@@ -3260,7 +3271,7 @@ A and B. </p>
                    (let [analysis (fn [] (db/save-result (mtc/consistency params)))
                          id (job/submit analysis)
                          jobs (get-in req [:session :jobs])
-                         job (str base-url &quot;api/job/&quot; id)]
+                         job (str api-url &quot;/job/&quot; id)]
                      (assoc-in 
                        (http/created job (job/status id)) [:session :jobs] (conj jobs id)))))
            (context &quot;/result&quot; []
@@ -3269,6 +3280,10 @@ A and B. </p>
                     (GET &quot;/session&quot; [:as req] 
                          (-&gt; (resp/response (map job/status (get-in req [:session :jobs])))
                              (resp/status 200)))
+                    (DELETE &quot;/:id&quot; [id]
+                         (do (job/cancel id) 
+                            (-&gt; (resp/response (job/status id))
+                                (resp/status 200))))
                     (GET &quot;/:id&quot; [id] 
                          (-&gt; (resp/response (job/status id))
                              (resp/status 200)))))
@@ -3279,7 +3294,7 @@ A and B. </p>
   (route/not-found &quot;Nothing to see here, move along now&quot;))</pre></td></tr><tr><td class="docs"><p>Main entry point for all requests.</p>
 </td><td class="codes"><pre class="brush: clojure">(def app
   (-&gt;
-    (handler/api routes)
+    (handler/api routes-handler)
     (ring-json/wrap-json-body)
     (wrap-request-logger)
     (wrap-session);
@@ -3365,7 +3380,8 @@ The previous attempt at solving the problem can be found on
   (:use clinicico.config) 
   (:import [java.util.concurrent LinkedBlockingQueue 
             Callable Executors TimeUnit ThreadPoolExecutor])
-  (:require [clojure.tools.logging :as log]))</pre></td></tr><tr><td class="docs">
+  (:require [clojure.tools.logging :as log]
+            [clj-time.core :as time]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def job-executor (ThreadPoolExecutor.
                     1 1 0 TimeUnit/MILLISECONDS (LinkedBlockingQueue.)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def jobs (atom {}))</pre></td></tr><tr><td class="docs"><p>Add a function (job) to the job queue.</p>
@@ -3373,40 +3389,56 @@ The previous attempt at solving the problem can be found on
   [func]
   (let [job-id   (str (java.util.UUID/randomUUID))
         callable (reify Callable (call [_] (func)))]
-    (swap! jobs assoc job-id (.submit job-executor callable))
-    job-id))</pre></td></tr><tr><td class="docs">
+    (swap! jobs assoc job-id {:future (.submit job-executor callable)
+                              :created (time/now)})
+    job-id))</pre></td></tr><tr><td class="docs"><p>Cancels a queued job.
+   Due to the connection R it would be incredibly hard to cancel running jobs,
+   so this is not allowed.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn cancel
+  [id]
+  (let [job-future (:future (@jobs id))]
+    (if (nil? job-future) 
+      (throw (clinicico.ResourceNotFound.))
+      (.cancel job-future false))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- job-url 
   [id] 
-  (str base-url &quot;api/job/&quot; id)) </pre></td></tr><tr><td class="docs">
+  (str api-url &quot;job/&quot; id)) </pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- job-results 
   [id]
   (try
-    (-&gt; {}
-        (merge (.get (@jobs id)))
-        (assoc :status &quot;completed&quot;))
-    (catch Exception e {:status &quot;failed&quot;})))</pre></td></tr><tr><td class="docs">
+    (let [results (.get (:future (@jobs id)))]
+      (-&gt; (merge results)
+          (assoc :status &quot;completed&quot;)))
+    (catch Exception e {:status &quot;failed&quot; :cause (.toString e)})))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- with-queued 
   [id]
-  (let [job-future (@jobs id)
+  (let [job-future (:future (@jobs id))
         queue (seq (.toArray (.getQueue job-executor)))]
     (if (nil? queue)
       {:status &quot;running&quot;}
       (let [pos (.indexOf queue job-future)]
         (if (= pos -1) 
           {:status &quot;running&quot;} 
-          {:status &quot;pending&quot; :queuePosition (inc pos)})))))</pre></td></tr><tr><td class="docs"><p>Returns the status of the job associated with id as a map.
+          {:status &quot;pending&quot; :queuePosition (inc pos)})))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- with-base-status 
+  [id job] 
+  (-&gt; {}
+      (assoc :job (job-url id))
+      (assoc :created (get-in job [:created]))))</pre></td></tr><tr><td class="docs"><p>Returns the status of the job associated with id as a map.
    The status can either be <code>running</code>, <code>pending</code>, <code>completed</code>, <code>failed</code> or <code>canceled</code>
    When the status is <code>pending</code> the map will contain a key for the position in the queue.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn status 
   [id] 
-  (let [job-future (@jobs id)]
+  (let [job (@jobs id)
+        job-future (:future job)]
     (if-not (nil? job-future) 
       (if (.isDone job-future)
-        (-&gt; {}
-            (merge (job-results id))
-            (assoc :job (job-url id)))
-        (-&gt; {} 
-            (assoc :job (job-url id))
+        (if (.isCancelled job-future) 
+          (-&gt; (with-base-status id job)
+              (assoc :status &quot;canceled&quot;))
+          (-&gt; (with-base-status id job)
+              (merge (job-results id))))
+        (-&gt; (with-base-status id job)
             (merge (with-queued id))))
       (throw (clinicico.ResourceNotFound. (str &quot;Could not find job: &quot; id))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.middleware" name="clinicico.middleware"><h1 class="project-name">clinicico.middleware</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Middleware</h2>
 
@@ -3423,7 +3455,7 @@ The previous attempt at solving the problem can be found on
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.middleware
   (:use compojure.core
         ring.util.response
-        clinicico.util
+        clinicico.util.util
         [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
   (:require [clinicico.R.util :as R]
@@ -3442,7 +3474,7 @@ The previous attempt at solving the problem can be found on
 <ul>
 <li>Returns <code>HTTP/404</code> when <code>ResourceNotFound</code> exception was thrown.</li>
 <li>Returns <code>HTTP/400</code> when <code>InvalidArgumentException</code> was thrown, 
-  e.g. missing JSON arguments.</li>
+ e.g. missing JSON arguments.</li>
 <li>Returns <code>HTTP/500</code> for all unhandled thrown <code>Exception</code>.</li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn wrap-exception-handler 
@@ -3479,7 +3511,7 @@ The previous attempt at solving the problem can be found on
         (log/debug remote-addr (upper-case (name request-method)) uri &quot;-&gt;&quot; status))
       response)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.mtc.mtc" name="clinicico.mtc.mtc"><h1 class="project-name">clinicico.mtc.mtc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.mtc.mtc
-  (:use [clinicico.util]
+  (:use [clinicico.util.util]
         [clinicico.config]
         [clojure.string :only [upper-case join split]]) 
   (:require [clojure.java.io :as io]
@@ -3586,35 +3618,26 @@ The previous attempt at solving the problem can be found on
 Takes any map that includes a network and a results field.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.mtc.store
-  (:import [org.bson.types ObjectId]
-           (com.fasterxml.jackson.core JsonGenerator))
+  (:import [org.bson.types ObjectId])
   (:use [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
         [monger.conversion :only [from-db-object]]
-        [cheshire.custom :only [JSONable]]
         [clinicico.config]
-        [clinicico.util]
+        [clinicico.util.util]
         [validateur.validation])
   (:require [clojure.walk :as walk]
+            [clojure.tools.logging :as log]
             [monger.collection :as collection]
             [monger.conversion :as conv]
+            [monger.json]
             [monger.util :as util]
             [monger.joda-time]
-            [clojure.tools.logging :as log]
-            [monger.json]
             [clj-time.core :as time]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def mongo-options
-  {:host &quot;localhost&quot;  
-   :port 27017 
-   :db &quot;clinicico&quot; 
+  {:host (str (:mongo-host *config*))
+   :port (Long. (:mongo-port *config*))
+   :db (str (:mongo-db *config*))
    :results-collection &quot;results&quot;})</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(extend org.joda.time.DateTime
-  JSONable
-  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
-    (.writeStartObject jg)
-    (.writeFieldName jg &quot;date&quot;)
-    (.writeString jg (.toString date))
-    (.writeEndObject jg))})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- with-oid [results]
@@ -3637,12 +3660,16 @@ Takes any map that includes a network and a results field.</p>
             (collection/insert 
               (mongo-options :results-collection) 
               (conv/to-db-object (stringify-keys* new-result))))
-        {:results (str base-url &quot;api/result/&quot; (str (new-result :_id)))} 
+        {:results (str api-url &quot;result/&quot; (str (new-result :_id)))
+         :completed (time/now)} 
         (throw (Exception. &quot;Write Failed&quot;)))
-      (throw (IllegalArgumentException.)))))  </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.util" name="clinicico.util"><h1 class="project-name">clinicico.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns clinicico.util
+      (throw (IllegalArgumentException.)))))  </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.util.util" name="clinicico.util.util"><h1 class="project-name">clinicico.util.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns clinicico.util.util
   (:use   clojure.java.io
-          clojure.walk)
+          clojure.walk
+          [cheshire.custom :only [JSONable]])
+  (:import (com.fasterxml.jackson.core JsonGenerator)
+           (org.joda.time.format.ISODateTimeFormat))
   (:require [clojure.string :as s]))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def not-nil? (complement nil?))
 (defn uuid [] (str (java.util.UUID/randomUUID)))</pre></td></tr><tr><td class="docs"><p>Transposes maps of the form </p>
@@ -3685,5 +3712,13 @@ Takes any map that includes a network and a results field.</p>
   [m]
   (let [f (fn [[k v]] (if (keyword? k) [(name k) v] [(str k) v]))]
     ;; only apply to maps
-    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))</pre></td></tr><tr><td class="docs"><p>Make joda.time JSONable</p>
+</td><td class="codes"><pre class="brush: clojure">(extend org.joda.time.DateTime
+  JSONable
+  {:to-json (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg &quot;date&quot;)
+    (.writeString jg 
+                  (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))
+    (.writeEndObject jg))})</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
