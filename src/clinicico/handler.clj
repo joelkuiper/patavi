@@ -105,7 +105,7 @@
                    (let [analysis (fn [] (db/save-result (mtc/consistency params)))
                          id (job/submit analysis)
                          jobs (get-in req [:session :jobs])
-                         job (str base-url "api/job/" id)]
+                         job (str api-url "/job/" id)]
                      (assoc-in 
                        (http/created job (job/status id)) [:session :jobs] (conj jobs id)))))
            (context "/result" []

@@ -11,7 +11,19 @@
 
 (def ^:dynamic *config* (load-properties (resource "config.properties")))
 
+(def api-url (str (:scheme *config*) "://"
+                  (if (:api-subdomain *config*) 
+                    (str (:api-subdomain *config*) "."))
+                  (:server-name *config*)
+                  (if-not (= (:server-port *config*) 80)
+                    (str ":" (:server-port *config*)))
+                  (if-not (:api-subdomain *config*)
+                   "/api") 
+                  "/"))
+
 (def base-url (str 
                 (:scheme *config*) "://"  
-                (:server-name *config*) ":" 
-                (:server-port *config*) "/")) 
+                (:server-name *config*)
+                (if-not (= (:server-port *config*) 80)
+                  (str ":" (:server-port *config*)))
+                "/"))

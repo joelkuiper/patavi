@@ -33,7 +33,7 @@
 (defn cancel
   "Cancels a queued job.
    Due to the connection R it would be incredibly hard to cancel running jobs,
-   so this is not allowed"
+   so this is not allowed."
   [id]
   (let [job-future (:future (@jobs id))]
     (if (nil? job-future) 
@@ -42,7 +42,7 @@
 
 (defn- job-url 
   [id] 
-  (str base-url "api/job/" id)) 
+  (str api-url "job/" id)) 
 
 (defn- job-results 
   [id]

@@ -20,9 +20,9 @@
             [clj-time.core :as time]))
 
 (def mongo-options
-  {:host "localhost"  
-   :port 27017 
-   :db "clinicico" 
+  {:host (str (:mongo-host *config*))
+   :port (Long. (:mongo-port *config*))
+   :db (str (:mongo-db *config*))
    :results-collection "results"})
 
 (connect! mongo-options)
@@ -53,7 +53,7 @@
             (collection/insert 
               (mongo-options :results-collection) 
               (conv/to-db-object (stringify-keys* new-result))))
-        {:results (str base-url "api/result/" (str (new-result :_id)))
+        {:results (str api-url "result/" (str (new-result :_id)))
          :completed (time/now)} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException.)))))  

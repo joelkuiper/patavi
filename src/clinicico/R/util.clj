@@ -8,7 +8,8 @@
 ;; classes.  
 
 (ns clinicico.R.util
-  (:use     [clinicico.util.util]) 
+  (:use     [clinicico.util.util] 
+            [clinicico.config])
   (:require [clojure.java.io :as io])
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
@@ -27,7 +28,9 @@
    which is referred to as R in the code."
   [] 
   (let [conn (try 
-               (RConnection.)
+               (RConnection. 
+                 (str (:rserve-host *config* "localhost")) 
+                 (Integer. (:rserve-port *config* 6311)))
                (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
     (if (.isConnected conn) 
       conn)))
