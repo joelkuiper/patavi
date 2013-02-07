@@ -20,4 +20,3 @@
   :profiles
   {:dev {:dependencies [[lein-marginalia "0.8.0-SNAPSHOT"]
                         [ring-mock "0.1.3"]]}})
-
