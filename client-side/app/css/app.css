@@ -8,12 +8,12 @@
   background-color: rgb(242, 222, 222) !important ;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-.pending { 
+.running { 
   color: #3A87AD;
   background-color: rgb(217, 237, 247) !important;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
-.running { 
+.canceled { 
   color: #C09853;
   background-color: rgb(252, 248, 227) !important;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);

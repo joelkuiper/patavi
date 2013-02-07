@@ -114,6 +114,10 @@
                     (GET "/session" [:as req] 
                          (-> (resp/response (map job/status (get-in req [:session :jobs])))
                              (resp/status 200)))
+                    (DELETE "/:id" [id]
+                         (do (job/cancel id) 
+                            (-> (resp/response (job/status id))
+                                (resp/status 200))))
                     (GET "/:id" [id] 
                          (-> (resp/response (job/status id))
                              (resp/status 200)))))

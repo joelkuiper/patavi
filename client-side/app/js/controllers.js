@@ -3,13 +3,13 @@
 /* Controllers */
 
 function JobCtrl($scope, $http, $timeout) {
-  
+   
   var getUUID = function(path) { 
     var parser = document.createElement('a');
     parser.href = path;
     return parser.pathname.split("/").pop();
   }
-
+  $scope.tooltip = {cancel:"Cancel queued job<br> Running models cannot be canceled."};
   $scope.jobs = [];
   $http.get("/api/job/session").success(function(data) { 
     $scope.jobs = data;
@@ -17,16 +17,28 @@ function JobCtrl($scope, $http, $timeout) {
       job.uuid = getUUID(job.results); 
     });
   });
-  
+
+  var pushToScope = function(job, data) {
+    for (var field in data) { 
+      job[field] = data[field];
+    }
+  }
+
+  $scope.cancel = function(job) { 
+    $http({method:'DELETE', url:job}).success(function(status) { 
+      pushToScope(job, status); 
+    });
+  }
+
+  // Poll the status of each listed job every 3 seconds
   var poll = function() {
     (function tick() {
       $scope.jobs.forEach(function(job) { 
-        if(job.status !== "completed" && job.status !== "failed") {
+        var nonPoll = ["completed", "failed", "canceled"];
+        if(nonPoll.indexOf(job.status) == -1) {
           $http.get(job.job).success(function(data) { 
-            for (var field in data) { 
-              job[field] = data[field];
-            }
-            job.uuid = getUUID(job.results);
+           job.uuid = getUUID(job.results);
+           pushToScope(job, data);
           });
         }});
       $timeout(tick, 3000);

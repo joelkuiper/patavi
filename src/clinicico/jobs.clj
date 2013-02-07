@@ -30,6 +30,16 @@
                               :created (time/now)})
     job-id))
 
+(defn cancel
+  "Cancels a queued job.
+   Due to the connection R it would be incredibly hard to cancel running jobs,
+   so this is not allowed"
+  [id]
+  (let [job-future (:future (@jobs id))]
+    (if (nil? job-future) 
+      (throw (clinicico.ResourceNotFound.))
+      (.cancel job-future false))))
+
 (defn- job-url 
   [id] 
   (str base-url "api/job/" id)) 
@@ -40,11 +50,11 @@
     (let [results (.get (:future (@jobs id)))]
       (-> (merge results)
           (assoc :status "completed")))
-    (catch Exception e {:status "failed"})))
+    (catch Exception e {:status "failed" :cause (.toString e)})))
 
 (defn- with-queued 
   [id]
-  (let [job-future (@jobs id)
+  (let [job-future (:future (@jobs id))
         queue (seq (.toArray (.getQueue job-executor)))]
     (if (nil? queue)
       {:status "running"}
@@ -68,8 +78,11 @@
         job-future (:future job)]
     (if-not (nil? job-future) 
       (if (.isDone job-future)
-        (-> (with-base-status id job)
-            (merge (job-results id)))
+        (if (.isCancelled job-future) 
+          (-> (with-base-status id job)
+              (assoc :status "canceled"))
+          (-> (with-base-status id job)
+              (merge (job-results id))))
         (-> (with-base-status id job)
             (merge (with-queued id))))
       (throw (clinicico.ResourceNotFound. (str "Could not find job: " id))))))
