@@ -3,13 +3,15 @@ Work-in-progress wrapper to create a RESTful webservice from an R script
 Currently designed to work with GeMTC. 
 
 [Documentation][2]
+
 [clinici.co](http://clinici.co)
 
-[2]:(http://joelkuiper.github.com/clinicico/)
+[2]:http://joelkuiper.github.com/clinicico/
 
 ## Prerequisites
 
-You will need [Leiningen][1] 2.0.0 or above installed.
+You will need [Leiningen][1] 2.0.0 or above installed. 
+Furthermore you'll need to have R (> 2.14) installed with the RServe.
 
 [1]: https://github.com/technomancy/leiningen
 
@@ -17,7 +19,8 @@ You will need [Leiningen][1] 2.0.0 or above installed.
 
 To start a web server for the application, run:
 
-    lein ring server
+    ./initialize
+    ./start
 
 ## License
 Copyright (c) 2013, Joel Kuiper et.al.
