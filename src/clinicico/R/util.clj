@@ -20,7 +20,7 @@
  "Connect to an RServe instance. Each connection creates it's own workspace
   and forks the existing R process, effectively sandboxing the R operations
   Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html) 
-  which is referred to as R in the code"
+  which is referred to as R in the code.§"
  [] 
   (let [conn (try 
                (RConnection.)
@@ -36,7 +36,7 @@
   ([data $field] (as-list (.at ^RList data $field))))
 
 (defn- convert-fn 
-  "Conditionally converts a [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives"
+  "Conditionally converts a [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives."
   ^{:todo "make sure this is complete"}
   [field] 
   (cond 
@@ -46,8 +46,8 @@
     :else (throw (Exception. (str "Could not convert field " field)))))
 
 (defn in-list 
-  "Returns a field in a list as Clojure sequence (seq) using the convert-fn.
-   Rough equivalent to R's data$field accessor" 
+  "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
+   Rough equivalent to R's data$field accessor." 
   [data $field]
   (let [members (.at ^RList data $field)]
     (if-not (nil? members)
@@ -69,7 +69,7 @@
 
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map with the rows as a map between the labels and the values.
-   If not a named matrix substitutes the missing names with an incrementing index starting with 1" 
+   If not a named matrix substitutes the missing names with an incrementing index starting with." 
   [matrix] 
   (let [dimnames (.getAttribute matrix "dimnames")
         labels  (map (fn [ls] (if-not (.isNull ls) (seq (.asStrings ls)) nil)) (.asList dimnames))
@@ -90,7 +90,8 @@
     (map #(inc (.indexOf levels %)) lst)))
 
 (defn to-REXPVector
-  "Converts a sequential or a primitive to a subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html)"
+  "Converts a sequential or a primitive to a 
+   subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html)."
   [data-seq]
   (let [is-seq (sequential? data-seq)
         el (if is-seq (first data-seq) data-seq)]
@@ -109,7 +110,7 @@
 
 (defn map-to-RList [data]
   "Converts a map to an RList, using the to-REXPVector 
-   to convert underlying elements to REXPVectors"
+   to convert underlying elements to REXPVectors."
   (RList. 
     (map to-REXPVector (vals data)) (into-array String (keys data))))
 

@@ -123,7 +123,7 @@
   (route/not-found "Nothing to see here, move along now"))
 
 (def app
-  "Main entry point for all requests"
+  "Main entry point for all requests."
   (->
     (handler/api routes)
     (ring-json/wrap-json-body)

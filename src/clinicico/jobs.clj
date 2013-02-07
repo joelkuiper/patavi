@@ -19,7 +19,7 @@
 (def jobs (atom {}))
 
 (defn submit 
-  "Add a function (job) to the job queue"
+  "Add a function (job) to the job queue."
   [func]
   (let [job-id   (str (java.util.UUID/randomUUID))
         callable (reify Callable (call [_] (func)))]
@@ -52,7 +52,7 @@
 (defn status 
   "Returns the status of the job associated with id as a map.
    The status can either be `running`, `pending`, `completed`, `failed` or `canceled`
-   When the status is `pending` the map will contain a key for the position in the queue"
+   When the status is `pending` the map will contain a key for the position in the queue."
   [id] 
   (let [job-future (@jobs id)]
     (if-not (nil? job-future) 
