@@ -11,14 +11,15 @@
   (:use     [clinicico.util.util] 
             [clinicico.config])
   (:require [clojure.java.io :as io])
-  (:import (org.rosuda.REngine)
+  (:import (com.google.common.primitives Ints)
+           (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
                                REXPString REXPGenericVector
-                               REXPNull REngineException)
+                               REXPNull REngineException
+                               REXPList)
            (org.rosuda.REngine.Rserve RConnection)))
-
 
 (defn connect 
   "Connect to an RServe instance. Each connection creates its own workspace
@@ -39,8 +40,7 @@
   "Converts a 
    [REXPGenericVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html), 
    or a nested list, to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
-  ([data] (.asList ^REXPGenericVector data))
-  ([data $field] (as-list (.at ^RList data $field))))
+  ([data] (.asList data)))
 
 (defn convert-fn 
   "Conditionally converts a 
@@ -74,6 +74,10 @@
                     {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
 
+(defn- first-or-seq 
+  [array]
+  (if (> (count array) 1) (seq array) (first array)))
+
 (def into-map
   "Recursively transforms a (nested) named RList into a map"
   (fn [data]
@@ -83,21 +87,20 @@
                      (let [field (.at ^RList data k)]
                        (if (instance? REXPGenericVector field)
                          (into-map (as-list field))
-                         (seq ((convert-fn field) field))))) ks)))))
+                         (first-or-seq ((convert-fn field) field))))) ks)))))
 
 (defn into-clj
- "Converts the given REXP to a Clojure representation" 
+  "Converts the given REXP to a Clojure representation" 
   [rexp]
-  (if (instance? REXPGenericVector rexp) 
-    (into-map rexp)
-    (let [array ((convert-fn rexp) rexp)]
-      (if (> (count array) 1) (seq array) (first array)))))
+  (cond (instance? RList rexp) (into-map rexp)
+        (instance? REXPList rexp) (into-map (as-list rexp))
+        :else (first-or-seq ((convert-fn rexp) rexp))))
 
 (defn in-list 
   "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
    Rough equivalent to R's data$field accessor." 
   [data $field]
-  (let [members (as-list data $field)]
+  (let [members (.at ^RList (as-list data) $field)]
     (if-not (nil? members)
       (into-clj members)
       nil)))
@@ -110,9 +113,9 @@
    (parse R cmd true))
   ([^RConnection R cmd convert?] 
    (let [trycmd (str "try("cmd", silent=T)")
-         evaluation (.parseAndEval R trycmd nil true)]
+         evaluation (.parseAndEval ^RConnection R trycmd nil true)]
      (if (.inherits evaluation "try-error")
-       (throw (REngineException. R (.asString evaluation)))
+       (throw (REngineException. ^RConnection R (.asString evaluation)))
        (if convert? (into-clj evaluation) evaluation)))))
 
 (defn- factor-indexes 
@@ -122,30 +125,51 @@
 
 (defn into-rexp-vector
   "Converts a sequential or a primitive to a 
-   subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html)."
+   subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
+   REngine does not recognize longs so it will attempt to cast them to integers, which
+   will throw an error if overflown."
   [data-seq]
   (let [is-seq (sequential? data-seq)
         el (if is-seq (first data-seq) data-seq)]
     (cond 
       (instance? Integer el) 
-      (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
+        (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
+      (instance? Long el) 
+        (REXPInteger. (if is-seq (int-array (map #(Ints/checkedCast %) data-seq)) (Ints/checkedCast el))) 
       (instance? Boolean el) 
-      (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
+        (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
       (instance? Double el) 
-      (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
+        (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
       (and (instance? String el) is-seq (every? #(re-matches #"\w*" %) data-seq)) 
-      (REXPFactor. (int-array (factor-indexes data-seq)) 
+        (REXPFactor. (int-array (factor-indexes data-seq)) 
                    (into-array String (sort (distinct data-seq)))) 
       (instance? String el) 
-      (REXPString. (if is-seq (into-array String data-seq) el)) 
+        (REXPString. (if is-seq (into-array String data-seq) el)) 
       :else (throw (IllegalArgumentException. (str "Cannot parse " (class el)))))))
 
 (defn into-r-list  
-  "Converts a map to an RList, using the to-REXPVector 
+  "Recursively converts a map to an RList, using the to-REXPVector 
    to convert underlying elements to REXPVectors."
   [data]
   (RList. 
-    (map into-rexp-vector (vals data)) (into-array String (keys data))))
+    (map (fn [x] (if (map? x) (REXPGenericVector. (into-r-list x)) (into-rexp-vector x))) 
+         (vals data)) (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data)))))
+
+(defn into-r
+ [data] 
+  (if (map? data) (into-r-list data) (into-rexp-vector data))) 
+
+(defn assign 
+  "Assigns the given value as converted by into-r 
+   into an RConnection with a given name"
+  [R varname m]
+  (let [rstruct (into-r m)
+        rexp (if (instance? RList rstruct) (REXPList. ^RList rstruct) rstruct)]
+    (.assign ^RConnection R varname ^REXP rexp)))
+
+(defn rget 
+  [R varname] 
+  (into-clj (.get ^RConnection R varname nil true))) 
 
 (defn r-list-as-dataframe [RList] 
   (REXP/createDataFrame RList))
