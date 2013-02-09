@@ -1,6 +1,6 @@
 (ns clinicico.test.util
   (:use clojure.test
-        clinicico.util))
+        clinicico.util.util))
 
 
 (deftest test-map-cols-to-rows 

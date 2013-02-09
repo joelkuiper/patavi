@@ -11,12 +11,6 @@
                                RList)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(defn load-mtc! 
-  "Loads the [GeMTC library](http://cran.r-project.org/web/packages/gemtc/index.html) 
-   to the provided `RConnection`."
-  [R] 
-  (.voidEval R "suppressWarnings(require('gemtc',quietly=TRUE))"))
-
 (defn read-network 
   "Reads the network present in the current `RConnection` and transforms it into a map."
   [R]
@@ -25,16 +19,15 @@
         data (R/as-list network "data")
         treatments (R/as-list network "treatments")]
     {:description (if-not (.isNull description) (.asString description) "")
-     :data (map-cols-to-rows (R/list-to-map data))
-     :treatments (map-cols-to-rows (R/list-to-map treatments))}))
+     :data (map-cols-to-rows (R/into-map data))
+     :treatments (map-cols-to-rows (R/into-map treatments))}))
 
 (defn- load-network-file 
   [R file] 
   (let [networkFile (.createFile R (file :filename))]
-    (do 
-      (io/copy (file :tempfile) networkFile)
-      (.close networkFile)
-      (.assign R "network" (R/parse R (str "read.mtc.network('" (file :filename) "')"))))
+    (io/copy (file :tempfile) networkFile)
+    (.close networkFile)
+    (.assign R "network" (R/parse R (str "read.mtc.network('" (file :filename) "')")))
     (.removeFile R (file :filename))))
 
 (defn- load-network-json 
@@ -44,14 +37,14 @@
          treatments (:treatments network)]
      (do
        (.assign R "description" 
-                (R/to-REXPVector description))
+                (R/into-rexp-vector description))
        (.assign R "data" 
-                (R/RList-as-dataframe 
-                  (R/map-to-RList (map-rows-to-cols data))))
+                (R/r-list-as-dataframe 
+                  (R/into-r-list (map-rows-to-cols data))))
        (.assign R "treatments" 
                 (.eval R 
                   (REXPList. 
-                    (R/map-to-RList (map-rows-to-cols treatments))) nil false))
+                    (R/into-r-list (map-rows-to-cols treatments))) nil false))
        (.assign R "network" 
                 (R/parse R (str "mtc.network(data, description, treatments)"))))))
 
@@ -112,7 +105,6 @@
 (defn consistency 
   ([params]
    (with-open [R (R/connect)]
-     (load-mtc! R) 
      (load-network! R params)
      {:network (read-network R) 
       :results (analyze-consistency! R (get params "options"))})))

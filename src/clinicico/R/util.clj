@@ -16,12 +16,12 @@
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
                                REXPString REXPGenericVector
-                               REngineException)
+                               REXPNull REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
 
 (defn connect 
-  "Connect to an RServe instance. Each connection creates it's own workspace
+  "Connect to an RServe instance. Each connection creates its own workspace
    and forks the existing R process, effectively sandboxing the R operations.
 
    Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html) 
@@ -42,32 +42,18 @@
   ([data] (.asList ^REXPGenericVector data))
   ([data $field] (as-list (.at ^RList data $field))))
 
-(defn- convert-fn 
+(defn convert-fn 
   "Conditionally converts a 
    [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives."
-  ^{:todo "make sure this is complete"}
   [field] 
   (cond  ;; REXPFactor is-a REXPInteger, so the order matters
+        (.isNull field) (fn [x] nil)
         (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
+        (instance? REXPString field) #(.asStrings ^REXPString %)
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-        :else (throw (Exception. field))))
-
-(defn in-list 
-  "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
-   Rough equivalent to R's data$field accessor." 
-  [data $field]
-  (let [members (.at ^RList data $field)]
-    (if-not (nil? members)
-      (seq ((convert-fn members) members))
-      nil)))
-
-(defn parse [^RConnection R cmd] 
-  (let [trycmd (str "try("cmd", silent=T)")
-        evaluation (.parseAndEval R trycmd nil true)]
-    (if (.inherits evaluation "try-error")
-      (throw (REngineException. R (.asString evaluation)))
-      evaluation)))
+        (instance? REXPLogical field) #(.isTrue ^REXPLogical %) 
+        :else (throw (Exception. (.toString (class field))))))
 
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map 
@@ -88,20 +74,53 @@
                     {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))
 
-(defn list-to-map 
-  [data]
-  (let [ks (.keys ^RList data)] 
-    (zipmap ks 
-            (map (fn [k] 
-                   (let [field (.at ^RList data k)]
-                     (seq ((convert-fn field) field)))) ks))))
+(def into-map
+  "Recursively transforms a (nested) named RList into a map"
+  (fn [data]
+    (let [ks (.keys ^RList data)] 
+      (zipmap ks 
+              (map (fn [k] 
+                     (let [field (.at ^RList data k)]
+                       (if (instance? REXPGenericVector field)
+                         (into-map (as-list field))
+                         (seq ((convert-fn field) field))))) ks)))))
+
+(defn into-clj
+ "Converts the given REXP to a Clojure representation" 
+  [rexp]
+  (if (instance? REXPGenericVector rexp) 
+    (into-map rexp)
+    (let [array ((convert-fn rexp) rexp)]
+      (if (> (count array) 1) (seq array) (first array)))))
+
+(defn in-list 
+  "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
+   Rough equivalent to R's data$field accessor." 
+  [data $field]
+  (let [members (as-list data $field)]
+    (if-not (nil? members)
+      (into-clj members)
+      nil)))
+
+(defn parse 
+  "Evaluates and parses the R expression cmd, and 
+   throws an REngineException if the evaluation was unsuccesful.
+   Takes an optional parameter convert? indicating to convert the returned REXP"
+  ([^RConnection R cmd]
+   (parse R cmd true))
+  ([^RConnection R cmd convert?] 
+   (let [trycmd (str "try("cmd", silent=T)")
+         evaluation (.parseAndEval R trycmd nil true)]
+     (if (.inherits evaluation "try-error")
+       (throw (REngineException. R (.asString evaluation)))
+       (if convert? (into-clj evaluation) evaluation)))))
 
 (defn- factor-indexes 
   [lst] 
   (let [levels (sort (distinct lst))]
     (map #(inc (.indexOf levels %)) lst)))
 
-(defn to-REXPVector
+(defn into-rexp-vector
   "Converts a sequential or a primitive to a 
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html)."
   [data-seq]
@@ -121,12 +140,12 @@
       (REXPString. (if is-seq (into-array String data-seq) el)) 
       :else (throw (IllegalArgumentException. (str "Cannot parse " (class el)))))))
 
-(defn map-to-RList   
+(defn into-r-list  
   "Converts a map to an RList, using the to-REXPVector 
    to convert underlying elements to REXPVectors."
   [data]
   (RList. 
-    (map to-REXPVector (vals data)) (into-array String (keys data))))
+    (map into-rexp-vector (vals data)) (into-array String (keys data))))
 
-(defn RList-as-dataframe [RList] 
+(defn r-list-as-dataframe [RList] 
   (REXP/createDataFrame RList))

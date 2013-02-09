@@ -9,7 +9,7 @@
 ;; 1. The users submits JSON or a file with optional options to the appropriate analysis path using `POST`. 
 ;;    In this case for example a GeMTC file to `/api/consistency` for consistency
 ;;    analysis.
-;; 2. The user recieves a job url.
+;; 2. The user receives a job url.
 ;; 3. The user can query the job for status using `GET` on `/job/:id` to see for
 ;;    example the position in the job queue. 
 ;; 4. When the results are available they are saved to a MongoDB instance as-is.
@@ -100,14 +100,13 @@
   (context "/api" []
            (OPTIONS "/" []
                     (http/options [:options] {:version "0.3.0-SNAPSHOT"}))
-           (mp/wrap-multipart-params
-            (POST "/analysis/consistency" [:as req & params]
-                   (let [analysis (fn [] (db/save-result (mtc/consistency params)))
-                         id (job/submit analysis)
-                         jobs (get-in req [:session :jobs])
-                         job (str api-url "/job/" id)]
-                     (assoc-in 
-                       (http/created job (job/status id)) [:session :jobs] (conj jobs id)))))
+           (POST "/analysis/consistency" [:as req & params]
+                 (let [analysis (fn [] (db/save-result (mtc/consistency params)))
+                       id (job/submit analysis)
+                       jobs (get-in req [:session :jobs])
+                       job (str api-url "/job/" id)]
+                   (assoc-in 
+                     (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []
                     (GET "/:id" [id] (http/no-content? (db/get-result id))))
            (context "/job" [] 
@@ -115,9 +114,9 @@
                          (-> (resp/response (map job/status (get-in req [:session :jobs])))
                              (resp/status 200)))
                     (DELETE "/:id" [id]
-                         (do (job/cancel id) 
-                            (-> (resp/response (job/status id))
-                                (resp/status 200))))
+                            (do (job/cancel id) 
+                                (-> (resp/response (job/status id))
+                                    (resp/status 200))))
                     (GET "/:id" [id] 
                          (-> (resp/response (job/status id))
                              (resp/status 200)))))
@@ -133,8 +132,9 @@
   (->
     (handler/api routes-handler)
     (ring-json/wrap-json-body)
+    (mp/wrap-multipart-params)
     (wrap-request-logger)
-    (wrap-session);
+    (wrap-session)
     (wrap-exception-handler)
     (wrap-response-logger)
     (wrap-json-response)
