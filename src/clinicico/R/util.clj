@@ -108,7 +108,8 @@
 (defn parse 
   "Evaluates and parses the R expression cmd, and 
    throws an REngineException if the evaluation was unsuccesful.
-   Takes an optional parameter convert? indicating to convert the returned REXP"
+   Takes an optional parameter convert? indicating to 
+   convert the returned REXP to a Clojure representation"
   ([^RConnection R cmd]
    (parse R cmd true))
   ([^RConnection R cmd convert?] 
@@ -123,11 +124,16 @@
   (let [levels (sort (distinct lst))]
     (map #(inc (.indexOf levels %)) lst)))
 
+(defn- cast-long
+  [number] 
+  (try (Ints/checkedCast number)
+    (catch IllegalArgumentException e (double number))))
+
 (defn into-rexp-vector
   "Converts a sequential or a primitive to a 
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
-   REngine does not recognize longs so it will attempt to cast them to integers, which
-   will throw an error if overflown."
+   REngine does not recognize longs so it will attempt to cast them to integers, if this fails doubles
+   will be used."
   [data-seq]
   (let [is-seq (sequential? data-seq)
         el (if is-seq (first data-seq) data-seq)]
@@ -135,7 +141,7 @@
       (instance? Integer el) 
         (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
       (instance? Long el) 
-        (REXPInteger. (if is-seq (int-array (map #(Ints/checkedCast %) data-seq)) (Ints/checkedCast el))) 
+        (REXPInteger. (if is-seq (int-array (map #(cast-long %) data-seq)) (cast-long el))) 
       (instance? Boolean el) 
         (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
       (instance? Double el) 

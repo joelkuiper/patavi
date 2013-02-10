@@ -8,6 +8,7 @@
                  [ring/ring-json "0.1.2"]
                  [org.clojure/tools.logging "0.2.4"]
                  [log4j/log4j "1.2.17"]
+                 [com.google.guava/guava "13.0.1"]
                  [com.novemberain/monger "1.4.2"]
                  [joda-time/joda-time "2.1"]
                  [local/RserveEngine "1.7.0"]
