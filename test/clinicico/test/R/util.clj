@@ -23,21 +23,23 @@
     (is (= 1.0 (R/into-clj (R/into-r 1.0))))
     (is (= 1 (R/into-clj (R/into-r 1))))
     (is (= [1 2] (R/into-clj (R/into-r [1 2]))))
+    (is (= [{"foo" "bar"} {"qun" "qux"}] (R/into-clj (R/into-r [{:foo "bar"} {:qun "qux"}]))))
     (is (= [true false] (R/into-clj (R/into-r [true false]))))
     (is (= ["foo" "bar"] (R/into-clj (R/into-r ["foo" "bar"]))))
+    ;(is (= {"foo" [{:a "b"} {:c "d"}]} (R/into-clj (R/into-r {"foo" [{:a "b"} {:c "d"}]}))))
     (is (= true (R/into-clj (R/into-r true)))))
   (testing "Transformation of RList to map"
-    (is (= {"foo" "bar"} (R/into-clj (R/into-r-list {"foo" "bar"}))))
-    (is (= {"foo" 12} (R/into-clj (R/into-r-list {"foo" 12}))))
-    (is (= {"foo" 12.03} (R/into-clj (R/into-r-list {"foo" 12.03}))))
-    (is (= {"foo" "bar" "baz" "qux"} (R/into-clj (R/into-r-list {"foo" "bar" "baz" "qux"})))))
+    (is (= {"foo" "bar"} (R/into-clj (R/into-r {"foo" "bar"}))))
+    (is (= {"foo" 12} (R/into-clj (R/into-r {"foo" 12}))))
+    (is (= {"foo" 12.03} (R/into-clj (R/into-r {"foo" 12.03}))))
+    (is (= {"foo" "bar" "baz" "qux"} (R/into-clj (R/into-r {"foo" "bar" "baz" "qux"})))))
   (testing "Transform nested RList to map"
-    (is (= {"foo" {"qux" "bar"}} (R/into-clj (R/into-r-list {"foo" {"qux" "bar"}}))))
-    (is (= {"foo" {"qux" false}} (R/into-clj (R/into-r-list {"foo" {"qux" false}}))))
-    (is (= {"foo" {"1" {"a" false}}} (R/into-clj (R/into-r-list {"foo" {1 {"a" false}}}))))
-    (is (= {"foo" {"1" {"k" "v"}}} (R/into-clj (R/into-r-list {"foo" {1 {:k "v"}}}))))))
+    (is (= {"foo" {"qux" "bar"}} (R/into-clj (R/into-r {"foo" {"qux" "bar"}}))))
+    (is (= {"foo" {"qux" false}} (R/into-clj (R/into-r {"foo" {"qux" false}}))))
+    (is (= {"foo" {"1" {"a" false}}} (R/into-clj (R/into-r {"foo" {1 {"a" false}}}))))
+    (is (= {"foo" {"1" {"k" "v"}}} (R/into-clj (R/into-r {"foo" {1 {:k "v"}}}))))))
 
-(deftest test-r-conversions
+(deftest test-r-assignments
   (testing "Assignments to RServe"
     (R/assign @R "foo" {:foo "foobar"}) 
     (is (= (R/rget @R "foo") {"foo" "foobar"})))

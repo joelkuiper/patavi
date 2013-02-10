@@ -37,14 +37,14 @@
          treatments (:treatments network)]
      (do
        (.assign R "description" 
-                (R/into-rexp-vector description))
+                (R/into-r description))
        (.assign R "data" 
                 (R/r-list-as-dataframe 
-                  (R/into-r-list (map-rows-to-cols data))))
+                  (R/into-r (map-rows-to-cols data))))
        (.assign R "treatments" 
                 (.eval R 
                   (REXPList. 
-                    (R/into-r-list (map-rows-to-cols treatments))) nil false))
+                    (R/into-r (map-rows-to-cols treatments))) nil false))
        (.assign R "network" 
                 (R/parse R (str "mtc.network(data, description, treatments)"))))))
 

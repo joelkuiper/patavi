@@ -39,3 +39,52 @@
      (let [file (doto (java.io.File/createTempFile "tmp" ".stuff") .deleteOnExit)]
       (spit file "foobar")
       (is (= {"foo" {"file" (.getName file)}} (dispatch "echo" {:foo {:file {:tempfile file :filename (.getName file)}}})))))))
+
+(deftest test-run-mtc 
+  (testing "Running the GeMTC consistency program" 
+    (let [mtc {"network" {"description" "",
+       "data" [
+         {
+           "study" "1",
+           "treatment" "A",
+           "mean" -1.22,
+           "stdDev" 3.7,
+           "sampleSize" 54
+         },
+         {
+           "study" "1",
+           "treatment" "B",
+           "mean" -1.2,
+           "stdDev" 4.3,
+           "sampleSize" 81
+         },
+         {
+           "study" "2",
+           "treatment" "B",
+           "mean" -1.8,
+           "stdDev" 2.48,
+           "sampleSize" 154
+         },
+         {
+           "study" "2",
+           "treatment" "B",
+           "mean" -2.1,
+           "stdDev" 2.99,
+           "sampleSize" 143
+         }
+       ],
+       "treatments" [
+         {
+           "id" "A",
+           "description" "Some medicine"
+         },
+         {
+           "id" "B",
+           "description" "Placebo"
+         }
+       ]
+     }}
+      results (dispatch "consistency" mtc)]
+      (println results))))
+
+
