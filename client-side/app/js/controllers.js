@@ -9,7 +9,7 @@ function JobCtrl($scope, $http, $timeout) {
     parser.href = path;
     return parser.pathname.split("/").pop();
   }
-  $scope.tooltip = {cancel:"Cancel queued job<br> Running models cannot be canceled."};
+  $scope.tooltip = {cancel:"Cancel queued job"}
   $scope.jobs = [];
   $http.get("/api/job/session").success(function(data) { 
     $scope.jobs = data;

@@ -12,22 +12,24 @@
     <div ng-repeat="(analysis, results) in results.results">
       <h2>{{analysis | uppercase}}</h2>
       <div ng-repeat="data in results.results">
-        <h4>{{data.name | uppercase}}</h4>
-        <p>{{data.description}}</p>
-        <table class="table table-bordered table-striped">
-          <thead>
-            <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
-              <td>&nbsp;</td>
-              <td ng-repeat="(name, col) in cols">{{name}}</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="(row, cols) in data.data">
-              <td>{{row}}</td>
-              <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div ng-show="data">
+          <h4>{{data.name | uppercase}}</h4>
+          <p>{{data.description}}</p>
+          <table class="table table-bordered table-striped">
+            <thead>
+              <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
+                <td>&nbsp;</td>
+                <td ng-repeat="(name, col) in cols">{{name}}</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="(row, cols) in data.data">
+                <td>{{row}}</td>
+                <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="span8">

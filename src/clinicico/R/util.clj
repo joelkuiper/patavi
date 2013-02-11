@@ -86,7 +86,7 @@
                           (first-or-seq ((convert-fn field) field)))) data)]
       (if (.isNamed ^RList data)
         (zipmap (.keys ^RList data) values)
-        values))))
+        (vec values)))))
 
 (defn into-clj
   "Converts the given REXP to a Clojure representation" 

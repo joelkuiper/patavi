@@ -13,7 +13,7 @@
     <h3>Jobs</h3>
       <ul class="unstyled">
         <li ng-repeat="job in jobs" class="{{job.status}} well"> 
-        <button type="button" class="close" ng-click="cancel(job.job)" bs-tooltip="tooltip.cancel">&times;</button>
+        <button type="button" class="close" ng-click="cancel(job.job)" tooltip="{{tooltip.cancel}}">&times;</button>
         <p>
         <strong>Job:</strong> {{job.job}}<br>
         <strong>Status:</strong> {{job.status}}<br>
