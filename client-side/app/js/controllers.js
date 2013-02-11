@@ -88,19 +88,27 @@ function AnalysisCtrl($scope, Analyses, $routeParams) {
 AnalysisCtrl.$inject = ['$scope', '$http']
 
 function AddStudyCtrl($scope) { 
-  $scope.newStudy = {treatments: {}, id: ""};
+  var studyProto = {treatments: {}, id: ""}
+  $scope.newStudy = angular.copy(studyProto);
   $scope.open = function () {
     $scope.shouldBeOpen = true;
   };
 
   $scope.addStudy = function(analysis) { 
-    analysis.data.push($scope.newStudy);
+    var studyData = _.map($scope.newStudy.treatments, function(included, id) { 
+      if(included) {
+        return {id: $scope.newStudy.id, treatment: id};
+      }
+    });
+    analysis.data.push(studyData);
+
+    $scope.newStudy = angular.copy(studyProto);
     $scope.shouldBeOpen = false;
   }
 
   $scope.close = function () {
     $scope.shouldBeOpen = false;
-    $scope.newStudy = {};
+    $scope.newStudy = angular.copy(studyProto);
   };
 }
 AddStudyCtrl.$inject = ['$scope']
