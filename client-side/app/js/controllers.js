@@ -77,12 +77,21 @@ ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
 
 function AnalysisCtrl($scope, Analyses, $routeParams) {
   $scope.analyses = [];
+  
   $scope.addEmpty = function() {
     $scope.analyses.push({title:"Untitled analysis", 
                           content: {data: [],
                                     treatments: [{id: "foo", description: "bar"}],
                                     description: ""}});
   }
+
+  $scope.setGroupedMeasurements = function(analysis) { 
+    analysis.__groupedMeasurements =  _.groupBy(analysis.data, function(x) { return x['study']; });
+  }
+
+  $scope.$on('studyAdded', function(e, analysis) {
+    $scope.setGroupedMeasurements(analysis);
+  });
 }
 AnalysisCtrl.$inject = ['$scope', '$http']
 
@@ -103,6 +112,7 @@ function AddStudyCtrl($scope) {
     analysis.data = _.union(studyData, copy.data);
 
     $scope.newStudy = angular.copy(studyProto);
+    $scope.$emit('studyAdded', analysis);
     $scope.shouldBeOpen = false;
   }
 

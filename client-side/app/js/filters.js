@@ -6,9 +6,4 @@ angular.module('clinicico.filters', []).
     return function(number, decimals) { 
       return number.toFixed(decimals)
     };
-}).
-  filter('groupUs', function() { 
-    return function(array, group) { 
-      return _.groupBy(array, function(x) { return x[group]; });
-    }
 });
