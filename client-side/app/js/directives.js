@@ -39,4 +39,13 @@ directive("async", function() {
       });
     }
   };
+}).
+directive('analysis', function(){
+  return {
+    restrict: 'E',
+    scope: { analysis:'='},
+    replace: true,
+    transclude: true,
+    templateUrl: 'partials/analysis-detail.html',
+      }
 });

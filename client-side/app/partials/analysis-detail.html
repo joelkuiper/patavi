@@ -1,0 +1,51 @@
+<div>
+  <pre>{{analysis | json}}</pre>
+  <div class="control-group">
+    <label class="control-label" for="inputDescription">Description</label>
+    <div class="controls">
+      <input type="text" id="inputDescription" placeholder="Short description" ng-model="analysis.description">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputType">Type</label>
+    <div class="controls">
+      <select ng-model="analysis.type">
+        <option value="dichotomous" selected="selected">Dichotomous</option>
+        <option value="continuous">Continuous</option>
+        <option value="none">None</option>
+      </select>
+    </div>
+  </div>
+
+  <table class="table table-striped table-bordered">
+    <thead>
+      <tr>
+        <td>Id</td>
+        <td ng-show="analysis.type == 'continuous'">Mean</td>
+        <td ng-show="analysis.type == 'continuous'">Std.Dev</td>
+        <td ng-show="analysis.type == 'dichotomous'">Responders</td>
+        <td>Sample Size</td>
+        <td>&nbsp;</td>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <div ng-controller="AddStudyCtrl" ng-model="newStudy">
+      <button class="btn" ng-click="open()">Add study</button>
+      <div modal="shouldBeOpen" close="close()">
+          <div class="modal-header">
+              <h4>Add Study</h4>
+          </div>
+          <div class="modal-body">
+            <pre>{{newStudy | json}}</pre>
+            <input type="text" ng-model="newStudy.id">
+          </div>
+          <div class="modal-footer">
+              <button class="btn btn-warning cancel" ng-click="close()">Cancel</button>
+              <button class="btn btn-primary cancel" ng-click="addStudy(newStudy, analysis)">Add Study</button>
+          </div>
+      </div>
+  </div>
+</div>

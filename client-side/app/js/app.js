@@ -6,6 +6,7 @@ angular.module('clinicico', ['clinicico.filters', 'clinicico.services', 'clinici
   config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/jobs', {templateUrl: 'partials/jobs.html', controller: JobCtrl});
     $routeProvider.when('/result/:uuid', {templateUrl: 'partials/result.html', controller: ResultCtrl});
-    $routeProvider.otherwise({redirectTo: '/jobs'});
+    $routeProvider.when('/analyses', {templateUrl: 'partials/analyses.html', controller: AnalysisCtrl});
+    $routeProvider.otherwise({redirectTo: '/analyses'});
   }]);
 

@@ -48,30 +48,56 @@ function JobCtrl($scope, $http, $timeout) {
 
 }
 
-JobCtrl.$inject = ['$scope', '$http', '$timeout']
+JobCtrl.$inject = ['$scope', '$http']
 
 function ResultCtrl($scope, Result, $routeParams) {
   $scope.uuid = $routeParams.uuid;
   $scope.results = {};
-	$scope.network = {};
+  $scope.network = {};
  
-	
-	var pop = function(obj) {
-		for (var key in obj) {
-			if (!Object.hasOwnProperty.call(obj, key)) continue;
-			var result = obj[key];
-			// If the property can't be deleted fail with an error.
-			if (!delete obj[key]) { throw new Error(); }
-			return result;
-		} 
-	}
-	$scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
+  
+  var pop = function(obj) {
+    for (var key in obj) {
+      if (!Object.hasOwnProperty.call(obj, key)) continue;
+      var result = obj[key];
+      // If the property can't be deleted fail with an error.
+      if (!delete obj[key]) { throw new Error(); }
+      return result;
+    } 
+  }
+  $scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
 
-		$scope.network = pop(result.results.consistency.results);
-		$scope.network.treatments = pop(result.results.consistency.results);
-		$scope.network.description = pop(result.results.consistency.results);
-		$scope.results = result;
-	});
+    $scope.network = pop(result.results.consistency.results);
+    $scope.network.treatments = pop(result.results.consistency.results);
+    $scope.network.description = pop(result.results.consistency.results);
+    $scope.results = result;
+  });
 
 }
 ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
+
+function AnalysisCtrl($scope, Analyses, $routeParams) {
+  $scope.analyses = [];
+
+  $scope.addEmpty = function() {
+    $scope.analyses.push({title:"Untitled analysis", content: {data: []}});
+  }
+}
+AnalysisCtrl.$inject = ['$scope', '$http']
+
+function AddStudyCtrl($scope) { 
+  $scope.open = function () {
+    $scope.shouldBeOpen = true;
+  };
+
+  $scope.addStudy = function(study, analysis) { 
+    analysis.data.push(study);
+    $scope.shouldBeOpen = false;
+  }
+
+  $scope.close = function () {
+    $scope.shouldBeOpen = false;
+    $scope.newStudy = {};
+  };
+}
+AddStudyCtrl.$inject = ['$scope']
