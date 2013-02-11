@@ -1,6 +1,5 @@
 (ns clinicico.test.R.util
-  (:use clojure.test
-        clinicico.mtc.mtc)
+  (:use clojure.test)
   (:require [clinicico.R.util :as R]))
 
 (def R (atom nil))
@@ -26,7 +25,7 @@
     (is (= [{"foo" "bar"} {"qun" "qux"}] (R/into-clj (R/into-r [{:foo "bar"} {:qun "qux"}]))))
     (is (= [true false] (R/into-clj (R/into-r [true false]))))
     (is (= ["foo" "bar"] (R/into-clj (R/into-r ["foo" "bar"]))))
-    ;(is (= {"foo" [{:a "b"} {:c "d"}]} (R/into-clj (R/into-r {"foo" [{:a "b"} {:c "d"}]}))))
+    (is (= {"foo" [{"a" "b"} {"c" "d"}]} (R/into-clj (R/into-r {"foo" [{:a "b"} {:c "d"}]}))))
     (is (= true (R/into-clj (R/into-r true)))))
   (testing "Transformation of RList to map"
     (is (= {"foo" "bar"} (R/into-clj (R/into-r {"foo" "bar"}))))
@@ -42,7 +41,13 @@
 (deftest test-r-assignments
   (testing "Assignments to RServe"
     (R/assign @R "foo" {:foo "foobar"}) 
-    (is (= (R/rget @R "foo") {"foo" "foobar"})))
+    (is (= (R/rget @R "foo") {"foo" "foobar"}))
+    (R/assign @R "numbers" '(1 2 3 4))
+    (is (= "integer" (R/parse @R (str "class(numbers)"))))
+    (R/assign @R "numbers" {:foo '(1 2 3 4)})
+    (is (= "integer" (R/parse @R (str "class(numbers$foo)"))))
+    (R/assign @R "numbers" {:foo '[1 2 3 4]})
+    (is (= "integer" (R/parse @R (str "class(numbers$foo)")))))
   (testing "Complexer assignment"
     (R/assign @R "foo" {:foo [1 2 3 4]}) 
     (is (= (R/rget @R "foo") {"foo" [1 2 3 4]})))) 

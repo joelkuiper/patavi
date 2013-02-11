@@ -2,7 +2,7 @@
 ;; A simple MongoDB storage for the produced results. 
 ;; Takes any map that includes a network and a results field.
 
-(ns clinicico.mtc.store
+(ns clinicico.R.store
   (:import [org.bson.types ObjectId])
   (:use [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
@@ -39,7 +39,6 @@
 
 (def result-validator (validation-set
                       (presence-of :_id)
-                      (presence-of :network)
                       (presence-of :results)))
 
 (defn get-result [id] 
@@ -56,4 +55,4 @@
         {:results (str api-url "result/" (str (new-result :_id)))
          :completed (time/now)} 
         (throw (Exception. "Write Failed")))
-      (throw (IllegalArgumentException.)))))  
+      (throw (IllegalArgumentException. "Could not save invalid result set")))))  

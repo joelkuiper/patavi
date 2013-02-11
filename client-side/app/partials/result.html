@@ -5,38 +5,39 @@
       <a href="#/jobs">&larr; Jobs</a>
       </li>
     </ul>
-
     <h2>Network</h2>
-    <p>{{network.description}}</p>
-    <div ng-grid="networkGrid" class="span12" style="height: 400px; overflow-y: auto"></div>
-    <br>
-    <h2>Results</h2>
-    <div ng-repeat="data in consistency.results">
-      <h4>{{data.name | uppercase}}</h4>
-      <p>{{data.description}}</p>
-      <table class="table table-bordered table-striped">
-        <thead>
-          <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
-            <td>&nbsp;</td>
-            <td ng-repeat="(name, col) in cols">{{name}}</td>
-          </tr>
-        </thead>
-        <tbody>
-          <tr ng-repeat="(row, cols) in data.data">
-            <td>{{row}}</td>
-            <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <div class="span8">
-      <ul class="thumbnails">
-        <li class="span4"  ng-repeat="img in consistency.images">
-        <img ng-src="{{img.url}}" style="width:360px; height: 270px">
-        <p>{{img.description}}</p>
-        </li>
-      </ul>
+    <pre>{{network | json}}</pre>
+
+    <div ng-repeat="(analysis, results) in results.results">
+      <h2>{{analysis | uppercase}}</h2>
+      <div ng-repeat="data in results.results">
+        <h4>{{data.name | uppercase}}</h4>
+        <p>{{data.description}}</p>
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
+              <td>&nbsp;</td>
+              <td ng-repeat="(name, col) in cols">{{name}}</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="(row, cols) in data.data">
+              <td>{{row}}</td>
+              <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="span8">
+        <ul class="thumbnails">
+          <li class="span4"  ng-repeat="img in results.images">
+          <img ng-src="{{img.url}}" style="width:360px; height: 270px">
+          <p>{{img.description}}</p>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>

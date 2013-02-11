@@ -39,7 +39,7 @@
   "Converts a 
    [REXPGenericVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html), 
    or a nested list, to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
-  ([data] (.asList data)))
+  ([data] (.asList ^REXPGenericVector data)))
 
 (defn convert-fn 
   "Conditionally converts a 
@@ -130,40 +130,37 @@
 (defn into-r
   "Converts a sequential or a primitive to a 
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
-   REngine does not recognize longs so it will attempt to cast them to integers, if this fails doubles
-   will be used."
+   REngine does not recognize longs so it will attempt to cast them to integers"
   [data-seq]
-  (let [is-seq (sequential? data-seq)
-        el (if is-seq (first data-seq) data-seq)]
-    (cond 
-      (instance? Integer el) 
+  (if (and (counted? data-seq) (every? (or associative? sequential?) data-seq))
+    (REXPGenericVector. 
+      (if (map? data-seq) 
+        (RList. (map into-r (vals data-seq)) 
+                (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
+        (RList. (map into-r data-seq))))
+    (let [is-seq (sequential? data-seq)
+          el (if is-seq (first data-seq) data-seq)]
+      (cond 
+        (instance? Integer el) 
         (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
-      (instance? Long el) 
+        (instance? Long el) 
         (REXPInteger. (if is-seq (int-array (map #(cast-long %) data-seq)) (cast-long el))) 
-      (instance? Boolean el) 
+        (instance? Boolean el) 
         (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
-      (instance? Double el) 
+        (instance? Double el) 
         (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
-      (and (instance? String el) is-seq (every? #(re-matches #"\w*" %) data-seq)) 
+        (and (instance? String el) is-seq (every? #(re-matches #"\w*" %) data-seq)) 
         (REXPFactor. (int-array (factor-indexes data-seq)) 
-                   (into-array String (sort (distinct data-seq)))) 
-      (instance? String el) 
+                     (into-array String (sort (distinct data-seq)))) 
+        (instance? String el) 
         (REXPString. (if is-seq (into-array String data-seq) el)) 
-      (associative? data-seq) 
-        (if (map? data-seq) 
-          (REXPGenericVector. 
-            (RList. (map into-r (vals data-seq)) 
-                    (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq)))))
-          (REXPGenericVector. (RList. (map into-r data-seq))))
-      :else (throw (IllegalArgumentException. (str "Cannot parse " (class el)))))))
+        :else (throw (IllegalArgumentException. (str "Error parsing" (class el) " " data-seq)))))))
 
 (defn assign 
   "Assigns the given value as converted by into-r 
    into an RConnection with a given name"
   [R varname m]
-  (let [rstruct (into-r m)
-        rexp (if (instance? RList rstruct) (REXPGenericVector. ^RList rstruct) rstruct)]
-    (.assign ^RConnection R varname ^REXP rexp)))
+  (.assign ^RConnection R varname ^REXP (into-r m)))
 
 (defn rget 
   [R varname] 

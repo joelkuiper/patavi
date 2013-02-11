@@ -1,6 +1,7 @@
 (ns clinicico.test.R.analysis
   (:use clojure.test
         clinicico.R.analysis
+        clojure.walk
         validateur.validation)
   (:require [clinicico.R.util :as R]))
 
@@ -67,24 +68,49 @@
          },
          {
            "study" "2",
-           "treatment" "B",
+           "treatment" "A",
            "mean" -2.1,
            "stdDev" 2.99,
            "sampleSize" 143
+         },
+          {
+           "study" "2",
+           "treatment" "C",
+           "mean" 1.4,
+           "stdDev" 8.2,
+           "sampleSize" 34
+         },
+         {
+           "study" "3",
+           "treatment" "C",
+           "mean" -5.1,
+           "stdDev" 2.99,
+           "sampleSize" 125
+         },
+         {
+           "study" "3",
+           "treatment" "B",
+           "mean" -1.1,
+           "stdDev" 2.99,
+           "sampleSize" 177
          }
        ],
        "treatments" [
          {
            "id" "A",
-           "description" "Some medicine"
+           "description" "Medicine"
          },
          {
            "id" "B",
            "description" "Placebo"
          }
+         {
+           "id" "C",
+           "description" "Medicine2"
+         }
        ]
      }}
-      results (dispatch "consistency" mtc)]
-      (println results))))
+      results (dispatch "consistency" (keywordize-keys mtc))]
+      (is (= (contains? results :results) true)))))
 
 

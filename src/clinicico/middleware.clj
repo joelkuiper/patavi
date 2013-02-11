@@ -13,8 +13,7 @@
         clinicico.util.util
         [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
-  (:require [clinicico.R.util :as R]
-            [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log])
   (:import (com.fasterxml.jackson.core JsonGenerator)))
 
 (extend java.lang.Exception

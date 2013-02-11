@@ -1,5 +1,20 @@
-mtc.consistency <- function(network, factor = 2.5 , n.chain = 4, n.adapt = 5000, n.iter = 20000, thin = 1)  {
+consistency <- function(params)  {
   library(gemtc)
+  d <- params$network
+  if(!is.null(d$file)) { 
+    network <- read.mtc.network(d$file)
+  } else {
+    d <- d$data
+    d <- as.data.frame(t(sapply(d, unlist)))
+    treatments <- lapply(params$network$treatments, unlist)
+    network <- mtc.network(d, unlist(params$network$description), treatments)
+  }
+  factor <- if(is.null(params$factor)) 2.5 else params$factor
+  n.chain <- if(is.null(params$n.chain)) 4  else params$n.chain
+  n.adapt <- if(is.null(params$n.adapt)) 5000  else params$n.adapt
+  n.iter <- if(is.null(params$n.iter)) 20000  else params$n.iter
+  thin <- if(is.null(params$thin)) 1  else params$thin
+
   model <- mtc.model(network, "Consistency",  factor, n.chain) 
   run <- mtc.run(model, sampler="YADAS", n.adapt=n.adapt, n.iter=n.iter, thin=thin) 
 
@@ -31,12 +46,16 @@ mtc.consistency <- function(network, factor = 2.5 , n.chain = 4, n.adapt = 5000,
                                     "The graph for the included evidence",
                                     "Bar plot for the rank probabilities"))
 
-  results <- list(results = list("network" = network,
-																 "quantiles" = quantiles, 
+  results <- list(results = list("network" = network$data,
+																 "treatments" = network$treatments,
+																 "description" = network$description,
+                                 "quantiles" = quantiles, 
                                  "psrf" = psrf, 
                                  "ranks" = rank.prob),
-                  descriptions = list("Quantiles for each variable",
-
+                  descriptions = list("The generated network used to create the Consistency model",
+																			"Treatments compared in this analysis",
+																			"Short description",
+                                      "Quantiles for each variable",
                                       paste("The `potential scale reduction factor' is calculated for each",
                                             "variable in ‘x’, together with upper and lower confidence limits.",
                                             "Approximate convergence is diagnosed when the upper limit is close to 1.", sep=" "),

@@ -1,20 +1,25 @@
 (ns clinicico.R.analysis
   (:use validateur.validation
         clojure.walk
+        clinicico.config
         clinicico.util.util)
   (:require [clinicico.R.util :as R]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as strs]
+            [clojure.tools.logging :as log])
+  (:import (org.rosuda.REngine REXP RList)
+           (org.rosuda.REngine REXPDouble REXPLogical 
+                               REXPFactor REXPInteger 
+                               REXPString REXPGenericVector
+                               REXPNull REngineException)))
 
-(def validators (atom {}))
+(def validators (atom {"consistency" (validation-set 
+                                       (presence-of :network))}))
 
 (defn copy-to-r 
   [R file filename]
   (with-open [r-file (.createFile R filename)] 
     (io/copy file r-file)))
-
-(defn- upload-file-parameter
-  [R file]
-  (copy-to-r (get file "tempfile") (key file)))
 
 (defn load-analysis! 
   "Finds the R file with the associated analysis 
@@ -28,17 +33,49 @@
         (.voidEval R (str "source('"script"')"))
         (.removeFile R analysis)))))
 
+(defn- parse-results-list [^RList lst] 
+  (let [names (.keys lst)
+        conv {"matrix" #(R/parse-matrix %)
+              "data.frame" #(map-cols-to-rows (R/into-clj %))}]
+    (map (fn [k] (let [itm (.asList (.at lst k))
+                       data (.at itm "data")
+                       desc (R/into-clj (.at itm "description"))
+                       data-type (R/into-clj (.at itm "type"))]
+                   {:name k 
+                    :description  desc
+                    :data ((get conv data-type R/into-clj) data)})) names)))
+
+(defn- url-for-img-path [path]
+ (let [exploded (strs/split path #"\/")
+       workspace (first (filter #(re-matches #"conn[0-9]*" %) exploded))
+       img (last exploded)]
+   (str base-url "generated/" workspace "/" img)))
+
+(defn- parse-results [^REXP results]
+  (try 
+    (let [data (.asList results)
+          images (.asList (.at data "images"))
+          results (.asList (.at data "results"))]
+      {:images (map-cols-to-rows 
+                 {:url (map #(url-for-img-path %) 
+                            (map #(.asString (.at (.asList %) "url")) images))
+                  :description (map #(.asString (.at (.asList %) "description")) images)})
+       :results (parse-results-list results)})
+    (catch Exception e (R/into-clj results)))) ;; Fallback to generic structure
+
 (defn dispatch 
   [analysis params]
   (if (not (valid? (get @validators analysis (validation-set)) params))
-    (throw (IllegalArgumentException. (str "Provided parameters were not valid")))
+    (throw (IllegalArgumentException. (str "Provided parameters were not valid for analysis " analysis)))
     (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k)) ; These are just the files to be copied
           options (into {} (map (fn [[k v]] ; We replace the value of each of the files as a map to a their filename
                                   (if (contains? v :file) 
                                     [k {"file" (get-in v [:file :filename])}] 
                                     [k v])) params))]
       (with-open [R (R/connect)]
+        (doall (map 
+                 (fn [[k v]] (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
-        (map #(upload-file-parameter R %) files)
+        (log/debug options)
         (R/assign R "params" options)
-        (R/into-clj (R/parse R (str analysis "(params)") false))))))
+        {:results {(keyword analysis) (parse-results (R/parse R (str analysis "(params)") false))}}))))

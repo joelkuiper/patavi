@@ -31,9 +31,9 @@
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [clinicico.http :as http]
-            [clinicico.mtc.store :as db]
             [clinicico.jobs :as job]
-            [clinicico.mtc.mtc :as mtc]
+            [clinicico.R.analysis :as analysis]
+            [clinicico.R.store :as db]
             [ring.middleware [multipart-params :as mp]]
             [ring.middleware.json :as ring-json]
             [clojure.tools.logging :as log]
@@ -100,11 +100,13 @@
   (context "/api" []
            (OPTIONS "/" []
                     (http/options [:options] {:version "0.3.0-SNAPSHOT"}))
-           (POST "/analysis/consistency" [:as req & params]
-                 (let [analysis (fn [] (db/save-result (mtc/consistency params)))
+           (POST "/analysis/:method" [method & params]
+                 (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
                        id (job/submit analysis)
-                       jobs (get-in req [:session :jobs])
+                       jobs (get-in (params :request) [:session :jobs])
                        job (str api-url "/job/" id)]
+                   (log/debug params)
+                   (log/debug method)
                    (assoc-in 
                      (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []

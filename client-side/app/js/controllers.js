@@ -52,38 +52,26 @@ JobCtrl.$inject = ['$scope', '$http', '$timeout']
 
 function ResultCtrl($scope, Result, $routeParams) {
   $scope.uuid = $routeParams.uuid;
-  $scope.network = {};
-  $scope.colDefs = [];  
-  $scope.consistency = {};  
+  $scope.results = {};
+	$scope.network = {};
  
-  $scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
-    $scope.network = result.network;
-    $scope.consistency = result.results.consistency;
-    console.log(result);
-  });
+	
+	var pop = function(obj) {
+		for (var key in obj) {
+			if (!Object.hasOwnProperty.call(obj, key)) continue;
+			var result = obj[key];
+			// If the property can't be deleted fail with an error.
+			if (!delete obj[key]) { throw new Error(); }
+			return result;
+		} 
+	}
+	$scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
 
-  $scope.networkGrid = {data: 'network.data',
-    displayFooter: false,
-    canSelectRows: false,
-    displaySelectionCheckbox: false,
-    columnDefs: 'colDefs'};
+		$scope.network = pop(result.results.consistency.results);
+		$scope.network.treatments = pop(result.results.consistency.results);
+		$scope.network.description = pop(result.results.consistency.results);
+		$scope.results = result;
+	});
 
-  var colDefs = function(x) { 
-    var colDefs = [];
-    if(x) { 
-      for (var key in x[0]) { // First element (i.e. row) should have all the definitions
-        var el = x[0][key];
-        var floatFilter = (typeof el === 'number' && !(el % 1 == 0)) ? "precision:3" : null;
-        colDefs.push({"field": key, "cellFilter": (floatFilter || "")});
-      }
-    }
-    return colDefs;
-  };
-
-  $scope.$watch('network', function(newVal, oldVal) {
-    if(newVal.data) { 
-      $scope.colDefs = colDefs($scope.network.data);
-    }
-  });
 }
 ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
