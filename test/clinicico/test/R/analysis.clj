@@ -35,15 +35,18 @@
                                   (acceptance-of :bar))})
       (is (thrown? IllegalArgumentException (dispatch "foo" {:cun "q" :xuq "x"}))))
     (testing "Parameters are assigned"
-      (is (= {"foo" "bar" "bar" true} (dispatch "echo" {:foo "bar" :bar true}))))
+      (is (= {:results {:echo {"foo" "bar" "bar" true}}} (dispatch "echo" {:foo "bar" :bar true}))))
     (testing "Files are copied and retrievable"
      (let [file (doto (java.io.File/createTempFile "tmp" ".stuff") .deleteOnExit)]
       (spit file "foobar")
-      (is (= {"foo" {"file" (.getName file)}} (dispatch "echo" {:foo {:file {:tempfile file :filename (.getName file)}}})))))))
+      (is (= {:results {:echo {"foo" {"file" (.getName file)}}}} (dispatch "echo" {:foo {:file {:tempfile file :filename (.getName file)}}})))))))
 
 (deftest test-run-mtc 
   (testing "Running the GeMTC consistency program" 
-    (let [mtc {"network" {"description" "",
+    (let [mtc {
+      "n.iter" 1000,
+      "n.chain" 2,
+      "network" {"description" "",
        "data" [
          {
            "study" "1",

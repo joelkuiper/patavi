@@ -37,7 +37,7 @@
   (let [names (.keys lst)
         conv {"matrix" #(R/parse-matrix %)
               "data.frame" #(map-cols-to-rows (R/into-clj %))}]
-    (map (fn [k] (let [itm (.asList (.at lst k))
+    (map (fn [k] (let [itm (R/as-list (.at lst k))
                        data (.at itm "data")
                        desc (R/into-clj (.at itm "description"))
                        data-type (R/into-clj (.at itm "type"))]
@@ -53,29 +53,30 @@
 
 (defn- parse-results [^REXP results]
   (try 
-    (let [data (.asList results)
-          images (.asList (.at data "images"))
-          results (.asList (.at data "results"))]
+    (let [data (R/as-list results)
+          images (R/as-list (.at data "images"))
+          results (R/as-list (.at data "results"))]
       {:images (map-cols-to-rows 
                  {:url (map #(url-for-img-path %) 
-                            (map #(.asString (.at (.asList %) "url")) images))
-                  :description (map #(.asString (.at (.asList %) "description")) images)})
+                            (map #(.asString (.at (R/as-list %) "url")) images))
+                  :description (map #(.asString (.at (R/as-list %) "description")) images)})
        :results (parse-results-list results)})
-    (catch Exception e (R/into-clj results)))) ;; Fallback to generic structure
+    (catch Exception e (R/into-clj results)))) ;Fallback to generic structure
 
 (defn dispatch 
   [analysis params]
   (if (not (valid? (get @validators analysis (validation-set)) params))
-    (throw (IllegalArgumentException. (str "Provided parameters were not valid for analysis " analysis)))
-    (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k)) ; These are just the files to be copied
-          options (into {} (map (fn [[k v]] ; We replace the value of each of the files as a map to a their filename
+    (throw (IllegalArgumentException. 
+             (str "Provided parameters were not valid for analysis " analysis)))
+    (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k))
+          options (into {} (map (fn [[k v]]
                                   (if (contains? v :file) 
                                     [k {"file" (get-in v [:file :filename])}] 
                                     [k v])) params))]
       (with-open [R (R/connect)]
         (doall (map 
-                 (fn [[k v]] (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
+                 (fn [[k v]] 
+                   (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
-        (log/debug options)
         (R/assign R "params" options)
         {:results {(keyword analysis) (parse-results (R/parse R (str analysis "(params)") false))}}))))

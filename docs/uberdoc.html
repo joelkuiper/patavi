@@ -3029,11 +3029,135 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from an R script</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">joda-time/joda-time</td><td class="dotted"><hr /></td><td class="dep-version">2.1</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.mtc.mtc">clinicico.mtc.mtc</a></li><li><a href="#clinicico.mtc.store">clinicico.mtc.store</a></li><li><a href="#clinicico.util.util">clinicico.util.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.util" name="clinicico.R.util"><h1 class="project-name">clinicico.R.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>R</h2>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.google.guava/guava</td><td class="dotted"><hr /></td><td class="dep-version">13.0.1</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">joda-time/joda-time</td><td class="dotted"><hr /></td><td class="dep-version">2.1</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.analysis">clinicico.R.analysis</a></li><li><a href="#clinicico.R.store">clinicico.R.store</a></li><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.util.util">clinicico.util.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.analysis" name="clinicico.R.analysis"><h1 class="project-name">clinicico.R.analysis</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns clinicico.R.analysis
+  (:use validateur.validation
+        clojure.walk
+        clinicico.config
+        clinicico.util.util)
+  (:require [clinicico.R.util :as R]
+            [clojure.java.io :as io]
+            [clojure.string :as strs]
+            [clojure.tools.logging :as log])
+  (:import (org.rosuda.REngine REXP RList)
+           (org.rosuda.REngine REXPDouble REXPLogical 
+                               REXPFactor REXPInteger 
+                               REXPString REXPGenericVector
+                               REXPNull REngineException)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def validators (atom {&quot;consistency&quot; (validation-set 
+                                       (presence-of :network))}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn copy-to-r 
+  [R file filename]
+  (with-open [r-file (.createFile R filename)] 
+    (io/copy file r-file)))</pre></td></tr><tr><td class="docs"><p>Finds the R file with the associated analysis 
+   name and load its into an RConnection.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn load-analysis! 
+  [R analysis]
+  (let [script (io/as-file (io/resource (str &quot;R/&quot; analysis &quot;.R&quot;)))]
+    (if (nil? script)
+      (throw (IllegalArgumentException. (str &quot;Could not find specified analysis &quot; analysis)))
+      (do
+        (copy-to-r R script analysis) 
+        (.voidEval R (str &quot;source('&quot;script&quot;')&quot;))
+        (.removeFile R analysis)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- parse-results-list [^RList lst] 
+  (let [names (.keys lst)
+        conv {&quot;matrix&quot; #(R/parse-matrix %)
+              &quot;data.frame&quot; #(map-cols-to-rows (R/into-clj %))}]
+    (map (fn [k] (let [itm (.asList (.at lst k))
+                       data (.at itm &quot;data&quot;)
+                       desc (R/into-clj (.at itm &quot;description&quot;))
+                       data-type (R/into-clj (.at itm &quot;type&quot;))]
+                   {:name k 
+                    :description  desc
+                    :data ((get conv data-type R/into-clj) data)})) names)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- url-for-img-path [path]
+ (let [exploded (strs/split path #&quot;\/&quot;)
+       workspace (first (filter #(re-matches #&quot;conn[0-9]*&quot; %) exploded))
+       img (last exploded)]
+   (str base-url &quot;generated/&quot; workspace &quot;/&quot; img)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- parse-results [^REXP results]
+  (try 
+    (let [data (.asList results)
+          images (.asList (.at data &quot;images&quot;))
+          results (.asList (.at data &quot;results&quot;))]
+      {:images (map-cols-to-rows 
+                 {:url (map #(url-for-img-path %) 
+                            (map #(.asString (.at (.asList %) &quot;url&quot;)) images))
+                  :description (map #(.asString (.at (.asList %) &quot;description&quot;)) images)})
+       :results (parse-results-list results)})
+    (catch Exception e (R/into-clj results)))) ;; Fallback to generic structure</pre></td></tr><tr><td class="docs"><p>Fallback to generic structure</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn dispatch 
+  [analysis params]
+  (if (not (valid? (get @validators analysis (validation-set)) params))
+    (throw (IllegalArgumentException. (str &quot;Provided parameters were not valid for analysis &quot; analysis)))
+    (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k)) ; These are just the files to be copied
+          options (into {} (map (fn [[k v]] ; We replace the value of each of the files as a map to a their filename
+                                  (if (contains? v :file) 
+                                    [k {&quot;file&quot; (get-in v [:file :filename])}] 
+                                    [k v])) params))]
+      (with-open [R (R/connect)]
+        (doall (map 
+                 (fn [[k v]] (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
+        (load-analysis! R analysis)
+        (log/debug options)
+        (R/assign R &quot;params&quot; options)
+        {:results {(keyword analysis) (parse-results (R/parse R (str analysis &quot;(params)&quot;) false))}}))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.store" name="clinicico.R.store"><h1 class="project-name">clinicico.R.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Store</h2>
+
+<p>A simple MongoDB storage for the produced results. 
+Takes any map that includes a network and a results field.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns clinicico.R.store
+  (:import [org.bson.types ObjectId])
+  (:use [monger.core :only [connect! set-db! get-db]]
+        [monger.result :only [ok?]]
+        [monger.conversion :only [from-db-object]]
+        [clinicico.config]
+        [clinicico.util.util]
+        [validateur.validation])
+  (:require [clojure.walk :as walk]
+            [clojure.tools.logging :as log]
+            [monger.collection :as collection]
+            [monger.conversion :as conv]
+            [monger.json]
+            [monger.util :as util]
+            [monger.joda-time]
+            [clj-time.core :as time]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def mongo-options
+  {:host (str (:mongo-host *config*))
+   :port (Long. (:mongo-port *config*))
+   :db (str (:mongo-db *config*))
+   :results-collection &quot;results&quot;})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(connect! mongo-options)
+(set-db! (get-db (mongo-options :db)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- with-oid [results]
+  (assoc results :_id (util/object-id)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- created-now [results]
+  (assoc results :created (time/now)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- modified-now [result]
+  (assoc result :modified (time/now)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def result-validator (validation-set
+                      (presence-of :_id)
+                      (presence-of :results)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn get-result [id] 
+  (dissoc (collection/find-map-by-id &quot;results&quot; (ObjectId. id)) :_id))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn save-result [result]
+  (let [new-result (created-now 
+                     (modified-now (with-oid result)))]
+    (if (valid? result-validator new-result)
+      (if (ok? 
+            (collection/insert 
+              (mongo-options :results-collection) 
+              (conv/to-db-object (stringify-keys* new-result))))
+        {:results (str api-url &quot;result/&quot; (str (new-result :_id)))
+         :completed (time/now)} 
+        (throw (Exception. &quot;Write Failed&quot;)))
+      (throw (IllegalArgumentException. &quot;Could not save invalid result set&quot;)))))  </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.util" name="clinicico.R.util"><h1 class="project-name">clinicico.R.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>R</h2>
 
 <p>R interoperability is provided by <a href="http://www.rforge.net/Rserve/">Rserve</a>. 
 RServe provides both a TCP/IP server for calling R functionality as well as
-a Java library for convenient access to a Rserve.  </p>
+a Java library for convenient access to an Rserve.  </p>
 
 <p>The functions below are mostly utilities for converting back and forth
 between native Clojure representations (maps and vectors) and RServes'
@@ -3043,13 +3167,14 @@ classes.  </p>
   (:use     [clinicico.util.util] 
             [clinicico.config])
   (:require [clojure.java.io :as io])
-  (:import (org.rosuda.REngine)
+  (:import (com.google.common.primitives Ints)
+           (org.rosuda.REngine)
            (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
                                REXPString REXPGenericVector
-                               REngineException)
-           (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates it's own workspace
+                               REXPNull REngineException)
+           (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Connect to an RServe instance. Each connection creates its own workspace
    and forks the existing R process, effectively sandboxing the R operations.</p>
 
 <p>   Returns an <a href="http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html">RConnection</a> 
@@ -3066,30 +3191,18 @@ classes.  </p>
    <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html">REXPGenericVector</a>, 
    or a nested list, to an <a href="http://rforge.net/org/doc/org/rosuda/REngine/RList.html">RList</a>.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn as-list 
-  ([data] (.asList ^REXPGenericVector data))
-  ([data $field] (as-list (.at ^RList data $field))))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a 
+  ([data] (.asList ^REXPGenericVector data)))</pre></td></tr><tr><td class="docs"><p>Conditionally converts a 
    <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a> to primitives.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- convert-fn 
-  ^{:todo &quot;make sure this is complete&quot;}
+</td><td class="codes"><pre class="brush: clojure">(defn convert-fn 
   [field] 
   (cond  ;; REXPFactor is-a REXPInteger, so the order matters
+        (.isNull field) (fn [x] nil)
         (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
+        (instance? REXPString field) #(.asStrings ^REXPString %)
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-        :else (throw (Exception. field))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
-   Rough equivalent to R's data$field accessor.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn in-list 
-  [data $field]
-  (let [members (.at ^RList data $field)]
-    (if-not (nil? members)
-      (seq ((convert-fn members) members))
-      nil)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn parse [^RConnection R cmd] 
-  (let [trycmd (str &quot;try(&quot;cmd&quot;, silent=T)&quot;)
-        evaluation (.parseAndEval R trycmd nil true)]
-    (if (.inherits evaluation &quot;try-error&quot;)
-      (throw (REngineException. R (.asString evaluation)))
-      evaluation)))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
+        (instance? REXPLogical field) #(.isTrue ^REXPLogical %) 
+        :else (throw (Exception. (.toString (class field))))))</pre></td></tr><tr><td class="docs"><p>Parses a (named) matrix (2d-list in R) to a map 
    with the rows as a map between labels and values.
    If not a named matrix it will substitute the missing names 
    with an incrementing index starting with 1.</p>
@@ -3107,41 +3220,84 @@ classes.  </p>
           (mapcat (fn [[k v]] 
                     {k (zipmap (or (second labels) (range 1 (inc (count v)))) v)}) 
                   (zipmap (or (first labels) (range 1 (inc (count data)))) data)))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn list-to-map 
-  [data]
-  (let [ks (.keys ^RList data)] 
-    (zipmap ks 
-            (map (fn [k] 
-                   (let [field (.at ^RList data k)]
-                     (seq ((convert-fn field) field)))) ks))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- first-or-seq 
+  [array]
+  (if (&gt; (count array) 1) (seq array) (first array)))</pre></td></tr><tr><td class="docs"><p>Recursively transforms a (nested) named RList into a map</p>
+</td><td class="codes"><pre class="brush: clojure">(def into-map
+  (fn [data]
+    (let [values (map (fn [field] 
+                        (if (instance? REXPGenericVector field)
+                          (into-map (as-list field))
+                          (first-or-seq ((convert-fn field) field)))) data)]
+      (if (.isNamed ^RList data)
+        (zipmap (.keys ^RList data) values)
+        values))))</pre></td></tr><tr><td class="docs"><p>Converts the given REXP to a Clojure representation</p>
+</td><td class="codes"><pre class="brush: clojure">(defn into-clj
+  [rexp]
+  (cond (instance? RList rexp) (into-map rexp)
+        (instance? REXPGenericVector rexp) (into-clj (as-list rexp))
+        :else (first-or-seq ((convert-fn rexp) rexp))))</pre></td></tr><tr><td class="docs"><p>Returns a field in a list as Clojure sequence (seq) using the <code>convert-fn</code>.
+   Rough equivalent to R's data$field accessor.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn in-list 
+  [data $field]
+  (let [members (.at ^RList (as-list data) $field)]
+    (if-not (nil? members)
+      (into-clj members)
+      nil)))</pre></td></tr><tr><td class="docs"><p>Evaluates and parses the R expression cmd, and 
+   throws an REngineException if the evaluation was unsuccesful.
+   Takes an optional parameter convert? indicating to 
+   convert the returned REXP to a Clojure representation</p>
+</td><td class="codes"><pre class="brush: clojure">(defn parse 
+  ([^RConnection R cmd]
+   (parse R cmd true))
+  ([^RConnection R cmd convert?] 
+   (let [trycmd (str &quot;try(&quot;cmd&quot;, silent=T)&quot;)
+         evaluation (.parseAndEval ^RConnection R trycmd nil true)]
+     (if (.inherits evaluation &quot;try-error&quot;)
+       (throw (REngineException. ^RConnection R (.asString evaluation)))
+       (if convert? (into-clj evaluation) evaluation)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- factor-indexes 
   [lst] 
   (let [levels (sort (distinct lst))]
-    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a 
-   subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn to-REXPVector
+    (map #(inc (.indexOf levels %)) lst)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn- cast-long
+  [number] 
+  (Ints/checkedCast number))</pre></td></tr><tr><td class="docs"><p>Converts a sequential or a primitive to a 
+   subclass of <a href="http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html">REXPVector</a>.
+   REngine does not recognize longs so it will attempt to cast them to integers</p>
+</td><td class="codes"><pre class="brush: clojure">(defn into-r
   [data-seq]
-  (let [is-seq (sequential? data-seq)
-        el (if is-seq (first data-seq) data-seq)]
-    (cond 
-      (instance? Integer el) 
-      (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
-      (instance? Boolean el) 
-      (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
-      (instance? Double el) 
-      (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
-      (and (instance? String el) is-seq (every? #(re-matches #&quot;\w*&quot; %) data-seq)) 
-      (REXPFactor. (int-array (factor-indexes data-seq)) 
-                   (into-array String (sort (distinct data-seq)))) 
-      (instance? String el) 
-      (REXPString. (if is-seq (into-array String data-seq) el)) 
-      :else (throw (IllegalArgumentException. (str &quot;Cannot parse &quot; (class el)))))))</pre></td></tr><tr><td class="docs"><p>Converts a map to an RList, using the to-REXPVector 
-   to convert underlying elements to REXPVectors.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn map-to-RList   
-  [data]
-  (RList. 
-    (map to-REXPVector (vals data)) (into-array String (keys data))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn RList-as-dataframe [RList] 
+  (if (and (counted? data-seq) (every? (or associative? sequential?) data-seq))
+    (REXPGenericVector. 
+      (if (map? data-seq) 
+        (RList. (map into-r (vals data-seq)) 
+                (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
+        (RList. (map into-r data-seq))))
+    (let [is-seq (sequential? data-seq)
+          el (if is-seq (first data-seq) data-seq)]
+      (cond 
+        (instance? Integer el) 
+        (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
+        (instance? Long el) 
+        (REXPInteger. (if is-seq (int-array (map #(cast-long %) data-seq)) (cast-long el))) 
+        (instance? Boolean el) 
+        (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
+        (instance? Double el) 
+        (REXPDouble. (if is-seq (double-array data-seq) (double el))) 
+        (and (instance? String el) is-seq (every? #(re-matches #&quot;\w*&quot; %) data-seq)) 
+        (REXPFactor. (int-array (factor-indexes data-seq)) 
+                     (into-array String (sort (distinct data-seq)))) 
+        (instance? String el) 
+        (REXPString. (if is-seq (into-array String data-seq) el)) 
+        :else (throw (IllegalArgumentException. (str &quot;Error parsing&quot; (class el) &quot; &quot; data-seq)))))))</pre></td></tr><tr><td class="docs"><p>Assigns the given value as converted by into-r 
+   into an RConnection with a given name</p>
+</td><td class="codes"><pre class="brush: clojure">(defn assign 
+  [R varname m]
+  (.assign ^RConnection R varname ^REXP (into-r m)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn rget 
+  [R varname] 
+  (into-clj (.get ^RConnection R varname nil true))) </pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn r-list-as-dataframe [RList] 
   (REXP/createDataFrame RList))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.ResourceNotFound" name="clinicico.ResourceNotFound"><h1 class="project-name">clinicico.ResourceNotFound</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.ResourceNotFound
   (:gen-class :extends java.lang.Exception))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.config" name="clinicico.config"><h1 class="project-name">clinicico.config</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
@@ -3171,17 +3327,17 @@ classes.  </p>
                 &quot;/&quot;))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.handler" name="clinicico.handler"><h1 class="project-name">clinicico.handler</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clinici.co</h2>
 
 <p>Clinici.co provides a way for exposing R scripts as a web service using 
-<a href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a>
+<a href="http://en.wikipedia.org/wiki/Representational_state_transfer">REST</a>.
 Currently this framework handles the loading and running of GeMTC consistency
 models, but should eventually not be restricted to this. </p>
 
-<p>The typical life time of a Clinici.co request is roughly as follows: </p>
+<p>The typical life time of a Clinici.co session is roughly as follows: </p>
 
 <ol>
 <li>The users submits JSON or a file with optional options to the appropriate analysis path using <code>POST</code>. 
 In this case for example a GeMTC file to <code>/api/consistency</code> for consistency
 analysis.</li>
-<li>The user recieves a job url.</li>
+<li>The user receives a job url.</li>
 <li>The user can query the job for status using <code>GET</code> on <code>/job/:id</code> to see for
 example the position in the job queue.</li>
 <li>When the results are available they are saved to a MongoDB instance as-is.</li>
@@ -3203,9 +3359,9 @@ the user to retrieve the jobs he or she submitted but not others. </p>
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [clinicico.http :as http]
-            [clinicico.mtc.store :as db]
             [clinicico.jobs :as job]
-            [clinicico.mtc.mtc :as mtc]
+            [clinicico.R.analysis :as analysis]
+            [clinicico.R.store :as db]
             [ring.middleware [multipart-params :as mp]]
             [ring.middleware.json :as ring-json]
             [clojure.tools.logging :as log]
@@ -3213,7 +3369,7 @@ the user to retrieve the jobs he or she submitted but not others. </p>
 </td><td class="codes"><pre class="brush: clojure">(defn main [] ())</pre></td></tr><tr><td class="docs"><h3>Consistency models</h3>
 
 <p>Consistency models can be created based on a GeMTC network file
-in a multi-part form submit, or alternatively by providing
+in a multi-part form submit or, alternatively, by providing
 a network field in the following JSON format: </p>
 
 <pre><code>{"description":"",
@@ -3271,14 +3427,15 @@ A and B. </p>
   (context &quot;/api&quot; []
            (OPTIONS &quot;/&quot; []
                     (http/options [:options] {:version &quot;0.3.0-SNAPSHOT&quot;}))
-           (mp/wrap-multipart-params
-            (POST &quot;/analysis/consistency&quot; [:as req &amp; params]
-                   (let [analysis (fn [] (db/save-result (mtc/consistency params)))
-                         id (job/submit analysis)
-                         jobs (get-in req [:session :jobs])
-                         job (str api-url &quot;/job/&quot; id)]
-                     (assoc-in 
-                       (http/created job (job/status id)) [:session :jobs] (conj jobs id)))))
+           (POST &quot;/analysis/:method&quot; [method &amp; params]
+                 (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
+                       id (job/submit analysis)
+                       jobs (get-in (params :request) [:session :jobs])
+                       job (str api-url &quot;/job/&quot; id)]
+                   (log/debug params)
+                   (log/debug method)
+                   (assoc-in 
+                     (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context &quot;/result&quot; []
                     (GET &quot;/:id&quot; [id] (http/no-content? (db/get-result id))))
            (context &quot;/job&quot; [] 
@@ -3286,9 +3443,9 @@ A and B. </p>
                          (-&gt; (resp/response (map job/status (get-in req [:session :jobs])))
                              (resp/status 200)))
                     (DELETE &quot;/:id&quot; [id]
-                         (do (job/cancel id) 
-                            (-&gt; (resp/response (job/status id))
-                                (resp/status 200))))
+                            (do (job/cancel id) 
+                                (-&gt; (resp/response (job/status id))
+                                    (resp/status 200))))
                     (GET &quot;/:id&quot; [id] 
                          (-&gt; (resp/response (job/status id))
                              (resp/status 200)))))
@@ -3301,8 +3458,9 @@ A and B. </p>
   (-&gt;
     (handler/api routes-handler)
     (ring-json/wrap-json-body)
+    (mp/wrap-multipart-params)
     (wrap-request-logger)
-    (wrap-session);
+    (wrap-session)
     (wrap-exception-handler)
     (wrap-response-logger)
     (wrap-json-response)
@@ -3379,7 +3537,7 @@ function (or lambda) into the job queue. The job queue is implemented using
 a <a href="http://docs.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html">ThreadPoolExecutor</a>
 which processes only one job at a time. The jobs can be queried for status.
 The previous attempt at solving the problem can be found on 
-<a href="http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure">StackOverflow</a></p>
+<a href="http://stackoverflow.com/questions/14673108/asynchronous-job-queue-for-web-service-in-clojure">StackOverflow</a>.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.jobs
   (:use clinicico.config) 
@@ -3463,8 +3621,7 @@ The previous attempt at solving the problem can be found on
         clinicico.util.util
         [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
-  (:require [clinicico.R.util :as R]
-            [clojure.tools.logging :as log])
+  (:require [clojure.tools.logging :as log])
   (:import (com.fasterxml.jackson.core JsonGenerator)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(extend java.lang.Exception
   JSONable
@@ -3514,164 +3671,7 @@ The previous attempt at solving the problem can be found on
       (if (instance? Exception body)
         (log/warn body remote-addr (upper-case (name request-method)) uri &quot;-&gt;&quot; status body)
         (log/debug remote-addr (upper-case (name request-method)) uri &quot;-&gt;&quot; status))
-      response)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.mtc.mtc" name="clinicico.mtc.mtc"><h1 class="project-name">clinicico.mtc.mtc</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns clinicico.mtc.mtc
-  (:use [clinicico.util.util]
-        [clinicico.config]
-        [clojure.string :only [upper-case join split]]) 
-  (:require [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
-            [clinicico.R.util :as R])
-  (:import (org.rosuda.REngine)
-           (org.rosuda.REngine REXP
-                               REXPList
-                               RList)
-           (org.rosuda.REngine.Rserve RConnection)))</pre></td></tr><tr><td class="docs"><p>Loads the <a href="http://cran.r-project.org/web/packages/gemtc/index.html">GeMTC library</a> 
-   to the provided <code>RConnection</code>.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn load-mtc! 
-  [R] 
-  (.voidEval R &quot;suppressWarnings(require('gemtc',quietly=TRUE))&quot;))</pre></td></tr><tr><td class="docs"><p>Reads the network present in the current <code>RConnection</code> and transforms it into a map.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn read-network 
-  [R]
-  (let [network (R/as-list (.get R &quot;network&quot; nil true)) 
-        description (.at network &quot;description&quot;)
-        data (R/as-list network &quot;data&quot;)
-        treatments (R/as-list network &quot;treatments&quot;)]
-    {:description (if-not (.isNull description) (.asString description) &quot;&quot;)
-     :data (map-cols-to-rows (R/list-to-map data))
-     :treatments (map-cols-to-rows (R/list-to-map treatments))}))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- load-network-file 
-  [R file] 
-  (let [networkFile (.createFile R (file :filename))]
-    (do 
-      (io/copy (file :tempfile) networkFile)
-      (.close networkFile)
-      (.assign R &quot;network&quot; (R/parse R (str &quot;read.mtc.network('&quot; (file :filename) &quot;')&quot;))))
-    (.removeFile R (file :filename))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- load-network-json 
-  [R network]
-   (let [description (:description network)
-         data (:data network) 
-         treatments (:treatments network)]
-     (do
-       (.assign R &quot;description&quot; 
-                (R/to-REXPVector description))
-       (.assign R &quot;data&quot; 
-                (R/RList-as-dataframe 
-                  (R/map-to-RList (map-rows-to-cols data))))
-       (.assign R &quot;treatments&quot; 
-                (.eval R 
-                  (REXPList. 
-                    (R/map-to-RList (map-rows-to-cols treatments))) nil false))
-       (.assign R &quot;network&quot; 
-                (R/parse R (str &quot;mtc.network(data, description, treatments)&quot;))))))</pre></td></tr><tr><td class="docs"><p>Loads a GeMTC network into an <code>RConnection</code>.</p>
-
-<ul>
-<li>If the params field contains a file it is assumed to be a 
- GeMTC file and proccessed accordingly.</li>
-<li>If it is a network it should be in the network JSON format.</li>
-</ul>
-</td><td class="codes"><pre class="brush: clojure">(defn load-network! 
-  [R params]
-  (cond 
-    (contains? params &quot;file&quot;) (load-network-file R (get params &quot;file&quot;))
-    (contains? params &quot;network&quot;) (load-network-json R (get params &quot;network&quot;))
-    :else (throw (IllegalArgumentException. &quot;Could not load network for data &quot; params))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- parse-results-list [^RList lst] 
-  (let [names (.keys lst)
-        conv {&quot;matrix&quot; #(R/parse-matrix %)}]
-    (map (fn [k] (let [itm (R/as-list lst k)
-                                   data (.at itm &quot;data&quot;)
-                                   desc (.asString (.at itm &quot;description&quot;))
-                                   data-type (.asString (.at itm &quot;type&quot;))]
-                               {:name k 
-                                :description  desc
-                                :data ((get conv data-type) data)})) names)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- url-for-img-path [path]
- (let [exploded (split path #&quot;\/&quot;)
-       workspace (first (filter #(re-matches #&quot;conn[0-9]*&quot; %) exploded))
-       img (last exploded)]
-   (str base-url &quot;generated/&quot; workspace &quot;/&quot; img)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- parse-results [^REXP results]
-  (let [data (.asList results)
-        images (.asList (.at data &quot;images&quot;))
-        results (.asList (.at data &quot;results&quot;))]
-    {:images (map-cols-to-rows 
-               {:url (map #(url-for-img-path %) 
-                          (map #(.asString (.at (.asList %) &quot;url&quot;)) images))
-                :description (map #(.asString (.at (.asList %) &quot;description&quot;)) images)})
-     :results (parse-results-list results)}))</pre></td></tr><tr><td class="docs"><p>Runs a consistency model and returns the used network and results. 
-   To produce the relevant results and do other preprocessing 
-   please modify the loaded consistency.R script.</p>
-
-<p>   This script should return a list of results with 
-   descriptions and a list of images with associated descriptions.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn- analyze-consistency!
-  [R options] 
-  (let [script-file &quot;consistency.R&quot;] 
-    (with-open [script (.createFile R script-file)] 
-      (io/copy (io/as-file (io/resource (str &quot;R/&quot; script-file))) script))
-    (.voidEval R (str &quot;source('&quot;script-file&quot;')&quot;))
-    (.removeFile R script-file)
-    {:consistency (parse-results (R/parse R &quot;mtc.consistency(network)&quot;))}))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn consistency 
-  ([params]
-   (with-open [R (R/connect)]
-     (load-mtc! R) 
-     (load-network! R params)
-     {:network (read-network R) 
-      :results (analyze-consistency! R (get params &quot;options&quot;))})))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.mtc.store" name="clinicico.mtc.store"><h1 class="project-name">clinicico.mtc.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Store</h2>
-
-<p>A simple MongoDB storage for the produced results. 
-Takes any map that includes a network and a results field.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns clinicico.mtc.store
-  (:import [org.bson.types ObjectId])
-  (:use [monger.core :only [connect! set-db! get-db]]
-        [monger.result :only [ok?]]
-        [monger.conversion :only [from-db-object]]
-        [clinicico.config]
-        [clinicico.util.util]
-        [validateur.validation])
-  (:require [clojure.walk :as walk]
-            [clojure.tools.logging :as log]
-            [monger.collection :as collection]
-            [monger.conversion :as conv]
-            [monger.json]
-            [monger.util :as util]
-            [monger.joda-time]
-            [clj-time.core :as time]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def mongo-options
-  {:host (str (:mongo-host *config*))
-   :port (Long. (:mongo-port *config*))
-   :db (str (:mongo-db *config*))
-   :results-collection &quot;results&quot;})</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(connect! mongo-options)
-(set-db! (get-db (mongo-options :db)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- with-oid [results]
-  (assoc results :_id (util/object-id)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- created-now [results]
-  (assoc results :created (time/now)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- modified-now [result]
-  (assoc result :modified (time/now)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def result-validator (validation-set
-                      (presence-of :_id)
-                      (presence-of :network)
-                      (presence-of :results)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn get-result [id] 
-  (dissoc (collection/find-map-by-id &quot;results&quot; (ObjectId. id)) :_id))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn save-result [result]
-  (let [new-result (created-now 
-                     (modified-now (with-oid result)))]
-    (if (valid? result-validator new-result)
-      (if (ok? 
-            (collection/insert 
-              (mongo-options :results-collection) 
-              (conv/to-db-object (stringify-keys* new-result))))
-        {:results (str api-url &quot;result/&quot; (str (new-result :_id)))
-         :completed (time/now)} 
-        (throw (Exception. &quot;Write Failed&quot;)))
-      (throw (IllegalArgumentException.)))))  </pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.util.util" name="clinicico.util.util"><h1 class="project-name">clinicico.util.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+      response)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.util.util" name="clinicico.util.util"><h1 class="project-name">clinicico.util.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.util.util
   (:use   clojure.java.io
           clojure.walk
@@ -3728,5 +3728,19 @@ Takes any map that includes a network and a results field.</p>
     (.writeFieldName jg &quot;date&quot;)
     (.writeString jg 
                   (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))
-    (.writeEndObject jg))})</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+    (.writeEndObject jg))})</pre></td></tr><tr><td class="docs"><p>Calculates the difference between to maps, returns the k v of the difference. </p>
+
+<p>   Stolen from <a href="http://stackoverflow.com/questions/3387155/difference-between-two-maps">StackOverflow</a></p>
+</td><td class="codes"><pre class="brush: clojure">(defn map-difference 
+  [m1 m2]
+  (loop [m (transient {})
+         ks (concat (keys m1) (keys m2))]
+    (if-let [k (first ks)]
+      (let [e1 (find m1 k)
+            e2 (find m2 k)]
+        (cond (and e1 e2 (not= (e1 1) (e2 1))) (recur (assoc! m k (e1 1)) (next ks))
+              (not e1) (recur (assoc! m k (e2 1)) (next ks))
+              (not e2) (recur (assoc! m k (e1 1)) (next ks))
+              :else    (recur m (next ks))))
+      (persistent! m))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>

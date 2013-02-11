@@ -38,7 +38,7 @@
 (defn as-list 
   "Converts a 
    [REXPGenericVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPGenericVector.html), 
-   or a nested list, to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
+   to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
   ([data] (.asList ^REXPGenericVector data)))
 
 (defn convert-fn 
@@ -107,7 +107,7 @@
 (defn parse 
   "Evaluates and parses the R expression cmd, and 
    throws an REngineException if the evaluation was unsuccesful.
-   Takes an optional parameter convert? indicating to 
+   Takes an optional parameter convert? indicating whether or not to 
    convert the returned REXP to a Clojure representation"
   ([^RConnection R cmd]
    (parse R cmd true))
@@ -128,7 +128,7 @@
   (Ints/checkedCast number))
 
 (defn into-r
-  "Converts a sequential or a primitive to a 
+  "Converts Clojure data-structures into  
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
    REngine does not recognize longs so it will attempt to cast them to integers"
   [data-seq]

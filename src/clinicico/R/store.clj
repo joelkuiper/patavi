@@ -1,6 +1,6 @@
 ;; ## Store 
 ;; A simple MongoDB storage for the produced results. 
-;; Takes any map that includes a network and a results field.
+;; Takes any map that includes a results field.
 
 (ns clinicico.R.store
   (:import [org.bson.types ObjectId])

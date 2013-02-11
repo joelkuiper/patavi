@@ -1,3 +1,15 @@
+wrap.result <- function(result, description) { 
+  list(data=result, description=description, type=class(result))
+}
+wrap.plot <- function(name, plot.fn, description) {
+  name <- paste(name, ".png", sep="")
+  try(png(name))
+  plot.fn() 
+  dev.off();
+  list(url=paste(getwd(), "/", name, sep=""), name=name, description=description)
+}
+
+
 consistency <- function(params)  {
   library(gemtc)
   d <- params$network
@@ -16,22 +28,11 @@ consistency <- function(params)  {
   thin <- if(is.null(params$thin)) 1  else params$thin
 
   model <- mtc.model(network, "Consistency",  factor, n.chain) 
-  run <- mtc.run(model, sampler="YADAS", n.adapt=n.adapt, n.iter=n.iter, thin=thin) 
+  run <- mtc.run(model, n.adapt=n.adapt, n.iter=n.iter, thin=thin) 
 
-  wrap.result <- function(result, description) { 
-    list(data=result, description=description, type=class(result))
-  }
   quantiles <- summary(run)$quantiles 
   psrf <- gelman.diag(run)$psrf 
   rank.prob <- rank.probability(run) 
-
-  wrap.plot <- function(name, plot.fn, description) {
-    name <- paste(name, ".png", sep="")
-    try(png(name))
-    plot.fn() 
-    dev.off();
-    list(url=paste(getwd(), "/", name, sep=""), name=name, description=description)
-  }
 
   plots <- list(plots = list("forest" = (function() forest(run)),
                              "model" = (function() plot(model)),
@@ -47,14 +48,14 @@ consistency <- function(params)  {
                                     "Bar plot for the rank probabilities"))
 
   results <- list(results = list("network" = network$data,
-																 "treatments" = network$treatments,
-																 "description" = network$description,
+                                 "treatments" = network$treatments,
+                                 "description" = network$description,
                                  "quantiles" = quantiles, 
                                  "psrf" = psrf, 
                                  "ranks" = rank.prob),
                   descriptions = list("The generated network used to create the Consistency model",
-																			"Treatments compared in this analysis",
-																			"Short description",
+                                      "Treatments compared in this analysis",
+                                      "Short description",
                                       "Quantiles for each variable",
                                       paste("The `potential scale reduction factor' is calculated for each",
                                             "variable in ‘x’, together with upper and lower confidence limits.",
@@ -65,6 +66,16 @@ consistency <- function(params)  {
                                             "constructed from these rankings and normalized by the number of",
                                             "iterations to give the rank probabilities.", sep=" ")))
 
-  list(results=mapply(function(result, description) { wrap.result(result, description)}, results$results, results$descriptions, SIMPLIFY=F),
-       images=mapply(function(name, plot.fn, description) { wrap.plot(name, plot.fn, description) }, names(plots$plots), plots$plots, plots$descriptions, SIMPLIFY=F))
+  list(results=mapply(function(result, description) { 
+                        wrap.result(result, description) }, 
+                      results$results,
+                      results$descriptions, 
+                      SIMPLIFY=F),
+
+       images=mapply(function(name, plot.fn, description) { 
+                      wrap.plot(name, plot.fn, description) }, 
+                     names(plots$plots), 
+                     plots$plots, 
+                     plots$descriptions, 
+                     SIMPLIFY=F))
 }
