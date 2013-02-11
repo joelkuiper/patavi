@@ -77,7 +77,6 @@ ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
 
 function AnalysisCtrl($scope, Analyses, $routeParams) {
   $scope.analyses = [];
-
   $scope.addEmpty = function() {
     $scope.analyses.push({title:"Untitled analysis", 
                           content: {data: [],
@@ -95,12 +94,13 @@ function AddStudyCtrl($scope) {
   };
 
   $scope.addStudy = function(analysis) { 
+    var copy = angular.copy(analysis);
     var studyData = _.map($scope.newStudy.treatments, function(included, id) { 
       if(included) {
-        return {id: $scope.newStudy.id, treatment: id};
+        return {study: $scope.newStudy.id, treatment: id};
       }
     });
-    analysis.data.push(studyData);
+    analysis.data = _.union(studyData, copy.data);
 
     $scope.newStudy = angular.copy(studyProto);
     $scope.shouldBeOpen = false;
