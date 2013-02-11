@@ -55,7 +55,6 @@ function ResultCtrl($scope, Result, $routeParams) {
   $scope.results = {};
   $scope.network = {};
  
-  
   var pop = function(obj) {
     for (var key in obj) {
       if (!Object.hasOwnProperty.call(obj, key)) continue;
@@ -80,18 +79,22 @@ function AnalysisCtrl($scope, Analyses, $routeParams) {
   $scope.analyses = [];
 
   $scope.addEmpty = function() {
-    $scope.analyses.push({title:"Untitled analysis", content: {data: []}});
+    $scope.analyses.push({title:"Untitled analysis", 
+                          content: {data: [],
+                                    treatments: [{id: "foo", description: "bar"}],
+                                    description: ""}});
   }
 }
 AnalysisCtrl.$inject = ['$scope', '$http']
 
 function AddStudyCtrl($scope) { 
+  $scope.newStudy = {treatments: {}, id: ""};
   $scope.open = function () {
     $scope.shouldBeOpen = true;
   };
 
-  $scope.addStudy = function(study, analysis) { 
-    analysis.data.push(study);
+  $scope.addStudy = function(analysis) { 
+    analysis.data.push($scope.newStudy);
     $scope.shouldBeOpen = false;
   }
 

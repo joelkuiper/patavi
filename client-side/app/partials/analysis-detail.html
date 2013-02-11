@@ -32,20 +32,30 @@
     </tbody>
   </table>
 
-  <div ng-controller="AddStudyCtrl" ng-model="newStudy">
+  <div ng-controller="AddStudyCtrl">
       <button class="btn" ng-click="open()">Add study</button>
+
       <div modal="shouldBeOpen" close="close()">
-          <div class="modal-header">
-              <h4>Add Study</h4>
-          </div>
-          <div class="modal-body">
+        <form ng-submit="addStudy(analysis)">
+        <div class="modal-header">
+          <h4>Add Study</h4>
+        </div>
+        <div class="modal-body">
             <pre>{{newStudy | json}}</pre>
-            <input type="text" ng-model="newStudy.id">
-          </div>
-          <div class="modal-footer">
-              <button class="btn btn-warning cancel" ng-click="close()">Cancel</button>
-              <button class="btn btn-primary cancel" ng-click="addStudy(newStudy, analysis)">Add Study</button>
-          </div>
+        <input type="text" ng-model="newStudy.id">
+        <h4>Treatments</h4>
+        <div ng-repeat="treatment in analysis.treatments">
+          <label class="checkbox inline">
+            <input type="checkbox" ng-model="newStudy.treatments[treatment.id]">
+            {{treatment.id}}
+          </label>
+        </div>
       </div>
+    <div class="modal-footer">
+      <button class="btn btn-warning cancel" ng-click="close()">Cancel</button>
+      <button class="btn btn-primary cancel" type="submit">Add Study</button>
+    </div>
+  </form>
   </div>
+</div>
 </div>
