@@ -75,13 +75,13 @@ function ResultCtrl($scope, Result, $routeParams) {
 }
 ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
 
-function AnalysisCtrl($scope, Analyses, $routeParams) {
+function AnalysisCtrl($scope) {
   $scope.analyses = [];
   
   $scope.addEmpty = function() {
     $scope.analyses.push({title:"Untitled analysis", 
                           content: {data: [],
-                                    treatments: [{id: "foo", description: "bar"}],
+                                    treatments: [],
                                     description: ""}});
   }
 
@@ -93,10 +93,11 @@ function AnalysisCtrl($scope, Analyses, $routeParams) {
     $scope.setGroupedMeasurements(analysis);
   });
 }
-AnalysisCtrl.$inject = ['$scope', '$http']
+AnalysisCtrl.$inject = ['$scope']
 
-function AddStudyCtrl($scope) { 
-  var studyProto = {treatments: {}, id: ""}
+function StudyCtrl($scope) { 
+  var studyProto = {treatments: {}, id: ""};
+
   $scope.newStudy = angular.copy(studyProto);
   $scope.open = function () {
     $scope.shouldBeOpen = true;
@@ -121,4 +122,4 @@ function AddStudyCtrl($scope) {
     $scope.newStudy = angular.copy(studyProto);
   };
 }
-AddStudyCtrl.$inject = ['$scope']
+StudyCtrl.$inject = ['$scope']

@@ -1,5 +1,4 @@
 <div>
-  <pre>{{ analysis | json }}</pre>
   <div class="control-group">
     <label class="control-label" for="inputDescription">Description</label>
     <div class="controls">
@@ -20,24 +19,32 @@
   <table class="table table-striped table-bordered">
     <thead>
       <tr>
-        <td>Id</td>
-        <td ng-show="analysis.type == 'continuous'">Mean</td>
-        <td ng-show="analysis.type == 'continuous'">Std.Dev</td>
-        <td ng-show="analysis.type == 'dichotomous'">Responders</td>
-        <td ng-show="analysis.type != 'none' && analysis.type">Sample Size</td>
-        <td>&nbsp;</td>
+        <th>Id</th>
+        <th ng-show="analysis.type == 'continuous'">Mean</th>
+        <th ng-show="analysis.type == 'continuous'">Std.Dev</th>
+        <th ng-show="analysis.type == 'dichotomous'">Responders</th>
+        <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
+        <th>&nbsp;</th>
       </tr>
     </thead>
-    <tbody>
-    <div ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
-      {{study}}
-      {{measurements}}
-    </div>
+    <tbody ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
+      <tr>
+        <td colspan="{{{'continuous': 4, 'dichotomous': 3, 'none': 1}[analysis.type]}}">{{study}}</td>
+        <td><input type="checkbox"></td>
+      </tr>
+      <tr ng-repeat="m in measurements">
+        <td>{{m.treatment}}</td>
+        <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.mean"></td>
+        <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.stdDev"></td>
+        <td ng-show="analysis.type == 'dichotomous'"><input type="text" ng-model="m.responders"></td>
+        <td ng-show="analysis.type != 'none' && analysis.type"><input type="text" ng-model="m.sampleSize"></td>
+        <td>&nbsp;</td>
+      </tr>
     </tbody>
   </table>
 
-  <div ng-controller="AddStudyCtrl">
-    <button class="btn" ng-click="open()">Add study</button>
+  <div ng-controller="StudyCtrl">
+    <button class="btn btn-primary" ng-click="open()">Add study</button>
 
     <div modal="shouldBeOpen" close="close()">
       <form ng-submit="addStudy(analysis)">

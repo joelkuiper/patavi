@@ -47,5 +47,5 @@ directive('analysis', function(){
     replace: true,
     transclude: true,
     templateUrl: 'partials/analysis-detail.html',
-      }
+    }
 });
