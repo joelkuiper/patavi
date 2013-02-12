@@ -1,12 +1,6 @@
 <tabs>
 <pane ng-repeat="pane in analyses" heading="{{pane.title}}" active="pane.active">
-<div class="control-group">
-  <label class="control-label" for="inputName">Name</label>
-  <div class="controls">
-    <input type="text" id="inputName" ng-model="pane.title">
     <analysis analysis="pane"></analysis>
-  </div>
-</div>
 </pane>
 <pane heading="New analysis">
 <div class="row">

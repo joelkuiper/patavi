@@ -28,13 +28,6 @@ function AnalysisCtrl($scope, Analyses, $dialog) {
 		backdropClick: true,
 	}
 
-	var studyDialogOpts = _.extend({
-		templateUrl: 'partials/add-study.html',
-		controller: 'StudyController',
-		treatments: $scope.analysis.treatments
-	},
-	dialogBase);
-
 	$scope.$on('analysisUpdated', function() {
 		$scope.analysis.__groupedMeasurements = _.groupBy($scope.analysis.data, function(x) {
 			return x['study'];
@@ -58,6 +51,12 @@ function AnalysisCtrl($scope, Analyses, $dialog) {
 	}
 
 	$scope.createStudy = function() {
+		var studyDialogOpts = _.extend({
+			templateUrl: 'partials/add-study.html',
+			controller: 'StudyController',
+			treatments: $scope.analysis.treatments
+		},
+		dialogBase);
 		var d = $dialog.dialog(studyDialogOpts);
 		d.open().then(function(result) {
 			if (result) {
@@ -91,7 +90,7 @@ function TreatmentController($scope, dialog) {
 		var lst = _.reject($scope.treatments, function(t) {
 			return t === treatment
 		});
-    $scope.treatments = lst;
+		$scope.treatments = lst;
 	}
 
 	$scope.add = function() {

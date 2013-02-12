@@ -105,8 +105,6 @@
                        id (job/submit analysis)
                        jobs (get-in (params :request) [:session :jobs])
                        job (str api-url "/job/" id)]
-                   (log/debug params)
-                   (log/debug method)
                    (assoc-in 
                      (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []
