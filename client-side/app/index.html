@@ -7,15 +7,15 @@
     <link rel="stylesheet" href="css/ng-grid.css" media="screen" />
     <link rel="stylesheet" href="css/bootstrap.min.css" media="screen" />
   </head>
-  <body>
+  <body ng-controller="AppCtrl">
 
       <div class="navbar">
         <div class="navbar-inner">
           <a class="brand" href="#">clinici.co</a>
           <ul class="nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#">Analyses</a></li>
-            <li><a href="#">About</a></li>
+            <li ng-class="{active:isActive('/home')}"><a href="#/home">Home</a></li>
+            <li ng-class="{active:isActive('/analyses')}"><a href="#/analyses">Analyses</a></li>
+            <li ng-class="{active:isActive('/about')}"><a href="#/about">About</a></li>
           </ul>
         </div>
       </div>

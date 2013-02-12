@@ -4,17 +4,16 @@
   <label class="control-label" for="inputName">Name</label>
   <div class="controls">
     <input type="text" id="inputName" ng-model="pane.title">
+    <analysis analysis="pane"></analysis>
   </div>
 </div>
-  <analysis analysis="pane.content"></analysis>
 </pane>
-
 <pane heading="New analysis">
 <div class="row">
   <div class="span4 offset1">
     <h4>Or</h4>
     <hr>
-    <button type="submit" class="btn" ng-click="addEmpty()">Create new dataset</button>
+    <button type="submit" class="btn" ng-click="createNew()">Create new dataset</button>
   </div>  
   <div class="span4">
     <h4>Upload a GeMTC file</h4>
@@ -27,8 +26,6 @@
       </fieldset> 
     </form>
   </div>
-
-
 </div>
 </pane>
 </tabs>

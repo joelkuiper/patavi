@@ -1,71 +1,47 @@
 <div>
-  <div class="control-group">
-    <label class="control-label" for="inputDescription">Description</label>
-    <div class="controls">
-      <input type="text" id="inputDescription" placeholder="Short description" ng-model="analysis.description">
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label" for="inputType">Type</label>
-    <div class="controls">
-      <select ng-model="analysis.type">
-        <option value="dichotomous" selected="selected">Dichotomous</option>
-        <option value="continuous">Continuous</option>
-        <option value="none">None</option>
-      </select>
-    </div>
-  </div>
-
-  <table class="table table-striped table-bordered">
-    <thead>
-      <tr>
-        <th>Id</th>
-        <th ng-show="analysis.type == 'continuous'">Mean</th>
-        <th ng-show="analysis.type == 'continuous'">Std.Dev</th>
-        <th ng-show="analysis.type == 'dichotomous'">Responders</th>
-        <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
-        <th>&nbsp;</th>
-      </tr>
-    </thead>
-    <tbody ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
-      <tr>
-        <td colspan="{{{'continuous': 4, 'dichotomous': 3, 'none': 1}[analysis.type]}}">{{study}}</td>
-        <td><input type="checkbox"></td>
-      </tr>
-      <tr ng-repeat="m in measurements">
-        <td>{{m.treatment}}</td>
-        <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.mean"></td>
-        <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.stdDev"></td>
-        <td ng-show="analysis.type == 'dichotomous'"><input type="text" ng-model="m.responders"></td>
-        <td ng-show="analysis.type != 'none' && analysis.type"><input type="text" ng-model="m.sampleSize"></td>
-        <td>&nbsp;</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <div ng-controller="StudyCtrl">
-    <button class="btn btn-primary" ng-click="open()">Add study</button>
-
-    <div modal="shouldBeOpen" close="close()">
-      <form ng-submit="addStudy(analysis)">
-        <div class="modal-header">
-          <h4>Add Study</h4>
-        </div>
-        <div class="modal-body">
-          <input type="text" ng-model="newStudy.id" required>
-          <h4>Treatments</h4>
-          <div ng-repeat="treatment in analysis.treatments">
-            <label class="checkbox inline">
-              <input type="checkbox" ng-model="newStudy.treatments[treatment.id]">
-              {{treatment.id}}
-            </label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-warning cancel" ng-click="close()">Cancel</button>
-          <button class="btn btn-primary cancel" type="submit">Add Study</button>
-        </div>
-      </form>
-    </div>
+  <pre>{{analysis | json}}</pre>
+<div class="control-group">
+  <label class="control-label" for="inputDescription">Description</label>
+  <div class="controls">
+    <input type="text" id="inputDescription" placeholder="Short description" ng-model="analysis.description">
   </div>
 </div>
+<div class="control-group">
+  <label class="control-label" for="inputType">Type</label>
+  <div class="controls">
+    <select ng-model="analysis.type">
+      <option value="dichotomous" selected="selected">Dichotomous</option>
+      <option value="continuous">Continuous</option>
+      <option value="none">None</option>
+    </select>
+  </div>
+</div>
+
+<table class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th>Id</th>
+      <th ng-show="analysis.type == 'continuous'">Mean</th>
+      <th ng-show="analysis.type == 'continuous'">Std.Dev</th>
+      <th ng-show="analysis.type == 'dichotomous'">Responders</th>
+      <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
+      <th>&nbsp;</th>
+    </tr>
+  </thead>
+  <tbody ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
+    <tr>
+      <td colspan="{{{'continuous': 4, 'dichotomous': 3, 'none': 1}[analysis.type]}}">{{study}}</td>
+      <td><input type="checkbox"></td>
+    </tr>
+    <tr ng-repeat="m in measurements">
+      <td>{{m.treatment}}</td>
+      <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.mean"></td>
+      <td ng-show="analysis.type == 'continuous'"><input type="text" ng-model="m.stdDev"></td>
+      <td ng-show="analysis.type == 'dichotomous'"><input type="text" ng-model="m.responders"></td>
+      <td ng-show="analysis.type != 'none' && analysis.type"><input type="text" ng-model="m.sampleSize"></td>
+      <td>&nbsp;</td>
+    </tr>
+  </tbody>
+</table>
+<p><button class="btn btn-primary" ng-click="createStudy()">Add study</button>
+<button class="btn btn-info" ng-click="editTreatments()">Edit Treatments</button></p>

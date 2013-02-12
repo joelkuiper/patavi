@@ -1,0 +1,22 @@
+<div>
+  <div class="modal-header">
+    <h4>Add Study</h4>
+  </div>
+  <div class="modal-body">
+    <form>
+      <input type="text" ng-model="result.id">
+      <h4>Treatments</h4>
+      <div ng-repeat="treatment in treatments">
+        <label class="checkbox inline">
+          <input type="checkbox" ng-model="result.treatments[treatment.id]">
+          {{treatment.id}}
+        </label>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button ng-click="close()" class="btn btn-warning" >Close</button>
+    <button ng-click="close(result)" class="btn btn-primary" >Add Study</button>
+  </div>
+</div>
+

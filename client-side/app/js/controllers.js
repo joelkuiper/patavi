@@ -2,124 +2,103 @@
 
 /* Controllers */
 
-function JobCtrl($scope, $http, $timeout) {
-   
-  var getUUID = function(path) { 
-    var parser = document.createElement('a');
-    parser.href = path;
-    return parser.pathname.split("/").pop();
-  }
-  $scope.tooltip = {cancel:"Cancel queued job"}
-  $scope.jobs = [];
-  $http.get("/api/job/session").success(function(data) { 
-    $scope.jobs = data;
-    $scope.jobs.forEach(function(job) {
-      job.uuid = getUUID(job.results); 
-    });
-  });
+function AppCtrl($scope, $location) {
+	$scope.isActive = function(route) {
+		return route === $location.path();
+	}
+}
+AppCtrl.$inject = ['$scope', '$location'];
 
-  var pushToScope = function(job, data) {
-    for (var field in data) { 
-      job[field] = data[field];
-    }
-    job.uuid = getUUID(job.results);
-  }
+function HomeCtrl() {}
+function AboutCtrl() {}
 
-  $scope.cancel = function(job) { 
-    $http({method:'DELETE', url:job}).success(function(status) { 
-      pushToScope(job, status); 
-    });
-  }
+function AnalysesCtrl($scope, Analyses) {
+	$scope.analyses = Analyses.query();
 
-  // Poll the status of each listed job every 3 seconds
-  var poll = function() {
-    (function tick() {
-      $scope.jobs.forEach(function(job) { 
-        var nonPoll = ["completed", "failed", "canceled"];
-        if(nonPoll.indexOf(job.status) == -1) {
-          $http.get(job.job).success(function(data) { 
-           pushToScope(job, data);
-          });
-        }});
-      $timeout(tick, 3000);
-    })();
-  }
-  poll();
+	$scope.createNew = function() {
+		Analyses.create();
+	}
+}
+AnalysesCtrl.inject = ['$scope', 'Analyses']
 
+function AnalysisCtrl($scope, Analyses, $dialog) {
+	var dialogBase = {
+		backdrop: true,
+		keyboard: true,
+		backdropClick: true,
+	}
+
+	var studyDialogOpts = _.extend({
+		templateUrl: 'partials/add-study.html',
+		controller: 'StudyController',
+		treatments: $scope.analysis.treatments
+	},
+	dialogBase);
+
+	$scope.$on('analysisUpdated', function() {
+		$scope.analysis.__groupedMeasurements = _.groupBy($scope.analysis.data, function(x) {
+			return x['study'];
+		});
+	});
+
+	$scope.editTreatments = function() {
+		var treatmentDialogOpts = _.extend({
+			templateUrl: 'partials/edit-treatments.html',
+			controller: 'TreatmentController',
+			treatments: $scope.analysis.treatments
+		},
+		dialogBase);
+
+		var d = $dialog.dialog(treatmentDialogOpts)
+		d.open().then(function(treatments) {
+			if (treatments) {
+				$scope.analysis.treatments = treatments;
+			}
+		});
+	}
+
+	$scope.createStudy = function() {
+		var d = $dialog.dialog(studyDialogOpts);
+		d.open().then(function(result) {
+			if (result) {
+				$scope.analysis.addStudy(result);
+				$scope.$emit('analysisUpdated');
+			}
+		});
+	};
+}
+AnalysesCtrl.inject = ['$scope', 'Analyses', '$dialog']
+
+function StudyController($scope, dialog) {
+	$scope.treatments = dialog.options.treatments;
+	$scope.result = {
+		id: "",
+		treatments: {}
+	};
+	$scope.close = function(result) {
+		dialog.close(result);
+	};
 }
 
-JobCtrl.$inject = ['$scope', '$http']
+function TreatmentController($scope, dialog) {
+	var copy = angular.copy(dialog.options.treatments);
+	$scope.treatments = dialog.options.treatments;
+	$scope.close = function(treatments) {
+		dialog.close(treatments || copy);
+	};
 
-function ResultCtrl($scope, Result, $routeParams) {
-  $scope.uuid = $routeParams.uuid;
-  $scope.results = {};
-  $scope.network = {};
- 
-  var pop = function(obj) {
-    for (var key in obj) {
-      if (!Object.hasOwnProperty.call(obj, key)) continue;
-      var result = obj[key];
-      // If the property can't be deleted fail with an error.
-      if (!delete obj[key]) { throw new Error(); }
-      return result;
-    } 
-  }
-  $scope.result = Result.get({uuid: $scope.uuid}, function(result) { 
+	$scope.remove = function(treatment) {
+		var lst = _.reject($scope.treatments, function(t) {
+			return t === treatment
+		});
+    $scope.treatments = lst;
+	}
 
-    $scope.network = pop(result.results.consistency.results);
-    $scope.network.treatments = pop(result.results.consistency.results);
-    $scope.network.description = pop(result.results.consistency.results);
-    $scope.results = result;
-  });
-
+	$scope.add = function() {
+		$scope.treatments.push({
+			id: "",
+			description: ""
+		})
+	}
 }
-ResultCtrl.$inject = ['$scope', 'Result', '$routeParams']
 
-function AnalysisCtrl($scope) {
-  $scope.analyses = [];
-  
-  $scope.addEmpty = function() {
-    $scope.analyses.push({title:"Untitled analysis", 
-                          content: {data: [],
-                                    treatments: [],
-                                    description: ""}});
-  }
-
-  $scope.setGroupedMeasurements = function(analysis) { 
-    analysis.__groupedMeasurements =  _.groupBy(analysis.data, function(x) { return x['study']; });
-  }
-
-  $scope.$on('studyAdded', function(e, analysis) {
-    $scope.setGroupedMeasurements(analysis);
-  });
-}
-AnalysisCtrl.$inject = ['$scope']
-
-function StudyCtrl($scope) { 
-  var studyProto = {treatments: {}, id: ""};
-
-  $scope.newStudy = angular.copy(studyProto);
-  $scope.open = function () {
-    $scope.shouldBeOpen = true;
-  };
-
-  $scope.addStudy = function(analysis) { 
-    var copy = angular.copy(analysis);
-    var studyData = _.map($scope.newStudy.treatments, function(included, id) { 
-      if(included) {
-        return {study: $scope.newStudy.id, treatment: id};
-      }
-    });
-    analysis.data = _.union(studyData, copy.data);
-
-    $scope.newStudy = angular.copy(studyProto);
-    $scope.$emit('studyAdded', analysis);
-    $scope.shouldBeOpen = false;
-  }
-
-  $scope.close = function () {
-    $scope.shouldBeOpen = false;
-    $scope.newStudy = angular.copy(studyProto);
-  };
-}
-StudyCtrl.$inject = ['$scope']

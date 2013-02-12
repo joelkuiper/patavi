@@ -1,0 +1,20 @@
+<div>
+  <div class="modal-header">
+    <h4>Edit Treatments</h4>
+  </div>
+  <div class="modal-body">
+    <h4>Treatments</h4>
+    <form class="form-inline">
+      <div ng-repeat="treatment in treatments" class="control-group">
+        <input type="text" ng-model="treatment.id" placeholder="Name">
+        <input type="text" ng-model="treatment.description" placeholder="Description">
+        <button class="btn btn-danger btn-mini" tooltip="Remove"  ng-click="remove(treatment)"><i class="icon-remove icon-white"></i></button>
+      </div>
+    </form>
+  </div>
+  <button class="btn btn-link" ng-click="add()">Add Treatment</button>
+  <div class="modal-footer">
+    <button ng-click="close()" class="btn btn-warning" >Cancel</button>
+    <button ng-click="close(treatments)" class="btn btn-primary" >Done</button>
+  </div>
+</div>
