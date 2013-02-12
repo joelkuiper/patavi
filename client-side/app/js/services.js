@@ -20,10 +20,7 @@ factory('Analyses', function() {
 		this.id = createUUID();
 		this.title = "Untitled analysis";
 		this.description = "";
-		this.treatments = [{
-			id: "foo",
-			description: "bar"
-		}];
+		this.treatments = [];
 		this.data = [];
 		var self = this;
 		this.addStudy = function(study) {
@@ -38,8 +35,18 @@ factory('Analyses', function() {
 			self.data = _.union(self.data, newData);
 		}
 
+		this.deleteStudy = function(study) {
+			var newStudies = _.reject(self.data, function(s) {
+				console.log(s);
+				console.log(study);
+				return s.study === study;
+			});
+			console.log(newStudies);
+			self.data = newStudies;
+		}
+
 		this.addTreatment = function(treatment) {
-      self.treatments.push(treatment);
+			self.treatments.push(treatment);
 		}
 	}
 
@@ -56,6 +63,14 @@ factory('Analyses', function() {
 			_.find(this.query, function(a) {
 				return a.id == id
 			});
+		},
+
+		fromGeMTC: function(data) {
+			var newAnalysis = new Analysis();
+			_.each(data, function(d) {
+				newAnalysis[d.name] = d.data;
+			});
+			this.analyses.push(newAnalysis);
 		}
 	}
 

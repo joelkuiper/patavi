@@ -2,19 +2,19 @@
   <div class="modal-header">
     <h3>Edit Treatments</h3>
   </div>
+    <form class="form-inline" ng-submit="close(treatments)">
   <div class="modal-body">
     <h4>Treatments</h4>
-    <form class="form-inline">
       <div ng-repeat="treatment in treatments" class="control-group">
-        <input type="text" ng-model="treatment.id" placeholder="Name">
-        <input type="text" ng-model="treatment.description" placeholder="Description">
+        <input type="text" ng-model="treatment.id" required="required" placeholder="Name">
+        <input type="text" ng-model="treatment.description" placeholder="Description (optional)">
         <button class="btn btn-danger btn-mini" tooltip="Remove"  ng-click="remove(treatment)"><i class="icon-remove icon-white"></i></button>
       </div>
-    </form>
     <button class="btn btn-link" ng-click="add()">Add Treatment</button>
   </div>
   <div class="modal-footer">
     <button ng-click="close()" class="btn btn-warning" >Cancel</button>
-    <button ng-click="close(treatments)" class="btn btn-primary" >Done</button>
+    <button type="submit" class="btn btn-primary" >Done</button>
   </div>
+    </form>
 </div>

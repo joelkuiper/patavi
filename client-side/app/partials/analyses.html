@@ -1,25 +1,28 @@
 <tabs>
 <pane ng-repeat="pane in analyses" heading="{{pane.title}}" active="pane.active">
-    <analysis analysis="pane"></analysis>
+<analysis analysis="pane"></analysis>
 </pane>
 <pane heading="New analysis">
 <div class="row">
   <div class="span4 offset1">
-    <h4>Or</h4>
+    <h4>New Dataset</h4>
     <hr>
-    <button type="submit" class="btn" ng-click="createNew()">Create new dataset</button>
+    <button type="submit" class="btn btn-primary" ng-click="createNew()">Create new dataset</button>
   </div>  
   <div class="span4">
     <h4>Upload a GeMTC file</h4>
     <hr>
-    <form enctype="multipart/form-data" async="/api/analysis/consistency" class="span3" ng-model="analyses">
-      <fieldset>
-        <input name="network[file]" type="file">
-        <br><br>
-        <button type="submit" class="btn btn-primary">Upload</button>
-      </fieldset> 
-    </form>
+    <div ng-controller="JobCtrl">
+      <form enctype="multipart/form-data" async="/api/analysis/network" class="span3" ng-model="jobs" success-fn="fromGeMTC()">
+        <fieldset>
+          <input name="network[file]" type="file">
+          <br><br>
+          <button type="submit" class="btn btn-primary" ng-class="{false: 'disabled'}[allowSubmission]">Upload</button>
+        </fieldset> 
+      </form>
+    </div>
   </div>
 </div>
 </pane>
 </tabs>
+

@@ -2,9 +2,9 @@
   <div class="modal-header">
     <h3>Add Study</h3>
   </div>
-  <div class="modal-body">
-    <form>
-      <input type="text" ng-model="result.id">
+  <form ng-submit="close(result)">
+    <div class="modal-body">
+      <input type="text" ng-model="result.id" required="required">
       <h4>Treatments</h4>
       <div ng-repeat="treatment in treatments">
         <label class="checkbox inline">
@@ -12,11 +12,11 @@
           {{treatment.id}}
         </label>
       </div>
-    </form>
-  </div>
-  <div class="modal-footer">
-    <button ng-click="close()" class="btn btn-warning" >Close</button>
-    <button ng-click="close(result)" class="btn btn-primary" >Add Study</button>
-  </div>
+    </div>
+    <div class="modal-footer">
+      <button ng-click="close()" class="btn btn-warning" >Close</button>
+      <button type="submit" class="btn btn-primary" >Add Study</button>
+    </div>
+  </form>
 </div>
 
