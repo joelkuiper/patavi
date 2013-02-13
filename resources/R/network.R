@@ -5,7 +5,6 @@ wrap.result <- function(result, description) {
 network <- function(params)  {
   library(gemtc)
   d <- params$network
-  print(d)
   if(!is.null(d$file)) { 
     network <- read.mtc.network(d$file)
     filename <- strsplit(d$file, "\\.")[[1]][[1]]

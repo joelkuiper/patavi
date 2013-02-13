@@ -118,6 +118,7 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 		add: function(job) {
 			if (!this.polling) {
 				this.startPoll();
+				this.polling = true;
 			}
 			this.jobs.push(job);
 		},

@@ -140,7 +140,8 @@
         (RList. (map into-r data-seq))))
     (let [is-seq (sequential? data-seq)
           el (if is-seq (first data-seq) data-seq)]
-      (cond 
+      (cond
+        (nil? el) (REXPNull.)
         (instance? Integer el) 
         (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
         (instance? Long el) 

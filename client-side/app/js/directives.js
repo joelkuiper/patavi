@@ -22,7 +22,7 @@ directive("asyncJob", ['Jobs', function(Jobs) {
 						});
 					},
 					cache: false,
-					contentType: false,
+					contentType: attributes.enctype || false,
 					processData: false
 				});
 			});
@@ -37,7 +37,29 @@ directive('analysis', function() {
 			analysis: '='
 		},
 		replace: true,
+		templateUrl: 'partials/analysis.html',
+	}
+}).
+directive('network', function() {
+	return {
+		restrict: 'E',
+		controller: 'AnalysisCtrl',
+		scope: {
+			analysis: '='
+		},
+		replace: true,
 		templateUrl: 'partials/analysis-detail.html',
+	}
+}).
+directive('result', function() {
+	return {
+		restrict: 'E',
+		controller: 'ResultCtrl',
+		scope: {
+			analysis: '='
+		},
+		replace: true,
+		templateUrl: 'partials/result-detail.html',
 	}
 }).
 directive('regexValidate', function() {

@@ -79,4 +79,5 @@
                    (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
         (R/assign R "params" options)
+        (log/debug params)
         {:results {(keyword analysis) (parse-results (R/parse R (str analysis "(params)") false))}}))))

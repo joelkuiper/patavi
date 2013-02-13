@@ -19,12 +19,16 @@ consistency <- function(params)  {
     d <- d$data
     d <- as.data.frame(t(sapply(d, unlist)))
     treatments <- lapply(params$network$treatments, unlist)
+
+    print(d) 
+    print(treatments)
     network <- mtc.network(d, unlist(params$network$description), treatments)
   }
+
   factor <- if(is.null(params$factor)) 2.5 else params$factor
-  n.chain <- if(is.null(params$n.chain)) 4  else params$n.chain
-  n.adapt <- if(is.null(params$n.adapt)) 5000  else params$n.adapt
-  n.iter <- if(is.null(params$n.iter)) 20000  else params$n.iter
+  n.chain <- if(is.null(params$n_chain)) 4  else params$n_chain
+  n.adapt <- if(is.null(params$n_adapt)) 5000  else params$n_adapt
+  n.iter <- if(is.null(params$n_iter)) 20000  else params$n_iter
   thin <- if(is.null(params$thin)) 1  else params$thin
 
   model <- mtc.model(network, "Consistency",  factor, n.chain) 

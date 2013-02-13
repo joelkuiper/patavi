@@ -1,4 +1,4 @@
-<tabs>
+<tabs nav-type="tabbable tabs-left" item-type="nav nav-tabs">
 <pane ng-repeat="pane in analyses" heading="{{pane.title}}" active="pane.active">
 <analysis analysis="pane"></analysis>
 </pane>
@@ -12,7 +12,7 @@
   <div class="span4">
     <h4>Upload a GeMTC file</h4>
     <hr>
-    <form enctype="multipart/form-data" async-job="/api/analysis/network" class="span3" ng-model="jobs" jobType="networkConvert" broadcast="networkUploaded">
+    <form async-job="/api/analysis/network" class="span3" jobType="networkConvert" broadcast="networkUploaded">
       <fieldset>
         <input name="network[file]" type="file">
         <br><br>

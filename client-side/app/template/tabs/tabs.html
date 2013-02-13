@@ -1,5 +1,5 @@
-<div class="tabbable tabs-left">
-  <ul class="nav nav-tabs">
+<div class="{{navType}}">
+	<ul class="{{itemType}}">
     <li ng-repeat="pane in panes" ng-class="{active:pane.selected}">
       <a href="" ng-click="select(pane)">{{pane.heading}}</a>
     </li>

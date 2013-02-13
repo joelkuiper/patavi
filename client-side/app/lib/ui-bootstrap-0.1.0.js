@@ -1039,7 +1039,8 @@ angular.module('ui.bootstrap.tabs', [])
   return {
     restrict: 'EA',
     transclude: true,
-    scope: {},
+    scope: { navType: '@',
+             itemType: '@' },
     controller: 'TabsController',
     templateUrl: 'template/tabs/tabs.html',
     replace: true

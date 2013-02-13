@@ -41,61 +41,6 @@
 
 (defn main [] ())
 
-;; ### Consistency models 
-;; Consistency models can be created based on a GeMTC network file
-;; in a multi-part form submit or, alternatively, by providing
-;; a network field in the following JSON format: 
-;; 
-;;     {"description":"",
-;;       "data":[
-;;         {
-;;           "study":"1",
-;;           "treatment":"A",
-;;           "mean":-1.22,
-;;           "std.dev":3.7,
-;;           "sampleSize":54
-;;         },
-;;         {
-;;           "study":"1",
-;;           "treatment":"B",
-;;           "mean":-1.2,
-;;           "std.dev":4.3,
-;;           "sampleSize":81
-;;         },
-;;         {
-;;           "study":"2",
-;;           "treatment":"B",
-;;           "mean":-1.8,
-;;           "std.dev":2.48,
-;;           "sampleSize":154
-;;         },
-;;         {
-;;           "study":"2",
-;;           "treatment":"B",
-;;           "mean":-2.1,
-;;           "std.dev":2.99,
-;;           "sampleSize":143
-;;         }
-;;       ],
-;;       "treatments":[
-;;         {
-;;           "id":"A",
-;;           "description":"Some medicine"
-;;         },
-;;         {
-;;           "id":"B",
-;;           "description":"Placebo"
-;;         },
-;;       ]
-;;     } 
-;;
-;; Where each of the treatments must be present in the data and
-;; vice-versa. Furthermore for dichotomous networks the `mean` and
-;; `sampleSize` can be replaced by the field `responders`. 
-;; The description is optional. The excerpt above specifies a network with
-;; continuous data for two two-armed studies comparing treatments
-;; A and B. 
- 
 (defroutes routes-handler
   (context "/api" []
            (OPTIONS "/" []
@@ -105,6 +50,7 @@
                        id (job/submit analysis)
                        jobs (get-in (params :request) [:session :jobs])
                        job (str api-url "/job/" id)]
+                   (log/debug params)
                    (assoc-in 
                      (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []
@@ -131,7 +77,7 @@
   "Main entry point for all requests."
   (->
     (handler/api routes-handler)
-    (ring-json/wrap-json-body)
+    (ring-json/wrap-json-params)
     (mp/wrap-multipart-params)
     (wrap-request-logger)
     (wrap-session)

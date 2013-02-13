@@ -22,10 +22,10 @@ function AnalysesCtrl($scope, Analyses) {
 		Analyses.fromGeMTC(network);
 	};
 
-  $scope.$on('networkUploaded', function(e, job) { 
-    var network = job.results.results.network.results;
-    $scope.fromGeMTC(network);
-  });
+	$scope.$on('networkUploaded', function(e, job) {
+		var network = job.results.results.network.results;
+		$scope.fromGeMTC(network);
+	});
 }
 AnalysesCtrl.inject = ['$scope', 'Analyses']
 
@@ -85,6 +85,72 @@ function AnalysisCtrl($scope, Analyses, $dialog) {
 }
 AnalysesCtrl.inject = ['$scope', 'Analyses', '$dialog']
 
+function ResultCtrl($scope, Analyses, Jobs) {
+	$scope.params = {};
+	$scope.results = {};
+
+	var filterForType = function(data, type) {
+		var newData = [];
+		if (type === "dichotomous") {
+			_.each(data, function(measurement) {
+				delete measurement['mean'];
+				delete measurement['stdDev'];
+			});
+		} else if (type === "continuous") {
+			_.each(data, function(measurement) {
+				delete measurement['responders'];
+			});
+		}
+		return data;
+	}
+
+	$scope.$watch('analysis', function() {
+		var network = angular.copy($scope.analysis);
+		$scope.params.network = {
+			data: _.toArray(_.values(filterForType(network.data, network.type))),
+			treatments: network.treatments,
+			description: network.description
+		};
+	});
+
+	var pop = function(obj) {
+		for (var key in obj) {
+			if (!Object.hasOwnProperty.call(obj, key)) continue;
+			var result = obj[key];
+			// If the property can't be deleted fail with an error.
+			if (!delete obj[key]) {
+				throw new Error();
+			}
+			return result;
+		}
+	}
+	$scope.$on('completedAnalysis', function(e, job) {
+		_.each(_.range(3), function() {
+			pop(job.results.results.consistency.results) // remove the first 3; TODO
+		});
+		$scope.results.results = job.results.results;
+	});
+
+	$scope.run = function(type) {
+		$.ajax({
+			url: '/api/analysis/' + type.toLowerCase(),
+			type: 'POST',
+			data: JSON.stringify($scope.params),
+			dataType: "json",
+			contentType: 'application/json; charset=utf-8',
+			success: function(responseJSON, textStatus, jqXHR) {
+				Jobs.add({
+					data: responseJSON,
+					type: 'run' + type,
+					broadcast: 'completedAnalysis'
+				});
+			}
+		});
+	}
+
+}
+ResultCtrl.inject = ['$scope', '$http', 'Analyses', 'Jobs']
+
 function StudyCtrl($scope, dialog) {
 	$scope.treatments = dialog.options.treatments;
 	$scope.result = {
@@ -117,3 +183,4 @@ function TreatmentCtrl($scope, dialog) {
 		})
 	}
 }
+
