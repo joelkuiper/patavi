@@ -12,15 +12,13 @@
   <div class="span4">
     <h4>Upload a GeMTC file</h4>
     <hr>
-    <div ng-controller="JobCtrl">
-      <form enctype="multipart/form-data" async="/api/analysis/network" class="span3" ng-model="jobs" success-fn="fromGeMTC()">
-        <fieldset>
-          <input name="network[file]" type="file">
-          <br><br>
-          <button type="submit" class="btn btn-primary" ng-class="{false: 'disabled'}[allowSubmission]">Upload</button>
-        </fieldset> 
-      </form>
-    </div>
+    <form enctype="multipart/form-data" async-job="/api/analysis/network" class="span3" ng-model="jobs" jobType="networkConvert" broadcast="networkUploaded">
+      <fieldset>
+        <input name="network[file]" type="file">
+        <br><br>
+        <button type="submit" class="btn btn-primary" ng-class="{false: 'disabled'}[allowSubmission]">Upload</button>
+      </fieldset> 
+    </form>
   </div>
 </div>
 </pane>

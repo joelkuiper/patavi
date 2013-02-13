@@ -18,6 +18,14 @@ function AnalysesCtrl($scope, Analyses) {
 	$scope.createNew = function() {
 		Analyses.create();
 	}
+	$scope.fromGeMTC = function(network) {
+		Analyses.fromGeMTC(network);
+	};
+
+  $scope.$on('networkUploaded', function(e, job) { 
+    var network = job.results.results.network.results;
+    $scope.fromGeMTC(network);
+  });
 }
 AnalysesCtrl.inject = ['$scope', 'Analyses']
 
@@ -109,75 +117,3 @@ function TreatmentCtrl($scope, dialog) {
 		})
 	}
 }
-
-function JobCtrl($scope, $http, $timeout, Analyses) {
-	$scope.jobs = [];
-	$scope.results = [];
-	$scope.allowSubmission = true;
-
-	var getUUID = function(path) {
-		var parser = document.createElement('a');
-		parser.href = path;
-		return parser.pathname.split("/").pop();
-	}
-
-	$scope.cancel = function(job) {
-		$http({
-			method: 'DELETE',
-			url: job
-		}).success(function(status) {
-			pushToScope(job, status);
-		});
-	}
-
-	var pushToScope = function(job, data) {
-		for (var field in data) {
-			job[field] = data[field];
-		}
-		job.uuid = getUUID(job.results);
-	}
-	$scope.fromGeMTC = function() {
-		Analyses.fromGeMTC($scope.results.pop().results.network.results);
-	};
-
-	var isCompleted = function() { 
-		var statuses = _.pluck(_.pluck($scope.jobs, 'job'), 'status');
-		return !_.some(statuses, function(x) { return x == 'running' || x == 'pending' }); 
-	}
-
-	var setAllowSubmission = function() { 
-		$scope.allowSubmission = isCompleted();
-	}
-
-	$scope.$watch('jobs', function() { 
-		setAllowSubmission();
-	});
-
-	// Poll the status of each listed job every 3 seconds
-	var poll = function() { (function tick() {
-				var nonPoll = ["completed", "failed", "canceled"];
-			_.each($scope.jobs, function(job) {
-				if (nonPoll.indexOf(job.job.status) == - 1) {
-					$http.get(job.job.job).success(function(data) {
-						pushToScope(job.job, data);
-					});
-				} else {
-					if (!job.executed && job.job.status === "completed") {
-						// Get results 
-						$http.get(job.job.results).success(function(data) {
-							$scope.results.push(data); 
-							$scope.$eval(job.successFn);
-						});
-						job.executed = true;
-					}
-					setAllowSubmission();
-				}
-			});
-			$timeout(tick, 500);
-		})();
-	}
-	poll();
-}
-
-AnalysesCtrl.inject = ['$scope', '$http', '$timeout', 'Analyses']
-

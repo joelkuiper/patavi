@@ -8,11 +8,13 @@ network <- function(params)  {
   print(d)
   if(!is.null(d$file)) { 
     network <- read.mtc.network(d$file)
+    filename <- strsplit(d$file, "\\.")[[1]][[1]]
   } else {
     stop("No GeMTC file found");
   }
 
-  results <- list(results      = list("data" = network$data,
+  results <- list(results      = list("title" = filename,
+                                      "data" = network$data,
                                       "type" = if (is.null(network$data$mean)) "dichotomous" else "continuous", 
                                       "treatments" = network$treatments,
                                       "description" = network$description),

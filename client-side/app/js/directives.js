@@ -3,7 +3,7 @@
 /* Directives */
 
 angular.module('clinicico.directives', []).
-directive("async", function() {
+directive("asyncJob", ['Jobs', function(Jobs) {
 	return {
 		restrict: "A",
 		require: '?ngModel',
@@ -11,21 +11,15 @@ directive("async", function() {
 			element.bind("submit", function() {
 				var formData = new FormData($(element)[0]);
 				$.ajax({
-					url: attributes.async,
+					url: attributes.asyncJob,
 					type: 'POST',
 					data: formData,
 					success: function(responseJSON, textStatus, jqXHR) {
-						//duplicate the previous view value.
-						var copy = angular.copy(ngModel.$viewValue);
-
-						//add the new objects
-						copy.push({job: responseJSON, successFn: attributes.successFn});
-
-						//update the model and run form validation.
-						ngModel.$setViewValue(copy);
-
-						//queue a digest.
-						scope.$apply();
+						Jobs.add({
+							data: responseJSON,
+							type: attributes.jobType,
+							broadcast: attributes.broadcast
+						});
 					},
 					cache: false,
 					contentType: false,
@@ -34,7 +28,7 @@ directive("async", function() {
 			});
 		}
 	};
-}).
+}]).
 directive('analysis', function() {
 	return {
 		restrict: 'E',

@@ -59,11 +59,6 @@ factory('Analyses', function() {
 		query: function() {
 			return this.analyses;
 		},
-		get: function(id) {
-			_.find(this.query, function(a) {
-				return a.id == id
-			});
-		},
 
 		fromGeMTC: function(data) {
 			var newAnalysis = new Analysis();
@@ -75,5 +70,63 @@ factory('Analyses', function() {
 	}
 
 	return Analyses;
-});
+}).
+factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, $timeout) {
+	var getUUID = function(path) {
+		var parser = document.createElement('a');
+		parser.href = path;
+		return parser.pathname.split("/").pop();
+	}
+
+	var updateJob = function(job, data) {
+		for (var field in data) {
+			job[field] = data[field];
+		}
+		job.uuid = getUUID(job.results);
+	}
+
+	var Jobs = {
+		jobs: [],
+		polling: false,
+
+		query: function() {
+			return this.jobs;
+		},
+		startPoll: function() {
+			var jobs = this.jobs;
+			(function tick() {
+				var nonPoll = ["completed", "failed", "canceled"];
+				_.each(jobs, function(job) {
+					if (nonPoll.indexOf(job.data.status) == - 1) {
+						$http.get(job.data.job).success(function(data) {
+							updateJob(job.data, data);
+						});
+					} else {
+						if (!job.executed && job.data.status === "completed") {
+							// Get results 
+							$http.get(job.data.results).success(function(data) {
+								job.results = data;
+								$rootScope.$broadcast(job.broadcast, job);
+							});
+							job.executed = true;
+						}
+					}
+				});
+				$timeout(tick, 500);
+			})();
+		},
+		add: function(job) {
+			if (!this.polling) {
+				this.startPoll();
+			}
+			this.jobs.push(job);
+		},
+		get: function(id) {
+			_.find(this.jobs, function(job) {
+				return job.id === id;
+			});
+		},
+	}
+	return Jobs;
+}]);
 
