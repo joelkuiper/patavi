@@ -18,5 +18,6 @@ config(['$routeProvider', function($routeProvider) {
 	$routeProvider.otherwise({
 		redirectTo: '/analyses'
 	});
-}]);
+}]).run(function($rootScope) {
+	$rootScope.hello = function() { alert("foo"); }});
 

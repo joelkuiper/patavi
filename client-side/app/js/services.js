@@ -116,14 +116,16 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 		__nonPoll: ["completed", "failed", "canceled"],
 
 		isReady: function() { 
-			return !((_.filter(this.jobs, function(j) { 
-				return this.__nonPoll.indexOf(job.data.status) == - 1);
-			}) >= 0);
+			var self = this;
+			return (_.filter(this.jobs, function(j) { 
+				return self.__nonPoll.indexOf(j.data.status) == - 1
+			}).length === 0);
 		},
 
 		query: function() {
 			return this.jobs;
 		},
+
 		startPoll: function() {
 			var jobs = this.jobs;
 			var self = this;
@@ -146,13 +148,16 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 				$timeout(tick, 500);
 			})();
 		},
+
 		add: function(job) {
 			if (!this.__polling) {
 				this.startPoll();
 				this.__polling = true;
 			}
 			this.jobs.push(job);
+			$rootScope.$broadCast("jobAdded");
 		},
+
 		get: function(id) {
 			return _.find(this.jobs, function(job) {
 				return job.id === id;

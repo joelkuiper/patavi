@@ -12,12 +12,13 @@ AppCtrl.$inject = ['$scope', '$location'];
 function HomeCtrl() {}
 function AboutCtrl() {}
 
-function AnalysesCtrl($scope, Analyses) {
+function AnalysesCtrl($scope, Analyses, Jobs) {
 	$scope.analyses = Analyses.query();
-
+	$scope.allowSubmission = Jobs.isReady();
 	$scope.createNew = function() {
 		Analyses.create();
 	}
+
 	$scope.fromGeMTC = function(network) {
 		Analyses.fromGeMTC(network);
 	};
@@ -27,7 +28,8 @@ function AnalysesCtrl($scope, Analyses) {
 		$scope.fromGeMTC(network);
 	});
 }
-AnalysesCtrl.inject = ['$scope', 'Analyses']
+
+AnalysesCtrl.inject = ['$scope', 'Analyses', 'Jobs']
 
 function AnalysisCtrl($scope, Analyses, $dialog) {
 	$scope.delete = {};
