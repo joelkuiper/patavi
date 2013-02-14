@@ -87,7 +87,6 @@ AnalysesCtrl.inject = ['$scope', 'Analyses', '$dialog']
 
 function ResultCtrl($scope, Analyses, Jobs) {
 	$scope.params = {};
-	$scope.results = {};
 
 	var filterForType = function(data, type) {
 		var newData = [];
@@ -105,7 +104,7 @@ function ResultCtrl($scope, Analyses, Jobs) {
 	}
 
 	$scope.$watch('analysis', function() {
-		var network = angular.copy($scope.analysis);
+		var network = $scope.analysis;
 		$scope.params.network = {
 			data: _.toArray(_.values(filterForType(network.data, network.type))),
 			treatments: network.treatments,
@@ -113,22 +112,10 @@ function ResultCtrl($scope, Analyses, Jobs) {
 		};
 	});
 
-	var pop = function(obj) {
-		for (var key in obj) {
-			if (!Object.hasOwnProperty.call(obj, key)) continue;
-			var result = obj[key];
-			// If the property can't be deleted fail with an error.
-			if (!delete obj[key]) {
-				throw new Error();
-			}
-			return result;
-		}
-	}
+
 	$scope.$on('completedAnalysis', function(e, job) {
-		_.each(_.range(3), function() {
-			pop(job.results.results.consistency.results) // remove the first 3; TODO
-		});
-		$scope.results.results = job.results.results;
+		var analysis = Analyses.addResults(job.analysis, job.results);
+
 	});
 
 	$scope.run = function(type) {
@@ -142,6 +129,7 @@ function ResultCtrl($scope, Analyses, Jobs) {
 				Jobs.add({
 					data: responseJSON,
 					type: 'run' + type,
+					analysis: $scope.analysis.id,
 					broadcast: 'completedAnalysis'
 				});
 			}

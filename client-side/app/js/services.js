@@ -22,7 +22,9 @@ factory('Analyses', function() {
 		this.description = "";
 		this.treatments = [];
 		this.data = [];
+		this.results = {};
 		var self = this;
+
 		this.addStudy = function(study) {
 			var newData = _.map(study.treatments, function(included, id) {
 				if (included) {
@@ -49,7 +51,17 @@ factory('Analyses', function() {
 			self.treatments.push(treatment);
 		}
 	}
-
+	var pop = function(obj) {
+		for (var key in obj) {
+			if (!Object.hasOwnProperty.call(obj, key)) continue;
+			var result = obj[key];
+			// If the property can't be deleted fail with an error.
+			if (!delete obj[key]) {
+				throw new Error();
+			}
+			return result;
+		}
+	}
 	var Analyses = {
 		analyses: [],
 
@@ -58,6 +70,19 @@ factory('Analyses', function() {
 		},
 		query: function() {
 			return this.analyses;
+		},
+		get: function(id) {
+			return _.find(this.analyses, function(a) {
+				return a.id === id;
+			});
+		},
+
+		addResults: function(id, results) {
+			var r = angular.copy(results.results);
+			_.each(_.range(3), function() {
+				pop(r.consistency.results) // remove the first network, description and treatments
+			});
+			this.get(id).results = r;
 		},
 
 		fromGeMTC: function(data) {
@@ -87,43 +112,49 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 
 	var Jobs = {
 		jobs: [],
-		polling: false,
+		__polling: false,
+		__nonPoll: ["completed", "failed", "canceled"],
+
+		isReady: function() { 
+			return !((_.filter(this.jobs, function(j) { 
+				return this.__nonPoll.indexOf(job.data.status) == - 1);
+			}) >= 0);
+		},
 
 		query: function() {
 			return this.jobs;
 		},
 		startPoll: function() {
 			var jobs = this.jobs;
+			var self = this;
 			(function tick() {
-				var nonPoll = ["completed", "failed", "canceled"];
 				_.each(jobs, function(job) {
-					if (nonPoll.indexOf(job.data.status) == - 1) {
+					if (self.__nonPoll.indexOf(job.data.status) == - 1) {
 						$http.get(job.data.job).success(function(data) {
 							updateJob(job.data, data);
 						});
 					} else {
 						if (!job.executed && job.data.status === "completed") {
-							// Get results 
 							$http.get(job.data.results).success(function(data) {
 								job.results = data;
 								$rootScope.$broadcast(job.broadcast, job);
 							});
-							job.executed = true;
 						}
+						job.executed = true;
 					}
 				});
 				$timeout(tick, 500);
 			})();
 		},
 		add: function(job) {
-			if (!this.polling) {
+			if (!this.__polling) {
 				this.startPoll();
-				this.polling = true;
+				this.__polling = true;
 			}
 			this.jobs.push(job);
 		},
 		get: function(id) {
-			_.find(this.jobs, function(job) {
+			return _.find(this.jobs, function(job) {
 				return job.id === id;
 			});
 		},

@@ -3,9 +3,9 @@
     <input name="network" type="hidden" ng-model="params.network">
     <label>Number of iterations</label><input type="number" ng-model="params.n_iter"> 
     <br>
-  <button class="btn" type="submit">Analyze</button>
+  <button class="btn" type="submit">Run model</button>
   </form>
-  <div ng-repeat="(analysis, results) in results.results">
+  <div ng-repeat="(analysis, results) in analysis.results">
     <h2>{{analysis | uppercase}}</h2>
     <div ng-repeat="data in results.results">
       <div ng-show="data">
