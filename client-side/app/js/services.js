@@ -155,7 +155,7 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 				this.__polling = true;
 			}
 			this.jobs.push(job);
-			$rootScope.$broadCast("jobAdded");
+			$rootScope.$broadcast("jobAdded");
 		},
 
 		get: function(id) {
