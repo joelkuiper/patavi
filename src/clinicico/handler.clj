@@ -2,7 +2,7 @@
 ;; Clinici.co provides a way for exposing R scripts as a web service using 
 ;; [REST](http://en.wikipedia.org/wiki/Representational_state_transfer).
 ;; Currently this framework handles the loading and running of GeMTC consistency
-;; models, but should eventually not be restricted to this. 
+;; models, but should not be restricted to this. 
 ;;
 ;; The typical life time of a Clinici.co session is roughly as follows: 
 ;;
@@ -50,7 +50,6 @@
                        id (job/submit analysis)
                        jobs (get-in (params :request) [:session :jobs])
                        job (str api-url "/job/" id)]
-                   (log/debug params)
                    (assoc-in 
                      (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []

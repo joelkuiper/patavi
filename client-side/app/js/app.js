@@ -18,6 +18,11 @@ config(['$routeProvider', function($routeProvider) {
 	$routeProvider.otherwise({
 		redirectTo: '/analyses'
 	});
-}]).run(function($rootScope) {
-	$rootScope.hello = function() { alert("foo"); }});
+}]).run(['$rootScope', 'Jobs', function($rootScope, Jobs) {
+	$rootScope.allowSubmission = true;
+	$rootScope.$on('jobsChange', 
+		function() { 
+			$rootScope.allowSubmission = Jobs.isReady(); })
+	}]
+);
 

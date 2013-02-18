@@ -8,6 +8,7 @@
             [clojure.string :as strs]
             [clojure.tools.logging :as log])
   (:import (org.rosuda.REngine REXP RList)
+           (org.rosuda.REngine.Rserve RConnection)
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
                                REXPString REXPGenericVector
@@ -16,15 +17,15 @@
 (def validators (atom {"consistency" (validation-set 
                                        (presence-of :network))}))
 
-(defn copy-to-r 
-  [R file filename]
+(defn copy-to-r! 
+  [^RConnection R file filename]
   (with-open [r-file (.createFile R filename)] 
     (io/copy file r-file)))
 
 (defn load-analysis! 
   "Finds the R file with the associated analysis 
    name and load its into an RConnection."
-  [R analysis]
+  [^RConnection R analysis]
   (let [script (io/as-file (io/resource (str "R/" analysis ".R")))]
     (if (nil? script)
       (throw (IllegalArgumentException. (str "Could not find specified analysis " analysis)))
@@ -61,7 +62,7 @@
                             (map #(.asString (.at (R/as-list %) "url")) images))
                   :description (map #(.asString (.at (R/as-list %) "description")) images)})
        :results (parse-results-list results)})
-    (catch Exception e (R/into-clj results)))) ;Fallback to generic structure
+    (catch Exception e (R/into-clj results)))) ; Fallback to generic structure
 
 (defn dispatch 
   [analysis params]
@@ -73,11 +74,10 @@
                                   (if (contains? v :file) 
                                     [k {"file" (get-in v [:file :filename])}] 
                                     [k v])) params))]
-      (with-open [R (R/connect)]
+      (with-open [^RConnection R (R/connect)]
         (doall (map 
                  (fn [[k v]] 
-                   (copy-to-r R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
+                   (copy-to-r! R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
         (R/assign R "params" options)
-        (log/debug params)
         {:results {(keyword analysis) (parse-results (R/parse R (str analysis "(params)") false))}}))))

@@ -14,10 +14,12 @@ network <- function(params)  {
 
   results <- list(results      = list("title" = filename,
                                       "data" = network$data,
-                                      "type" = if (is.null(network$data$mean)) "dichotomous" else "continuous", 
+                                      "type" = if (is.null(network$data$mean)) "dichotomous" else "continuous",
                                       "treatments" = network$treatments,
                                       "description" = network$description),
-                  descriptions = list("The generated network used to create the Consistency model",
+                  descriptions = list("The filename used to generate the network",
+                                      "The generated network used to create the Consistency model",
+                                      "Type of network",
                                       "Treatments compared in this analysis",
                                       "Short description"))
 

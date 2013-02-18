@@ -14,7 +14,6 @@ function AboutCtrl() {}
 
 function AnalysesCtrl($scope, Analyses, Jobs) {
 	$scope.analyses = Analyses.query();
-	$scope.allowSubmission = Jobs.isReady();
 	$scope.createNew = function() {
 		Analyses.create();
 	}
@@ -87,7 +86,7 @@ function AnalysisCtrl($scope, Analyses, $dialog) {
 }
 AnalysesCtrl.inject = ['$scope', 'Analyses', '$dialog']
 
-function ResultCtrl($scope, Analyses, Jobs) {
+function ResultCtrl($rootScope, $scope, Analyses, Jobs) {
 	$scope.params = {};
 
 	var filterForType = function(data, type) {
@@ -95,7 +94,7 @@ function ResultCtrl($scope, Analyses, Jobs) {
 		if (type === "dichotomous") {
 			_.each(data, function(measurement) {
 				delete measurement['mean'];
-				delete measurement['stdDev'];
+				delete measurement['std.dev'];
 			});
 		} else if (type === "continuous") {
 			_.each(data, function(measurement) {
@@ -103,6 +102,10 @@ function ResultCtrl($scope, Analyses, Jobs) {
 			});
 		}
 		return data;
+	}
+
+	$scope.cancel = function(jobUUID) { 
+		Jobs.cancel(jobUUID);
 	}
 
 	$scope.$watch('analysis', function() {
@@ -114,10 +117,8 @@ function ResultCtrl($scope, Analyses, Jobs) {
 		};
 	});
 
-
 	$scope.$on('completedAnalysis', function(e, job) {
 		var analysis = Analyses.addResults(job.analysis, job.results);
-
 	});
 
 	$scope.run = function(type) {
@@ -128,18 +129,19 @@ function ResultCtrl($scope, Analyses, Jobs) {
 			dataType: "json",
 			contentType: 'application/json; charset=utf-8',
 			success: function(responseJSON, textStatus, jqXHR) {
-				Jobs.add({
+				var job = Jobs.add({
 					data: responseJSON,
 					type: 'run' + type,
 					analysis: $scope.analysis.id,
 					broadcast: 'completedAnalysis'
 				});
+				$scope.analysis.job = job;
 			}
 		});
 	}
 
 }
-ResultCtrl.inject = ['$scope', '$http', 'Analyses', 'Jobs']
+ResultCtrl.inject = ['$rootScope', '$scope', '$http', 'Analyses', 'Jobs']
 
 function StudyCtrl($scope, dialog) {
 	$scope.treatments = dialog.options.treatments;

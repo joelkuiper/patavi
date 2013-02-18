@@ -3,12 +3,14 @@
 /* Directives */
 
 angular.module('clinicico.directives', []).
-directive("asyncJob", ['Jobs', function(Jobs) {
+directive("asyncJob", ['$rootScope', 'Jobs', function($rootScope, Jobs) {
 	return {
 		restrict: "A",
 		require: '?ngModel',
 		link: function(scope, element, attributes, ngModel) {
 			element.bind("submit", function() {
+				$rootScope.allowSubmission = false;
+				$rootScope.$apply();
 				var formData = new FormData($(element)[0]);
 				$.ajax({
 					url: attributes.asyncJob,
