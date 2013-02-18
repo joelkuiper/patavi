@@ -1,10 +1,24 @@
 <div>
-  <form ng-submit="run('Consistency')">
-    <input name="network" type="hidden" ng-model="params.network">
-    <label>Number of iterations</label><input type="number" ng-model="params.n_iter"> 
-    <br>
-  <button class="btn" type="submit">Run model</button>
-  </form>
+  <div class="span3">
+    <form ng-submit="run('Consistency')">
+      <input name="network" type="hidden" ng-model="params.network">
+      <label>Number of iterations</label><input type="number" ng-model="params.n_iter"> 
+      <br>
+      <button type="submit" class="btn btn-primary">Upload</button>
+    </form>
+  </div>
+  <div class="span5 offset1">
+    <div ng-show="analysis.job" class="{{analysis.job.data.status}} well"> 
+      <button type="button" class="close" ng-click="cancel(analysis.job.data.jobUUID)" tooltip="Cancel job">&times;</button>
+      <strong>Job:</strong> {{analysis.job.data.job}}<br>
+      <strong>Status:</strong> {{analysis.job.data.status}}<br>
+      <strong>Created at:</strong> {{analysis.job.data.created.date}}<br>
+      <span ng-show="analysis.job.data.completed.date"><strong>Finished at:</strong> {{analysis.job.data.completed.date}}<br></span>
+      <span ng-show="analysis.job.data.queuePosition > 1"><strong>Position in queue:</strong> {{analysis.job.data.queuePosition}}<br></span>
+      <span ng-show="analysis.job.data.results"><strong>Results:</strong><a href="#/result/{{analysis.job.data.uuid}}">{{analysis.job.data.results}}</a></span>
+    </div>
+  </div>
+
   <div ng-repeat="(analysis, results) in analysis.results">
     <h2>{{analysis | uppercase}}</h2>
     <div ng-repeat="data in results.results">

@@ -3,7 +3,6 @@
 <analysis analysis="pane"></analysis>
 </pane>
 <pane heading="New analysis">
-{{allowSubmission | json}}
 <div class="row">
   <div class="span4 offset1">
     <h4>New Dataset</h4>
@@ -17,7 +16,8 @@
       <fieldset>
         <input name="network[file]" type="file">
         <br><br>
-        <button type="submit" class="btn btn-primary" ng-class="{false: 'disabled'}[allowSubmission]">Upload</button>
+        <button type="submit" class="btn btn-primary" ng-disabled="!allowSubmission" ng-class="{false: 'disabled'}[allowSubmission]">Upload</button>
+				<img src="/img/processing.gif" ng-show="!allowSubmission">
       </fieldset> 
     </form>
   </div>
