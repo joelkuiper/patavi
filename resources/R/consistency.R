@@ -9,7 +9,6 @@ wrap.plot <- function(name, plot.fn, description) {
   list(url=paste(getwd(), "/", name, sep=""), name=name, description=description)
 }
 
-
 consistency <- function(params)  {
   library(gemtc)
   d <- params$network
@@ -17,12 +16,10 @@ consistency <- function(params)  {
     network <- read.mtc.network(d$file)
   } else {
     d <- d$data
-    d <- as.data.frame(t(sapply(d, unlist)))
+    d <- do.call(rbind, lapply(d, as.data.frame))
     treatments <- lapply(params$network$treatments, unlist)
 
-    print(d) 
-    print(treatments)
-    network <- mtc.network(d, unlist(params$network$description), treatments)
+    network <- mtc.network(d, treatments, unlist(params$network$description))
   }
 
   factor <- if(is.null(params$factor)) 2.5 else params$factor
@@ -41,11 +38,13 @@ consistency <- function(params)  {
   plots <- list(plots = list("forest" = (function() forest(run)),
                              "model" = (function() plot(model)),
                              "network" = (function() plot(network)), 
-                             "ranks" = (function() barplot(t(rank.prob), col=rainbow(dim(rank.prob)[[1]]), beside=T, legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]]))))),
+                             "ranks" = (function() barplot(t(rank.prob), 
+                              col=rainbow(dim(rank.prob)[[1]]), 
+                              beside=T, 
+                              legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]]))))),
                 descriptions = list("A forest plot for some baseline",
                                     paste("A graph with the treatments as vertices and the comparisons",
-                                          "as edges. The solid arrows represent basic parameters, the dotted",
-                                          "arrows represent inconsistency factors and solid lines represent",
+                                          "as edges. The lines with arrows represent basic parameters. Other lines represent",
                                           "comparisons that are not associated with any parameter but do have",
                                           "direct evidence from trials.", sep=" "),
                                     "The graph for the included evidence",
