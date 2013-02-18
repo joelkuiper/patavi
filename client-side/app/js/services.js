@@ -23,6 +23,7 @@ factory('Analyses', function() {
 		this.treatments = [];
 		this.data = [];
 		this.results = {};
+		this.jobStatus = "";
 		var self = this;
 
 		this.addStudy = function(study) {
@@ -144,6 +145,7 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 						}
 						job.executed = true;
 					}
+					$rootScope.$broadcast("jobsChange");
 				});
 				$timeout(tick, 500);
 			})();
@@ -155,7 +157,8 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 				this.__polling = true;
 			}
 			this.jobs.push(job);
-			$rootScope.$broadCast("jobAdded");
+			$rootScope.$broadcast("jobsChange");
+			return job;
 		},
 
 		get: function(id) {
@@ -163,6 +166,15 @@ factory("Jobs", ['$rootScope', '$http', '$timeout', function($rootScope, $http, 
 				return job.id === id;
 			});
 		},
+
+		cancel: function(id) { 
+			var job = this.get(id); 
+			console.log(job);
+			$http({method:'DELETE', url:job.data.job}).success(function(status) {
+				updateJob(job, status);
+				$rootScope.$broadcast("jobsChange");
+			});
+		}
 	}
 	return Jobs;
 }]);

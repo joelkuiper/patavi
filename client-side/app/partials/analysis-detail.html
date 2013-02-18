@@ -29,7 +29,7 @@
         <tr>
           <th>Id</th>
           <th ng-show="analysis.type == 'continuous'">Mean</th>
-          <th ng-show="analysis.type == 'continuous'">Std.Dev</th>
+          <th ng-show="analysis.type == 'continuous'">Std.dev</th>
           <th ng-show="analysis.type == 'dichotomous'">Responders</th>
           <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
           <th>&nbsp;</th>
@@ -46,13 +46,13 @@
             <input type="text" class="input-mini" type="number" float-validate ng-model="m.mean">
           </td>
           <td ng-show="analysis.type == 'continuous'">
-            <input type="text" class="input-mini" type="number" float-validate ng-model="m.stdDev">
+            <input type="text" class="input-mini" type="number" float-validate ng-model="m['std.dev']">
           </td>
           <td ng-show="analysis.type == 'dichotomous'">
             <input type="text" class="input-mini" type="number" ng-model="m.responders">
           </td>
           <td ng-show="analysis.type != 'none' && analysis.type">
-            <input type="number" class="input-mini" ng-model="m.sampleSize">
+            <input class="input-mini" type="number" ng-model="m.sampleSize">
           </td>
           <td>&nbsp;</td>
         </tr>
