@@ -23,7 +23,7 @@
   (testing "Files are copied"
     (let [file (doto (java.io.File/createTempFile "tmp" ".stuff") .deleteOnExit)]
       (spit file "foobar")
-      (copy-to-r @R file (.getName file))
+      (copy-to-r! @R file (.getName file))
       (is (not (= (R/parse @R (str "readLines('"(.getName file)"')")) "foo")))
       (is (= (R/parse @R (str "readLines('"(.getName file)"')"))) "foobar"))))
 
