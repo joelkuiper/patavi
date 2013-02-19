@@ -30,7 +30,7 @@
     (if (nil? script)
       (throw (IllegalArgumentException. (str "Could not find specified analysis " analysis)))
       (do
-        (copy-to-r R script analysis) 
+        (copy-to-r! R script analysis) 
         (.voidEval R (str "source('"script"')"))
         (.removeFile R analysis)))))
 
