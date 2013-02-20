@@ -1,12 +1,10 @@
 # clinicico
 Work-in-progress wrapper to create a RESTful webservice from an R script
 Currently designed to work with GeMTC. 
-
-[Documentation][2]
+[documentation wiki](https://github.com/joelkuiper/clinicico/wiki)
 
 [clinici.co](http://clinici.co)
 
-[2]:http://joelkuiper.github.com/clinicico/
 
 ## Prerequisites
 
@@ -21,6 +19,8 @@ To start a web server for the application, run:
 
     ./initialize
     ./start
+
+Or read the [dev-ops section](https://github.com/joelkuiper/clinicico/wiki/Devops) in the wiki. 
 
 ## License
 Copyright (c) 2013, Joel Kuiper et.al.
