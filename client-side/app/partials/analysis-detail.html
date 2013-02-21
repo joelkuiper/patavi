@@ -1,66 +1,82 @@
-<div>
-  <form class="form">
-    <div class="control-group">
-      <label class="control-label" for="inputName">Name</label>
-      <div class="controls">
-        <input type="text" id="inputName" ng-model="analysis.title">
+<div class="span9">
+    <div class="row">
+      <form class="form">
+        <div class="span3">
+          <div class="control-group">
+            <label class="control-label" for="inputName">Name</label>
+            <div class="controls">
+              <input type="text" id="inputName" ng-model="analysis.title">
+            </div>
+          </div>
+        </div>
+        <div class="span3">
+          <div class="control-group">
+            <label class="control-label" for="inputDescription">Description</label>
+            <div class="controls">
+              <input type="text" id="inputDescription" ng-model="analysis.description" placeholder="Description">
+            </div>
+          </div>
+        </div>
+        <div class="span3">
+          <div class="control-group">
+            <label class="control-label" for="inputType">Type</label>
+            <div class="controls">
+              <select ng-model="analysis.type">
+                <option value="dichotomous" selected="selected">Dichotomous</option>
+                <option value="continuous">Continuous</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="row">
+      <div class="span9">
+        <form class="form-inline">
+          <table class="table grid table-striped table-condensed table-bordered">
+            <thead>
+              <tr>
+                <th>Id</th>
+                <th ng-show="analysis.type == 'continuous'">Mean</th>
+                <th ng-show="analysis.type == 'continuous'">Std.dev</th>
+                <th ng-show="analysis.type == 'dichotomous'">Responders</th>
+                <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
+                <th>&nbsp;</th>
+              </tr>
+            </thead>
+            <tbody ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
+              <tr class="success">
+                <td colspan="{{{'continuous': 4, 'dichotomous': 3, 'none': 1}[analysis.type]}}">{{study}}</td>
+                <td><input type="checkbox" ng-model="delete[study]"></td>
+              </tr>
+              <tr ng-repeat="m in measurements">
+                <td>{{m.treatment}}</td>
+                <td ng-show="analysis.type == 'continuous'">
+                  <input type="text" class="input-small inline" type="number" float-validate ng-model="m.mean">
+                </td>
+                <td ng-show="analysis.type == 'continuous'">
+                  <input type="text" class="input-small inline" type="number" float-validate ng-model="m['std.dev']">
+                </td>
+                <td ng-show="analysis.type == 'dichotomous'">
+                  <input type="text" class="input-small inline" type="number" ng-model="m.responders">
+                </td>
+                <td ng-show="analysis.type != 'none' && analysis.type">
+                  <input class="input-small inline" type="number" ng-model="m.sampleSize">
+                </td>
+                <td>&nbsp;</td>
+              </tr>
+            </tbody>
+          </table>
+        </form>
       </div>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="inputDescription">Description</label>
-      <div class="controls">
-        <input type="text" id="inputDescription" ng-model="analysis.description" placeholder="Description">
-      </div>
+    <div class="row">
+      <div class="span7">
+      <p><button class="btn btn-primary" ng-click="createStudy()">Add study</button>
+      <button class="btn btn-info" ng-click="editTreatments()">Edit Treatments</button>
+      <button class="btn btn-danger" ng-click="deleteStudies(delete)">Delete Studies</button>
+      </p>
     </div>
-    <div class="control-group">
-      <label class="control-label" for="inputType">Type</label>
-      <div class="controls">
-        <select ng-model="analysis.type">
-          <option value="dichotomous" selected="selected">Dichotomous</option>
-          <option value="continuous">Continuous</option>
-          <option value="none">None</option>
-        </select>
-      </div>
-    </div>
-  </form>
-  <form class="form-inline">
-    <table class="table table-striped table-condensed table-bordered">
-      <thead>
-        <tr>
-          <th>Id</th>
-          <th ng-show="analysis.type == 'continuous'">Mean</th>
-          <th ng-show="analysis.type == 'continuous'">Std.dev</th>
-          <th ng-show="analysis.type == 'dichotomous'">Responders</th>
-          <th ng-show="analysis.type != 'none' && analysis.type">Sample Size</th>
-          <th>&nbsp;</th>
-        </tr>
-      </thead>
-      <tbody ng-repeat="(study, measurements) in analysis.__groupedMeasurements">
-        <tr class="success">
-          <td colspan="{{{'continuous': 4, 'dichotomous': 3, 'none': 1}[analysis.type]}}">{{study}}</td>
-          <td><input type="checkbox" ng-model="delete[study]"></td>
-        </tr>
-        <tr ng-repeat="m in measurements">
-          <td>{{m.treatment}}</td>
-          <td ng-show="analysis.type == 'continuous'">
-            <input type="text" class="input-mini" type="number" float-validate ng-model="m.mean">
-          </td>
-          <td ng-show="analysis.type == 'continuous'">
-            <input type="text" class="input-mini" type="number" float-validate ng-model="m['std.dev']">
-          </td>
-          <td ng-show="analysis.type == 'dichotomous'">
-            <input type="text" class="input-mini" type="number" ng-model="m.responders">
-          </td>
-          <td ng-show="analysis.type != 'none' && analysis.type">
-            <input class="input-mini" type="number" ng-model="m.sampleSize">
-          </td>
-          <td>&nbsp;</td>
-        </tr>
-      </tbody>
-    </table>
-  </form>
-  <p><button class="btn btn-primary" ng-click="createStudy()">Add study</button>
-  <button class="btn btn-info" ng-click="editTreatments()">Edit Treatments</button>
-  <button class="btn btn-danger" ng-click="deleteStudies(delete)">Delete Studies</button>
-  </p>
+  </div>
 </div>

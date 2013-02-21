@@ -18,3 +18,14 @@
   background-color: rgb(252, 248, 227) !important;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
+
+table.grid td  { 
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 1px;
+    vertical-align: middle;
+    padding-bottom: 1px;
+}
+td.grid td input { 
+    height: 18px
+}

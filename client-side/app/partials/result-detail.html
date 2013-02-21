@@ -1,54 +1,63 @@
 <div>
-  <div class="span3">
-    <form ng-submit="run('Consistency')">
-      <input name="network" type="hidden" ng-model="params.network">
-      <label>Number of iterations</label><input type="number" ng-model="params.n_iter"> 
-      <br>
-      <button type="submit" class="btn btn-primary">Upload</button>
-    </form>
-  </div>
-  <div class="span5 offset1">
-    <div ng-show="analysis.job" class="{{analysis.job.data.status}} well"> 
-      <button type="button" class="close" ng-click="cancel(analysis.job.data.jobUUID)" tooltip="Cancel job">&times;</button>
-      <strong>Job:</strong> {{analysis.job.data.job}}<br>
-      <strong>Status:</strong> {{analysis.job.data.status}}<br>
-      <strong>Created at:</strong> {{analysis.job.data.created.date}}<br>
-      <span ng-show="analysis.job.data.completed.date"><strong>Finished at:</strong> {{analysis.job.data.completed.date}}<br></span>
-      <span ng-show="analysis.job.data.queuePosition > 1"><strong>Position in queue:</strong> {{analysis.job.data.queuePosition}}<br></span>
-      <span ng-show="analysis.job.data.results"><strong>Results:</strong><a href="#/result/{{analysis.job.data.uuid}}">{{analysis.job.data.results}}</a></span>
+  <div class="row">
+    <div class="span3">
+      <form ng-submit="run('Consistency')">
+        <input name="network" type="hidden" ng-model="params.network">
+        <label>Number of iterations</label><input type="number" ng-model="params.n_iter" placeholder="20000"><br>
+        <label>Number of adapt iterations</label><input type="number" ng-model="params.n_adapt" placeholder="5000"><br>
+        <label>Factor</label><input type="number" ng-model="params.factor" placeholder="2.5"><br>
+        <label>Thinning</label><input type="number" ng-model="params.thin" placeholder="1">
+        <br>
+        <button type="submit" class="btn btn-primary">Run consistency</button>
+      </form>
     </div>
-  </div>
-
-  <div ng-repeat="(analysis, results) in analysis.results">
-    <h2>{{analysis | uppercase}}</h2>
-    <div ng-repeat="data in results.results">
-      <div ng-show="data">
-        <h4>{{data.name | uppercase}}</h4>
-        <p>{{data.description}}</p>
-        <table class="table table-bordered table-striped">
-          <thead>
-            <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
-              <td>&nbsp;</td>
-              <td ng-repeat="(name, col) in cols">{{name}}</td>
-            </tr>
-          </thead>
-          <tbody>
-            <tr ng-repeat="(row, cols) in data.data">
-              <td>{{row}}</td>
-              <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
-            </tr>
-          </tbody>
-        </table>
+    <div class="span5 offset1">
+      <div ng-show="analysis.job" class="{{analysis.job.data.status}} well"> 
+        <button type="button" class="close" ng-click="cancel(analysis.job.data.jobUUID)" tooltip="Cancel job">&times;</button>
+        <strong>Job:</strong> {{analysis.job.data.job}}<br>
+        <strong>Status:</strong> {{analysis.job.data.status}}<br>
+        <strong>Created at:</strong> {{analysis.job.data.created.date}}<br>
+        <span ng-show="analysis.job.data.completed.date"><strong>Finished at:</strong> {{analysis.job.data.completed.date}}<br></span>
+        <span ng-show="analysis.job.data.queuePosition > 1"><strong>Position in queue:</strong> {{analysis.job.data.queuePosition}}<br></span>
+        <span ng-show="analysis.job.data.cause"><strong>Cause:</strong> {{analysis.job.data.cause}}<br></span>
+        <span ng-show="analysis.job.data.results"><strong>Results:</strong><a href="#/result/{{analysis.job.data.uuid}}">{{analysis.job.data.results}}</a></span>
       </div>
     </div>
+  </div>
+  <div class="row"> 
+    <div class="span9">
+      <div ng-repeat="(analysis, results) in analysis.results">
+        <h2>{{analysis | uppercase}}</h2>
+        <div ng-repeat="data in results.results">
+          <div ng-show="data">
+            <h4>{{data.name | uppercase}}</h4>
+            <p>{{data.description}}</p>
+            <table class="table table-bordered table-condensed table-striped">
+              <thead>
+                <tr ng-repeat="(row, cols) in data.data" ng-show="$first">
+                  <td>&nbsp;</td>
+                  <td ng-repeat="(name, col) in cols">{{name}}</td>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="(row, cols) in data.data">
+                  <td>{{row}}</td>
+                  <td ng-repeat="(name, col) in cols">{{col | precision: 3}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-    <div class="span8">
-      <ul class="thumbnails">
-        <li class="span4"  ng-repeat="img in results.images">
-        <img ng-src="{{img.url}}" style="width:360px; height: 270px">
-        <p>{{img.description}}</p>
-        </li>
-      </ul>
+        <div class="span8">
+          <ul class="thumbnails">
+            <li class="span4"  ng-repeat="img in results.images">
+            <img ng-src="{{img.url}}" style="width:360px; height: 270px">
+            <p>{{img.description}}</p>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 </div>
