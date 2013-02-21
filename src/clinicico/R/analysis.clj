@@ -66,7 +66,7 @@
 
 (defn dispatch 
   [analysis params]
-  (if (not (valid? (get @validators analysis (validation-set)) params))
+  (if-not (valid? (get @validators analysis (validation-set)) params)
     (throw (IllegalArgumentException. 
              (str "Provided parameters were not valid for analysis " analysis)))
     (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k))

@@ -52,7 +52,7 @@
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
         (instance? REXPLogical field) #(.isTrue ^REXPLogical %) 
-        :else (throw (Exception. (.toString (class field))))))
+        :else (throw (Exception. (str (class field))))))
 
 (defn parse-matrix 
   "Parses a (named) matrix (2d-list in R) to a map 
@@ -145,7 +145,7 @@
         (instance? Integer el) 
         (REXPInteger. (if is-seq (int-array data-seq) (int el))) 
         (instance? Long el) 
-        (REXPInteger. (if is-seq (int-array (map #(cast-long %) data-seq)) (cast-long el))) 
+        (REXPInteger. (if is-seq (int-array (map cast-long data-seq)) (cast-long el))) 
         (instance? Boolean el) 
         (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el))) 
         (instance? Double el) 

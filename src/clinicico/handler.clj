@@ -56,15 +56,12 @@
                     (GET "/:id" [id] (http/no-content? (db/get-result id))))
            (context "/job" [] 
                     (GET "/session" [:as req] 
-                         (-> (resp/response (map job/status (get-in req [:session :jobs])))
-                             (resp/status 200)))
+                         (resp/status (resp/response (map job/status (get-in req [:session :jobs]))) 200))
                     (DELETE "/:id" [id]
                             (do (job/cancel id) 
-                                (-> (resp/response (job/status id))
-                                    (resp/status 200))))
+                                (resp/status (resp/response (job/status id)) 200)))
                     (GET "/:id" [id] 
-                         (-> (resp/response (job/status id))
-                             (resp/status 200)))))
+                         (resp/status (resp/response (job/status id)) 200))))
 
   ;; These routes should be handled by a webserver (e.g. nginx or apache)
   (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
