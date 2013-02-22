@@ -11,7 +11,8 @@
 
 (ns clinicico.jobs
   (:use clinicico.config) 
-  (:import [java.util.concurrent LinkedBlockingQueue 
+  (:import  org.rosuda.REngine.REngineException 
+            [java.util.concurrent LinkedBlockingQueue 
             Callable Executors TimeUnit ThreadPoolExecutor])
   (:require [clojure.tools.logging :as log]
             [clj-time.core :as time]))
@@ -44,13 +45,20 @@
   [id] 
   (str api-url "job/" id)) 
 
+(defn- cause 
+  [^Exception e] 
+  (let [cause (.getCause e)] 
+    (if (and (not (nil? e)) (instance? REngineException cause))
+      (.getMessage cause) 
+      (str e))))
+
 (defn- job-results 
   [id]
   (try
     (let [results (.get (:future (@jobs id)))]
       (-> (merge results)
           (assoc :status "completed")))
-    (catch Exception e {:status "failed" :cause (.toString e)})))
+    (catch Exception e {:status "failed" :cause (cause e)})))
 
 (defn- with-queued 
   [id]
