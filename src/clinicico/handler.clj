@@ -44,7 +44,7 @@
 (defroutes routes-handler
   (context "/api" []
            (OPTIONS "/" []
-                    (http/options [:options] {:version "0.2.0"}))
+                    (http/options [:options] {:version "0.2.1"}))
            (POST "/analysis/:method" [method & params]
                  (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
                        id (job/submit analysis)
