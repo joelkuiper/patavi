@@ -15,7 +15,6 @@
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]
             [lein-marginalia "0.7.1"]]
-  ;:marginalia {:javascript ["mathjax/MathJax.js"]}
   :aot [clinicico.ResourceNotFound]
   :ring {:handler clinicico.handler/app
          :init clinicico.handler/main}
