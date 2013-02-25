@@ -1,4 +1,4 @@
-(defproject clinicico "0.1.0-SNAPSHOT"
+(defproject clinicico "0.2.0"
   :description "A work-in-progress wrapper to create a RESTful webservice from an R script"
   :url "http://clinici.co"
   :repositories {"local" ~(str (.toURI (java.io.File. "third-party/repo")))}
