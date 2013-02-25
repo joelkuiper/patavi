@@ -53,7 +53,12 @@
                    (assoc-in 
                      (http/created job (job/status id)) [:session :jobs] (conj jobs id))))
            (context "/result" []
-                    (GET "/:id" [id] (http/no-content? (db/get-result id))))
+                    (GET "/:id" [id] (http/no-content? (db/get-result id)))
+                    (GET "/:id/file/:analysis/:file" [id analysis file] 
+                         (let [record (db/get-file id analysis file)]
+                           (-> (resp/response (.getInputStream record))
+                               (resp/content-type (:content-type (.getContentType record)))
+                               (resp/header "Content-Length" (.getLength record))))))
            (context "/job" [] 
                     (GET "/session" [:as req] 
                          (resp/status (resp/response (map job/status (get-in req [:session :jobs]))) 200))
@@ -65,7 +70,6 @@
 
   ;; These routes should be handled by a webserver (e.g. nginx or apache)
   (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
-  (route/resources "/generated" {:root "generated"})
   (route/resources "/")
   (route/not-found "Nothing to see here, move along now"))
 

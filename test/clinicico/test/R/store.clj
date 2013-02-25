@@ -11,12 +11,6 @@
 
 (use-fixtures :once mongo-connection)
 
-(defn- object-id? [id]
-  (and
-    (not (nil? id))''
-    (string? id)
-    (re-matches #"[0-9a-f]{24}" id)))
-
 (deftest test-save-result
   (testing "Create results"
     (let [result {:results "Foo"}
@@ -27,4 +21,10 @@
       (is (contains? results :created))
       (is (contains? results :modified))))
   (testing "Create Invalid Result"
-    (is (thrown? IllegalArgumentException (save-result {})))))
+    (is (thrown? IllegalArgumentException (save-result {}))))
+  (testing "Save file into db")
+    (let [file (doto (java.io.File/createTempFile "tmp" ".stuff") .deleteOnExit)]
+      (spit file "foobar")
+      (println "Foobar")
+      (save-result {:results [{:data {:content file :mime "text/plain"} :name "fooplot"}
+                             {:data [1 2 3] :name "fooinfo"}]})))

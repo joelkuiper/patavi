@@ -37,8 +37,11 @@
 (defn- parse-image 
   [image]
   (let [content (R/in-list image "image") 
-        mime (R/in-list image "mime")]
-  {:content content :mime mime}))
+        mime (R/in-list image "mime")
+        metadata (R/in-list image "metadata")]
+  {:content (io/input-stream (byte-array content)) 
+   :mime mime 
+   :metadata metadata}))
 
 (defn- parse-results-list [^RList lst] 
   (let [names (.keys lst)
@@ -57,7 +60,8 @@
   (try 
     (parse-results-list (R/as-list results))
     (catch Exception e 
-      (R/into-clj results)))) ; Fallback to generic structure
+      (do (log/debug e)
+          (R/into-clj results))))) ; Fallback to generic structure
 
 (defn dispatch 
   [analysis params]

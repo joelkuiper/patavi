@@ -8,7 +8,7 @@ make.plot <- function(plot.fn) {
     dev.off()
     r <- readBin(tmp, 'raw', 1024*1024) # 1MB filesize limit
     unlink(tmp)
-    img <- list(image=r, mime="image/png") 
+    img <- list(image=r, mime="image/png", metadata=list(format="png")) 
     class(img) <- "image"
     img
 }
