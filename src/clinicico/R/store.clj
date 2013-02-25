@@ -28,31 +28,42 @@
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
 
-(defn- with-oid [results]
+(defn- with-oid 
+  [results]
   (assoc results :_id (util/object-id)))
 
-(defn- created-now [results]
+(defn- created-now 
+  [results]
   (assoc results :created (time/now)))
 
-(defn- modified-now [result]
+(defn- modified-now 
+  [result]
   (assoc result :modified (time/now)))
 
 (def result-validator (validation-set
                       (presence-of :_id)
                       (presence-of :results)))
 
-(defn get-result [id] 
-  (dissoc (collection/find-map-by-id "results" (ObjectId. id)) :_id))
+(defn- save-files 
+  [results]
+  results
+)
 
-(defn save-result [result]
+(defn save-result 
+  [result]
   (let [new-result (created-now 
-                     (modified-now (with-oid result)))]
+                     (modified-now (save-files (with-oid result))))]
     (if (valid? result-validator new-result)
       (if (ok? 
             (collection/insert 
               (mongo-options :results-collection) 
               (conv/to-db-object (stringify-keys* new-result))))
         {:results (str api-url "result/" (str (new-result :_id)))
+         :id (str (new-result :_id))
          :completed (time/now)} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException. "Could not save invalid result set")))))  
+
+(defn get-result 
+  [id] 
+  (dissoc (collection/find-map-by-id "results" (ObjectId. id)) :_id))

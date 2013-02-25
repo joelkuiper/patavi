@@ -1,12 +1,16 @@
 wrap.result <- function(result, description) { 
     list(data=result, description=description, type=class(result))
 }
-wrap.plot <- function(name, plot.fn, description) {
-    name <- paste(name, ".png", sep="")
-    try(png(name))
-    plot.fn() 
-    dev.off();
-    list(url=paste(getwd(), "/", name, sep=""), name=name, description=description)
+make.plot <- function(plot.fn) { 
+    tmp <- tempfile()
+    CairoPNG(tmp)
+    plot.fn()
+    dev.off()
+    r <- readBin(tmp, 'raw', 1024*1024) # 1MB filesize limit
+    unlink(tmp)
+    img <- list(image=r, mime="image/png") 
+    class(img) <- "image"
+    img
 }
 
 consistency <- function(params)  {
@@ -35,27 +39,19 @@ consistency <- function(params)  {
     psrf <- gelman.diag(run)$psrf 
     rank.prob <- rank.probability(run) 
 
-    plots <- list(plots = list("forest" = (function() forest(run)),
-                               "model" = (function() plot(model)),
-                               "network" = (function() plot(network)), 
-                               "ranks" = (function() barplot(t(rank.prob), 
-                                                             col=rainbow(dim(rank.prob)[[1]]), 
-                                                             beside=T, 
-                                                             legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]]))))),
-                  descriptions = list("A forest plot for some baseline",
-                                      paste("A graph with the treatments as vertices and the comparisons",
-                                            "as edges. The lines with arrows represent basic parameters. Other lines represent",
-                                            "comparisons that are not associated with any parameter but do have",
-                                            "direct evidence from trials.", sep=" "),
-                                      "The graph for the included evidence",
-                                      "Bar plot for the rank probabilities"))
-
     results <- list(results = list("network" = network$data,
                                    "treatments" = network$treatments,
                                    "description" = network$description,
                                    "quantiles" = quantiles, 
                                    "psrf" = psrf, 
-                                   "ranks" = rank.prob),
+                                   "ranks" = rank.prob,
+                                   "forest_plot" = make.plot(function() forest(run)),
+                                   "model_plot" = make.plot(function() plot(model)),
+                                   "network_plot" = make.plot(function() plot(network)), 
+                                   "ranks_plot" = make.plot(function() barplot(t(rank.prob), 
+                                                                      col=rainbow(dim(rank.prob)[[1]]), 
+                                                                      beside=T, 
+                                                                      legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]]))))),
                     descriptions = list("The generated network used to create the Consistency model",
                                         "Treatments compared in this analysis",
                                         "Short description",
@@ -63,20 +59,20 @@ consistency <- function(params)  {
                                         paste("The `potential scale reduction factor' is calculated for each",
                                               "variable in ‘x’, together with upper and lower confidence limits.",
                                               "Approximate convergence is diagnosed when the upper limit is close to 1.", sep=" "),
-
                                         paste("For each MCMC iteration, the treatments are ranked by their effect",
                                               "relative to an arbitrary baseline. A frequency table is",
                                               "constructed from these rankings and normalized by the number of",
-                                              "iterations to give the rank probabilities.", sep=" ")))
+                                              "iterations to give the rank probabilities.", sep=" "),
+                                        "A forest plot for some baseline",
+                                        paste("A graph with the treatments as vertices and the comparisons",
+                                              "as edges. The lines with arrows represent basic parameters. Other lines represent",
+                                              "comparisons that are not associated with any parameter but do have",
+                                              "direct evidence from trials.", sep=" "),
+                                        "The graph for the included evidence",
+                                        "Bar plot for the rank probabilities"))
 
-    list(results=mapply(wrap.result, 
-                        results$results,
-                        results$descriptions, 
-                        SIMPLIFY=F),
-
-         images=mapply(wrap.plot, 
-                       names(plots$plots), 
-                       plots$plots, 
-                       plots$descriptions, 
-                       SIMPLIFY=F))
+    mapply(wrap.result, 
+           results$results,
+           results$descriptions, 
+           SIMPLIFY=F)
 }

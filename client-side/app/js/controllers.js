@@ -23,7 +23,7 @@ function AnalysesCtrl($scope, Analyses, Jobs) {
 	};
 
 	$scope.$on('networkUploaded', function(e, job) {
-		var network = job.results.results.network.results;
+		var network = job.results.results.network;
 		$scope.fromGeMTC(network);
 	});
 }
@@ -88,6 +88,7 @@ AnalysesCtrl.inject = ['$scope', 'Analyses', '$dialog']
 
 function ResultCtrl($rootScope, $scope, Analyses, Jobs) {
 	$scope.params = {};
+    $scope.allowSubmission = $rootScope.allowSubmission;
 
 	var filterForType = function(data, type) {
 		var newData = [];
