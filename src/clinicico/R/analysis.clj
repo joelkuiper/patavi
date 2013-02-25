@@ -34,35 +34,34 @@
         (.voidEval R (str "source('"script"')"))
         (.removeFile R analysis)))))
 
+(defn- parse-image 
+  [image]
+  (let [content (R/in-list image "image") 
+        mime (R/in-list image "mime")
+        metadata (R/in-list image "metadata")]
+  {:content (io/input-stream (byte-array content)) 
+   :mime mime 
+   :metadata metadata}))
+
 (defn- parse-results-list [^RList lst] 
   (let [names (.keys lst)
         conv {"matrix" #(R/parse-matrix %)
+              "image" #(parse-image %)
               "data.frame" #(map-cols-to-rows (R/into-clj %))}]
-    (map (fn [k] (let [itm (R/as-list (.at lst k))
+    (doall (map (fn [k] (let [itm (R/as-list (.at lst k))
                        data (.at itm "data")
                        desc (R/into-clj (.at itm "description"))
                        data-type (R/into-clj (.at itm "type"))]
                    {:name k 
                     :description  desc
-                    :data ((get conv data-type R/into-clj) data)})) names)))
-
-(defn- url-for-img-path [path]
- (let [exploded (strs/split path #"\/")
-       workspace (first (filter #(re-matches #"conn[0-9]*" %) exploded))
-       img (last exploded)]
-   (str base-url "generated/" workspace "/" img)))
+                    :data ((get conv data-type R/into-clj) data)})) names))))
 
 (defn- parse-results [^REXP results]
   (try 
-    (let [data (R/as-list results)
-          images (R/as-list (.at data "images"))
-          results (R/as-list (.at data "results"))]
-      {:images (map-cols-to-rows 
-                 {:url (map #(url-for-img-path %) 
-                            (map #(.asString (.at (R/as-list %) "url")) images))
-                  :description (map #(.asString (.at (R/as-list %) "description")) images)})
-       :results (parse-results-list results)})
-    (catch Exception e (R/into-clj results)))) ; Fallback to generic structure
+    (parse-results-list (R/as-list results))
+    (catch Exception e 
+      (do (log/debug e)
+          (R/into-clj results))))) ; Fallback to generic structure
 
 (defn dispatch 
   [analysis params]

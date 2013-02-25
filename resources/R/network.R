@@ -23,10 +23,8 @@ network <- function(params)  {
                                       "Treatments compared in this analysis",
                                       "Short description"))
 
-  list(images=list(),
-       results=mapply(function(result, description) { 
-                      wrap.result(result, description) }, 
-                      results$results,
-                      results$descriptions, 
-                      SIMPLIFY=F))
+  mapply(wrap.result,
+         results$results,
+         results$descriptions, 
+         SIMPLIFY=F)
 }

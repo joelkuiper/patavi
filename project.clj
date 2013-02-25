@@ -1,4 +1,4 @@
-(defproject clinicico "0.1.0-SNAPSHOT"
+(defproject clinicico "0.2.0"
   :description "A work-in-progress wrapper to create a RESTful webservice from an R script"
   :url "http://clinici.co"
   :repositories {"local" ~(str (.toURI (java.io.File. "third-party/repo")))}
@@ -15,7 +15,6 @@
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]
             [lein-marginalia "0.7.1"]]
-  ;:marginalia {:javascript ["mathjax/MathJax.js"]}
   :aot [clinicico.ResourceNotFound]
   :ring {:handler clinicico.handler/app
          :init clinicico.handler/main}

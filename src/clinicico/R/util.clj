@@ -17,7 +17,8 @@
            (org.rosuda.REngine REXPDouble REXPLogical 
                                REXPFactor REXPInteger 
                                REXPString REXPGenericVector
-                               REXPNull REngineException)
+                               REXPNull REngineException
+                               REXPRaw REXPSymbol)
            (org.rosuda.REngine.Rserve RConnection)))
 
 (defn connect 
@@ -52,6 +53,7 @@
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
         (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
         (instance? REXPLogical field) #(.isTrue ^REXPLogical %) 
+        (instance? REXPRaw field) #(.asBytes ^REXPRaw %) 
         :else (throw (Exception. (str (class field))))))
 
 (defn parse-matrix 
@@ -130,7 +132,8 @@
 (defn into-r
   "Converts Clojure data-structures into  
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
-   REngine does not recognize longs so it will attempt to cast them to integers"
+   REngine does not recognize longs so it will attempt to cast them to integers
+   Currently does not handle Raw data"
   [data-seq]
   (if (and (counted? data-seq) (every? (or associative? sequential?) data-seq))
     (REXPGenericVector. 

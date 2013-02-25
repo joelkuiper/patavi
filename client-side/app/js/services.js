@@ -79,9 +79,9 @@ factory('Analyses', function() {
 		},
 
 		addResults: function(id, results) {
-			var r = angular.copy(results.results);
+			var r = angular.copy(results);
 			_.each(_.range(3), function() {
-				pop(r.consistency.results) // remove the first network, description and treatments
+				pop(r.results.consistency) // remove the first network, description and treatments
 			});
 			this.get(id).results = r;
 		},

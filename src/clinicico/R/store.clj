@@ -7,6 +7,7 @@
   (:use [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
         [monger.conversion :only [from-db-object]]
+        [monger.gridfs :only [store-file make-input-file filename content-type metadata]]
         [clinicico.config]
         [clinicico.util.util]
         [validateur.validation])
@@ -17,6 +18,7 @@
             [monger.json]
             [monger.util :as util]
             [monger.joda-time]
+            [monger.gridfs :as gfs]
             [clj-time.core :as time]))
 
 (def mongo-options
@@ -28,31 +30,74 @@
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
 
-(defn- with-oid [results]
+(defn- with-oid 
+  [results]
   (assoc results :_id (util/object-id)))
 
-(defn- created-now [results]
+(defn- created-now 
+  [results]
   (assoc results :created (time/now)))
 
-(defn- modified-now [result]
+(defn- modified-now 
+  [result]
   (assoc result :modified (time/now)))
 
 (def result-validator (validation-set
                       (presence-of :_id)
                       (presence-of :results)))
 
-(defn get-result [id] 
-  (dissoc (collection/find-map-by-id "results" (ObjectId. id)) :_id))
+(defn- get-filename 
+  [file]
+  (let [ext (get-in file [:data :metadata "format"])
+        name (:name file)]
+    (str name "." ext)))
 
-(defn save-result [result]
+(defn- save-file 
+  [file analysis id]
+    (store-file (make-input-file (get-in file [:data :content]))
+                (metadata (get-in file [:data :metadata]))
+                (content-type (get-in file [:data :mime]))
+                (filename (str id "/" analysis "/" (get-filename file)))))
+
+(defn save-files-for-result 
+  [result id analysis]
+  (let [filter-fn (fn [x] (not (nil? (get-in x [:data :mime]))))
+        files (filter filter-fn result)]
+    (doall (map (fn [f] (save-file f analysis id)) files))
+    (concat (remove filter-fn result)
+      (map (fn [file] 
+        {:name (:name file) 
+         :description (:description file)
+         :url (str api-url "result/" id "/file/" analysis "/" (get-filename file))}) files))))
+
+(defn save-files 
+  [results]
+  (assoc results :results 
+    (into {} (map (fn [[k v]] 
+      {k (save-files-for-result v(:_id results) (name k))}) (results :results)))))
+
+(defn save-result 
+  [results]
   (let [new-result (created-now 
-                     (modified-now (with-oid result)))]
+                     (modified-now (save-files (with-oid results))))]
     (if (valid? result-validator new-result)
       (if (ok? 
             (collection/insert 
               (mongo-options :results-collection) 
               (conv/to-db-object (stringify-keys* new-result))))
         {:results (str api-url "result/" (str (new-result :_id)))
+         :id (str (new-result :_id))
          :completed (time/now)} 
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException. "Could not save invalid result set")))))  
+
+(defn get-result 
+  [id] 
+  (dissoc (collection/find-map-by-id "results" (ObjectId. id)) :_id))
+
+(defn get-file 
+  [id analysis filename] 
+  (let [f (-> (gfs/find-one {:filename (str id "/" analysis "/" filename)}))]
+    (if (nil? f) 
+      (throw (clinicico.ResourceNotFound.))
+      f)))

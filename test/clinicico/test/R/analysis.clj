@@ -52,49 +52,49 @@
            "study" "1",
            "treatment" "A",
            "mean" -1.22,
-           "stdDev" 3.7,
+           "std.dev" 3.7,
            "sampleSize" 54
          },
          {
            "study" "1",
            "treatment" "B",
            "mean" -1.2,
-           "stdDev" 4.3,
+           "std.dev" 4.3,
            "sampleSize" 81
          },
          {
            "study" "2",
            "treatment" "B",
            "mean" -1.8,
-           "stdDev" 2.48,
+           "std.dev" 2.48,
            "sampleSize" 154
          },
          {
            "study" "2",
            "treatment" "A",
            "mean" -2.1,
-           "stdDev" 2.99,
+           "std.dev" 2.99,
            "sampleSize" 143
          },
           {
            "study" "2",
            "treatment" "C",
            "mean" 1.4,
-           "stdDev" 8.2,
+           "std.dev" 8.2,
            "sampleSize" 34
          },
          {
            "study" "3",
            "treatment" "C",
            "mean" -5.1,
-           "stdDev" 2.99,
+           "std.dev" 2.99,
            "sampleSize" 125
          },
          {
            "study" "3",
            "treatment" "B",
            "mean" -1.1,
-           "stdDev" 2.99,
+           "std.dev" 2.99,
            "sampleSize" 177
          }
        ],
