@@ -61,7 +61,9 @@
                                (resp/header "Content-Length" (.getLength record))))))
            (context "/job" [] 
                     (GET "/session" [:as req] 
-                         (resp/status (resp/response (map job/status (get-in req [:session :jobs]))) 200))
+                         (resp/status 
+                           (resp/response 
+                             (map job/status (get-in req [:session :jobs]))) 200))
                     (DELETE "/:id" [id]
                             (do (job/cancel id) 
                                 (resp/status (resp/response (job/status id)) 200)))
