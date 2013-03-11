@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from an R script</p>
+</script><title>clinicico -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">clinicico</h1><h2 class="project-version">0.2.2</h2><br /><p>A work-in-progress wrapper to create a RESTful webservice from an R script</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr><tr><td class="dep-name">compojure</td><td class="dotted"><hr /></td><td class="dep-version">1.1.5</td></tr><tr><td class="dep-name">ring-middleware-format</td><td class="dotted"><hr /></td><td class="dep-version">0.2.3</td></tr><tr><td class="dep-name">ring/ring-json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr><tr><td class="dep-name">org.clojure/tools.logging</td><td class="dotted"><hr /></td><td class="dep-version">0.2.4</td></tr><tr><td class="dep-name">log4j/log4j</td><td class="dotted"><hr /></td><td class="dep-version">1.2.17</td></tr><tr><td class="dep-name">com.google.guava/guava</td><td class="dotted"><hr /></td><td class="dep-version">13.0.1</td></tr><tr><td class="dep-name">com.novemberain/monger</td><td class="dotted"><hr /></td><td class="dep-version">1.4.2</td></tr><tr><td class="dep-name">joda-time/joda-time</td><td class="dotted"><hr /></td><td class="dep-version">2.1</td></tr><tr><td class="dep-name">local/RserveEngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr><tr><td class="dep-name">local/REngine</td><td class="dotted"><hr /></td><td class="dep-version">1.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#clinicico.R.analysis">clinicico.R.analysis</a></li><li><a href="#clinicico.R.store">clinicico.R.store</a></li><li><a href="#clinicico.R.util">clinicico.R.util</a></li><li><a href="#clinicico.ResourceNotFound">clinicico.ResourceNotFound</a></li><li><a href="#clinicico.config">clinicico.config</a></li><li><a href="#clinicico.handler">clinicico.handler</a></li><li><a href="#clinicico.http">clinicico.http</a></li><li><a href="#clinicico.jobs">clinicico.jobs</a></li><li><a href="#clinicico.middleware">clinicico.middleware</a></li><li><a href="#clinicico.util.util">clinicico.util.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.analysis" name="clinicico.R.analysis"><h1 class="project-name">clinicico.R.analysis</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns clinicico.R.analysis
   (:use validateur.validation
@@ -3056,7 +3056,8 @@ net.brehaut.ClojureTools = (function (SH) {
   [^RConnection R analysis]
   (let [script (io/as-file (io/resource (str &quot;R/&quot; analysis &quot;.R&quot;)))]
     (if (nil? script)
-      (throw (IllegalArgumentException. (str &quot;Could not find specified analysis &quot; analysis)))
+      (throw (IllegalArgumentException. 
+        (str &quot;Could not find specified analysis &quot; analysis)))
       (do
         (copy-to-r! R script analysis) 
         (.voidEval R (str &quot;source('&quot;script&quot;')&quot;))
@@ -3100,10 +3101,13 @@ net.brehaut.ClojureTools = (function (SH) {
       (with-open [^RConnection R (R/connect)]
         (doall (map 
                  (fn [[k v]] 
-                   (copy-to-r! R (get-in v [:file :tempfile]) (get-in v [:file :filename]))) files))
+                   (copy-to-r! R 
+                    (get-in v [:file :tempfile]) 
+                    (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
         (R/assign R &quot;params&quot; options)
-        {:results {(keyword analysis) (parse-results (R/parse R (str analysis &quot;(params)&quot;) false))}}))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.store" name="clinicico.R.store"><h1 class="project-name">clinicico.R.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Store</h2>
+        {:results {(keyword analysis) (parse-results 
+                                        (R/parse R (str analysis &quot;(params)&quot;) false))}}))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#clinicico.R.store" name="clinicico.R.store"><h1 class="project-name">clinicico.R.store</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Store</h2>
 
 <p>A simple MongoDB storage for the produced results. 
 Takes any map that includes a results field.</p>
@@ -3414,7 +3418,7 @@ the user to retrieve the jobs he or she submitted but not others. </p>
 </td><td class="codes"><pre class="brush: clojure">(defroutes routes-handler
   (context &quot;/api&quot; []
            (OPTIONS &quot;/&quot; []
-                    (http/options [:options] {:version &quot;0.3.0-SNAPSHOT&quot;}))
+                    (http/options [:options] {:version &quot;0.2.1&quot;}))
            (POST &quot;/analysis/:method&quot; [method &amp; params]
                  (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
                        id (job/submit analysis)
@@ -3431,7 +3435,9 @@ the user to retrieve the jobs he or she submitted but not others. </p>
                                (resp/header &quot;Content-Length&quot; (.getLength record))))))
            (context &quot;/job&quot; [] 
                     (GET &quot;/session&quot; [:as req] 
-                         (resp/status (resp/response (map job/status (get-in req [:session :jobs]))) 200))
+                         (resp/status 
+                           (resp/response 
+                             (map job/status (get-in req [:session :jobs]))) 200))
                     (DELETE &quot;/:id&quot; [id]
                             (do (job/cancel id) 
                                 (resp/status (resp/response (job/status id)) 200)))

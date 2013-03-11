@@ -29,7 +29,7 @@
   (let [script (io/as-file (io/resource (str "R/" analysis ".R")))]
     (if (nil? script)
       (throw (IllegalArgumentException. 
-        (str "Could not find specified analysis " analysis)))
+               (str "Could not find specified analysis " analysis)))
       (do
         (copy-to-r! R script analysis) 
         (.voidEval R (str "source('"script"')"))
@@ -78,9 +78,10 @@
         (doall (map 
                  (fn [[k v]] 
                    (copy-to-r! R 
-                    (get-in v [:file :tempfile]) 
-                    (get-in v [:file :filename]))) files))
+                               (get-in v [:file :tempfile]) 
+                               (get-in v [:file :filename]))) files))
         (load-analysis! R analysis)
         (R/assign R "params" options)
-        {:results {(keyword analysis) (parse-results 
-                                        (R/parse R (str analysis "(params)") false))}}))))
+        {:results {(keyword analysis) 
+                   (parse-results 
+                     (R/parse R (str analysis "(params)") false))}}))))

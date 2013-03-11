@@ -158,7 +158,9 @@
                      (into-array String (sort (distinct data-seq)))) 
         (instance? String el) 
         (REXPString. (if is-seq (into-array String data-seq) el)) 
-        :else (throw (IllegalArgumentException. (str "Error parsing" (class el) " " data-seq)))))))
+        :else (throw 
+                (IllegalArgumentException. 
+                  (str "Error parsing" (class el) " " data-seq)))))))
 
 (defn assign 
   "Assigns the given value as converted by into-r 
@@ -169,6 +171,3 @@
 (defn rget 
   [R varname] 
   (into-clj (.get ^RConnection R varname nil true))) 
-
-(defn r-list-as-dataframe [RList] 
-  (REXP/createDataFrame RList))
