@@ -38,7 +38,7 @@
 
 (defn main [] ())
 
-(def *version* "0.2.1")
+(def ^:dynamic *version* "0.2.1")
 
 (defroutes routes-handler
   (context "/api" []

@@ -17,7 +17,7 @@
     (is (= (count (R/parse @R "rnorm(100)")) 100))))
 
 (deftest test-transforms
-  (testing "Transform primitve" 
+  (testing "Transform primitve"
     (is (= "foo" (R/into-clj (R/into-r "foo"))))
     (is (= 1.0 (R/into-clj (R/into-r 1.0))))
     (is (= 1 (R/into-clj (R/into-r 1))))
@@ -36,11 +36,15 @@
     (is (= {"foo" {"qux" "bar"}} (R/into-clj (R/into-r {"foo" {"qux" "bar"}}))))
     (is (= {"foo" {"qux" false}} (R/into-clj (R/into-r {"foo" {"qux" false}}))))
     (is (= {"foo" {"1" {"a" false}}} (R/into-clj (R/into-r {"foo" {1 {"a" false}}}))))
-    (is (= {"foo" {"1" {"k" "v"}}} (R/into-clj (R/into-r {"foo" {1 {:k "v"}}}))))))
+    (is (= {"foo" {"1" {"k" "v"}}} (R/into-clj (R/into-r {"foo" {1 {:k "v"}}})))))
+  (testing "Transformation of list of maps"
+    (is (= [{"foo" 10} {"bar" 5}] (R/into-clj (R/into-r [{"foo" 10} {"bar" 5}]))))
+    (is (= {"b" {"a" [{"foo" 10} {"bar" 5}]}} (R/into-clj (R/into-r {"b" {"a" [{"foo" 10} {"bar" 5}]}}))))
+    (is (= {"qux" [{"foo" 10} {"bar" 5}]} (R/into-clj (R/into-r {"qux" [{"foo" 10} {"bar" 5}]}))))))
 
 (deftest test-r-assignments
   (testing "Assignments to RServe"
-    (R/assign @R "foo" {:foo "foobar"}) 
+    (R/assign @R "foo" {:foo "foobar"})
     (is (= (R/rget @R "foo") {"foo" "foobar"}))
     (R/assign @R "numbers" '(1 2 3 4))
     (is (= "integer" (R/parse @R (str "class(numbers)"))))
@@ -49,5 +53,12 @@
     (R/assign @R "numbers" {:foo '[1 2 3 4]})
     (is (= "integer" (R/parse @R (str "class(numbers$foo)")))))
   (testing "Complexer assignment"
-    (R/assign @R "foo" {:foo [1 2 3 4]}) 
-    (is (= (R/rget @R "foo") {"foo" [1 2 3 4]})))) 
+    (R/assign @R "foo" {:foo [1 2 3 4]})
+    (is (= (R/rget @R "foo") {"foo" [1 2 3 4]})))
+  (testing "Asignment of list of maps"
+    (R/assign @R "foo" [{"foo" 10} {"bar" 5}])
+    (is (= (R/rget @R "foo") [{"foo" 10} {"bar" 5}])))
+  (testing "Assignment of map list of maps"
+    (R/assign @R "foo" {"b" {"a" [{"foo" 10} {"bar" 5}]}})
+    (is (= (R/rget @R "foo") {"b" {"a" [{"foo" 10} {"bar" 5}]}}))))
+
