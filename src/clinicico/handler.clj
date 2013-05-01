@@ -38,16 +38,22 @@
 
 (defn main [] ())
 
+(def *version* "0.2.1")
+
 (defroutes routes-handler
   (context "/api" []
            (OPTIONS "/" []
-                    (http/options [:options] {:version "0.2.1"}))
+                    (http/options [:options] {:version *version*}))
+           (OPTIONS "/analysis/:method" []
+                    (http/options [:post :options :get] {:version *version*}))
            (POST "/analysis/:method" [method & params]
                  (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
                        id (job/submit analysis)
                        job (str api-url "/job/" id)]
                    (http/created job (job/status id))))
            (context "/result" []
+                    (OPTIONS "/:id" []
+                             (http/options [:get :options] {:version *version*}))
                     (GET "/:id" [id] (http/no-content? (db/get-result id)))
                     (GET "/:id/file/:analysis/:file" [id analysis file]
                          (let [record (db/get-file id analysis file)]
@@ -55,6 +61,8 @@
                                (resp/content-type (:content-type (.getContentType record)))
                                (resp/header "Content-Length" (.getLength record))))))
            (context "/job" []
+                    (OPTIONS "/:id" []
+                             (http/options [:delete :get :options] {:version *version*}))
                     (DELETE "/:id" [id]
                             (do (job/cancel id)
                                 (resp/status (resp/response (job/status id)) 200)))
@@ -66,6 +74,15 @@
   (route/resources "/")
   (route/not-found "Nothing to see here, move along now"))
 
+(defn handle-cors-headers
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (-> response
+          (resp/header "Access-Control-Allow-Origin" "*")
+          (resp/header "Access-Control-Allow-Headers" "content-type, x-requested-with")
+          ))))
+
 (def app
   "Main entry point for all requests."
   (->
@@ -75,5 +92,6 @@
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)
+    (handle-cors-headers)
     (wrap-json-response)
     (wrap-restful-response)))
