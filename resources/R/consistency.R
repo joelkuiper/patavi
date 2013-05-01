@@ -1,14 +1,14 @@
-wrap.result <- function(result, description) { 
+wrap.result <- function(result, description) {
     list(data=result, description=description, type=class(result))
 }
-make.plot <- function(plot.fn) { 
+make.plot <- function(plot.fn) {
     tmp <- tempfile()
     CairoPNG(tmp)
     plot.fn()
     dev.off()
     r <- readBin(tmp, 'raw', 1024*1024) # 1MB filesize limit
     unlink(tmp)
-    img <- list(image=r, mime="image/png", metadata=list(format="png")) 
+    img <- list(image=r, mime="image/png", metadata=list(format="png"))
     class(img) <- "image"
     img
 }
@@ -16,14 +16,24 @@ make.plot <- function(plot.fn) {
 consistency <- function(params)  {
     library(gemtc)
     d <- params$network
-    if(!is.null(d$file)) { 
+    if(!is.null(d$file)) {
         network <- read.mtc.network(d$file)
     } else {
         d <- d$data
         d <- do.call(rbind, lapply(d, as.data.frame))
-        treatments <- lapply(params$network$treatments, unlist)
 
-        network <- mtc.network(d, treatments, unlist(params$network$description))
+        # Remove 1-arm studies
+        sel <- sapply(d$study, function(study) {
+            sum(d$study == study) > 1
+        })
+        d <- d[sel, ]
+
+        if(!is.null(params$network$treatments)) {
+            treatments <- lapply(params$network$treatments, unlist)
+            network <- mtc.network(data=d, treatments=treatments, description=unlist(params$network$description))
+        } else {
+            network <- mtc.network(data=d, description=unlist(params$network$description))
+        }
     }
 
     factor <- if(is.null(params$factor)) 2.5 else params$factor
@@ -32,25 +42,25 @@ consistency <- function(params)  {
     n.iter <- if(is.null(params$n_iter)) 20000  else params$n_iter
     thin <- if(is.null(params$thin)) 1  else params$thin
 
-    model <- mtc.model(network, "Consistency",  factor, n.chain) 
-    run <- mtc.run(model, n.adapt=n.adapt, n.iter=n.iter, thin=thin) 
+    model <- mtc.model(network, "Consistency",  factor, n.chain)
+    run <- mtc.run(model, n.adapt=n.adapt, n.iter=n.iter, thin=thin)
 
-    quantiles <- summary(run)$quantiles 
-    psrf <- gelman.diag(run)$psrf 
-    rank.prob <- rank.probability(run) 
+    quantiles <- summary(run)$quantiles
+    psrf <- gelman.diag(run)$psrf
+    rank.prob <- rank.probability(run)
 
     results <- list(results = list("network" = network$data,
                                    "treatments" = network$treatments,
                                    "description" = network$description,
-                                   "quantiles" = quantiles, 
-                                   "psrf" = psrf, 
+                                   "quantiles" = quantiles,
+                                   "psrf" = psrf,
                                    "ranks" = rank.prob,
                                    "forest_plot" = make.plot(function() forest(run)),
                                    "model_plot" = make.plot(function() plot(model)),
-                                   "network_plot" = make.plot(function() plot(network)), 
-                                   "ranks_plot" = make.plot(function() barplot(t(rank.prob), 
-                                                                      col=rainbow(dim(rank.prob)[[1]]), 
-                                                                      beside=T, 
+                                   "network_plot" = make.plot(function() plot(network)),
+                                   "ranks_plot" = make.plot(function() barplot(t(rank.prob),
+                                                                      col=rainbow(dim(rank.prob)[[1]]),
+                                                                      beside=T,
                                                                       legend.text=paste("Rank", rep(1:dim(rank.prob)[[1]]))))),
                     descriptions = list("The generated network used to create the Consistency model",
                                         "Treatments compared in this analysis",
@@ -71,8 +81,8 @@ consistency <- function(params)  {
                                         "The graph for the included evidence",
                                         "Bar plot for the rank probabilities"))
 
-    mapply(wrap.result, 
+    mapply(wrap.result,
            results$results,
-           results$descriptions, 
+           results$descriptions,
            SIMPLIFY=F)
 }
