@@ -42,7 +42,7 @@ consistency <- function(params)  {
     n.iter <- if(is.null(params$n_iter)) 20000  else params$n_iter
     thin <- if(is.null(params$thin)) 1  else params$thin
 
-    model <- mtc.model(network, "Consistency",  factor, n.chain)
+    model <- mtc.model(network, "consistency",  factor, n.chain)
     run <- mtc.run(model, n.adapt=n.adapt, n.iter=n.iter, thin=thin)
 
     quantiles <- summary(run)$quantiles

@@ -10,16 +10,21 @@ Currently designed to work with GeMTC.
 ## Prerequisites
 
 You will need [Leiningen][1] 2.0.0 or above installed. 
-Furthermore you'll need to have R (> 2.14) installed with the RServe.
+Furthermore you'll need to have R (> 2.14) installed with the [RServe][2] and
+[Cairo][3] packages. Also a running MongoDB.
 
 [1]: https://github.com/technomancy/leiningen
+[2]: http://www.rforge.net/Rserve/svn.html
+[3]: http://cran.r-project.org/web/packages/Cairo/
 
 ## Running
 
 To start a web server for the application, run:
 
-    ./initialize
-    ./start
+    ./scripts/initialize.sh
+    ./scripts/start.sh
+
+When restarting, you may need to 'killall Rserve'.
 
 Or read the [dev-ops section](https://github.com/joelkuiper/clinicico/wiki/Devops) in the wiki. 
 
