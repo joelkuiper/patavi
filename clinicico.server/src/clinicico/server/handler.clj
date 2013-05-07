@@ -4,6 +4,7 @@
   (:require [compojure.handler :as handler]
             [compojure.route   :as route]
             [ring.util.response :as resp]
+            [langohr.exchange  :as le]
             [langohr.core      :as rmq]
             [langohr.channel   :as lch]
             [langohr.queue     :as lq]
@@ -34,6 +35,9 @@
                      (resp/status 202)))))
   (route/resources "/")
   (route/not-found "Not Found"))
+
+(defn main [] ())
+
 
 (def app
   (handler/site app-routes))

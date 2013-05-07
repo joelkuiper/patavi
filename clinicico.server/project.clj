@@ -7,6 +7,7 @@
                  [ring/ring-json "0.1.2"]
                  [com.novemberain/langohr "1.0.0-beta13"]]
   :plugins [[lein-ring "0.8.3"]]
-  :ring {:handler clinicico.server.handler/app}
+  :ring {:handler clinicico.server.handler/app
+         :init clinicico.server.handler/main}
   :profiles
   {:dev {:dependencies [[ring-mock "0.1.3"]]}})
