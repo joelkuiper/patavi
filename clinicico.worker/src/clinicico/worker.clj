@@ -1,5 +1,6 @@
 (ns clinicico.worker
   (:gen-class)
+  (:use [clojure.tools.cli :only [cli]])
   (:require [langohr.core      :as rmq]
             [langohr.channel   :as lch]
             [langohr.queue     :as lq]
@@ -7,14 +8,14 @@
             [langohr.basic     :as lb]))
 
 (def ^{:const true}
-  default-exchange-name "")
+  exchange-name "")
 
 (defn message-handler
   [ch {:keys [content-type delivery-tag type] :as meta} ^bytes payload]
   (do
-    (Thread/sleep 100)
     (println (format "[consumer] Received a message: %s, delivery tag: %d, content type: %s, type: %s"
-                     (String. payload "UTF-8") delivery-tag content-type type))))
+                     (String. payload "UTF-8") delivery-tag content-type type))
+    (Thread/sleep 500)))
 
 (defn start-consumer
   "Starts a consumer in a separate thread"
@@ -23,16 +24,22 @@
                           (lc/subscribe ch queue-name message-handler :auto-ack true)))]
     (.start thread)))
 
+
 (defn -main
   [& args]
-  (let [conn  (rmq/connect)
-        ch    (lch/open conn)
-        qname "langohr.examples.hello-world"]
-    (println (format "[main] Connected. Channel id: %d" (.getChannelNumber ch)))
+  (let [[options args banner] (cli args
+                                   ["-h" "--help" "Show help" :default false :flag true]
+                                   ["-n" "--workers" "The amount of worker threads to start" :default (.availableProcessors (Runtime/getRuntime)) :parse-fn #(Integer. %)]
+                                   ["-m" "--method" "The R method and queue name to execute" :default "echo"])
+        conn (rmq/connect)
+        ch   (lch/open conn)
+        qname (format "task.%s" (:method options))]
+    (when (or (:help options))
+      (println banner)
+      (System/exit 0))
+    (println (format "[main] Connected. Channeld id: %d for channel %s" (.getChannelNumber ch) qname))
     (lq/declare ch qname :exclusive false :auto-delete true)
     (start-consumer conn ch qname)
     (while true (Thread/sleep 100))
     (rmq/close ch)
     (rmq/close conn)))
-
-

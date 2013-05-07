@@ -3,6 +3,7 @@
   (:use compojure.core)
   (:require [compojure.handler :as handler]
             [compojure.route   :as route]
+            [ring.util.response :as resp]
             [langohr.core      :as rmq]
             [langohr.channel   :as lch]
             [langohr.queue     :as lq]
@@ -12,17 +13,25 @@
 (def ch (lch/open (rmq/connect)))
 
 (def ^{:const true}
-  default-exchange-name "")
+  exchange-name "")
 
-(def qname
-  "langohr.examples.hello-world")
+(defn qname
+  [method]
+  (format "task.%s" method))
 
-(defn queue-job
-  []
-    (lb/publish ch default-exchange-name qname "Hello!" :content-type "text/plain" :type "greetings.hi"))
+(defn publish-task
+  [method payload]
+  (println (format "Publishing task to %s" (qname method)))
+  (lb/publish ch exchange-name (qname method) payload :content-type "text/plain" :type "greetings.hi"))
 
 (defroutes app-routes
-  (GET "/" [] (queue-job))
+  (context "/api" []
+           (POST "/task/:method" [method]
+                 (let [job (publish-task method "Hello world")]
+                   (->
+                     (resp/response nil)
+                     (resp/header "Location" job)
+                     (resp/status 202)))))
   (route/resources "/")
   (route/not-found "Not Found"))
 
