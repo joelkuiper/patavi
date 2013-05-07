@@ -5,7 +5,8 @@
             [langohr.channel   :as lch]
             [langohr.queue     :as lq]
             [langohr.consumers :as lc]
-            [langohr.basic     :as lb]))
+            [langohr.basic     :as lb]
+            [clojure.tools.logging :as log]))
 
 (def ^{:const true}
   exchange-name "")
@@ -13,8 +14,9 @@
 (defn message-handler
   [ch {:keys [content-type delivery-tag type] :as meta} ^bytes payload]
   (do
-    (println (format "[consumer] Received a message: %s, delivery tag: %d, content type: %s, type: %s"
-                     (String. payload "UTF-8") delivery-tag content-type type))
+    (log/debug
+      (format "[consumer] Received a message: %s, delivery tag: %d, content type: %s, type: %s"
+        (String. payload "UTF-8") delivery-tag content-type type))
     (Thread/sleep 2000)))
 
 (defn start-consumer
@@ -30,9 +32,9 @@
   [& args]
   (let [[options args banner]
         (cli args
-             ["-h" "--help" "Show help" :default false :flag true]
-             ["-n" "--nworkers" "The amount of worker threads to start" :default (.availableProcessors (Runtime/getRuntime)) :parse-fn #(Integer. %)]
-             ["-m" "--method" "The R method and queue name to execute" :default "echo"])
+          ["-h" "--help" "Show help" :default false :flag true]
+          ["-n" "--nworkers" "The amount of worker threads to start" :default (.availableProcessors (Runtime/getRuntime)) :parse-fn #(Integer. %)]
+          ["-m" "--method" "The R method and queue name to execute" :default "echo"])
         conn (rmq/connect)
         qname (format "task.%s" (:method options))]
     (when (or (:help options))
@@ -40,7 +42,7 @@
       (System/exit 0))
     (dotimes [n (:nworkers options)]
       (let [ch (lch/open conn)]
-        (println (format "[main] Connected worker %d. Channeld id: %d for channel %s" n (.getChannelNumber ch) qname))
+        (log/debug (format "[main] Connected worker %d. Channeld id: %d for channel %s" (inc n) (.getChannelNumber ch) qname))
         (lq/declare ch qname :exclusive false :auto-delete true)
         (start-consumer conn ch qname)))
       (while true (Thread/sleep 100))
