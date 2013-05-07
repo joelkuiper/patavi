@@ -88,8 +88,9 @@ smaa <- function(params) {
 
 	results <- list(
 		results = list("parameters"=params,
+					   "ranks"=unclass(smaa.ra(ranks)),
 					   "ranks_plot"=make.plot(function() plot(ranks))),
-		descriptions = list("Parameters", "Rank acceptabilities")
+		descriptions = list("Parameters", "Rank acceptabilities", "Rank acceptabilities")
 	)
 	
     mapply(wrap.result,
