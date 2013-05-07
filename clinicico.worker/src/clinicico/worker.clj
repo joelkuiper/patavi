@@ -6,6 +6,7 @@
             [langohr.queue     :as lq]
             [langohr.consumers :as lc]
             [langohr.basic     :as lb]
+            [cheshire.core :refer :all]
             [clojure.tools.logging :as log]))
 
 (def ^{:const true}
@@ -16,7 +17,7 @@
   (do
     (log/debug
       (format "[consumer] Received a message: %s, delivery tag: %d, content type: %s, type: %s"
-        (String. payload "UTF-8") delivery-tag content-type type))
+        (parse-smile payload) delivery-tag content-type type))
     (Thread/sleep 2000)))
 
 (defn start-consumer

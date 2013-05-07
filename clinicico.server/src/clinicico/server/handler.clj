@@ -2,13 +2,13 @@
   (:gen-class)
   (:use compojure.core
         clinicico.server.middleware
-        [ring.middleware.format-response
-         :only [wrap-restful-response
-                wrap-json-response]])
+        [ring.middleware.format-params :only [wrap-restful-params]]
+        [ring.middleware.format-response :only [wrap-restful-response]])
   (:require [compojure.handler :as handler]
             [compojure.route   :as route]
             [clojure.tools.logging :as log]
             [ring.util.response :as resp]
+            [cheshire.core :refer :all]
             [langohr.exchange  :as le]
             [langohr.core      :as rmq]
             [langohr.channel   :as lch]
@@ -31,14 +31,14 @@
     (let [qname (qname method)]
       (with-open [ch (lch/open conn)]
         (log/debug (format "Publishing task to %s (%d workers available)" qname (lq/consumer-count ch qname)))
-        (lb/publish ch exchange-name qname payload :content-type "text/plain" :type "r.task"))
+        (lb/publish ch exchange-name qname (generate-smile payload) :content-type "application/x-jackson-smile" :type "r.task"))
       {:location "ddf" :success true})
     (catch Exception e {:success false :cause (.getMessage e)})))
 
 (defroutes app-routes
   (context "/api" []
-           (POST "/task/:method" [method payload]
-                 (let [job (publish-task method payload)]
+           (POST "/task/:method" [method & body]
+                 (let [job (publish-task method body)]
                    (if (:success job)
                      (-> (resp/response nil)
                          (resp/header "Location" (:location job))
@@ -54,7 +54,7 @@
   (->
     (handler/site app-routes)
     (wrap-request-logger)
+    (wrap-restful-params)
     (wrap-exception-handler)
     (wrap-response-logger)
-    (wrap-json-response)
     (wrap-restful-response)))
