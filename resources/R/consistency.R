@@ -49,12 +49,31 @@ consistency <- function(params)  {
     psrf <- gelman.diag(run)$psrf
     rank.prob <- rank.probability(run)
 
+    # comprehensive list of relative effects
+    calc.relative.effects <- function(result) {
+        model <- result$model
+        ts <- model$network$treatments$id
+        n <- length(ts)
+        idx <- rep(TRUE, times=n*n)
+        f <- function(i) { (i - 1) * n + i }
+        idx[f(1:n)] <- FALSE
+        t1 <- rep(ts, each=length(ts))[idx]
+        t2 <- rep(ts, times=length(ts))[idx]
+        relative.effects <- summary(relative.effect(result, t1=t1, t2=t2))$quantiles
+        if (ll.call("scale.log", model)) {
+            relative.effects <- exp(relative.effects)
+        }
+        relative.effects
+    }
+    relative.effects <- calc.relative.effects(run)
+
     results <- list(results = list("network" = network$data,
                                    "treatments" = network$treatments,
                                    "description" = network$description,
                                    "quantiles" = quantiles,
                                    "psrf" = psrf,
                                    "ranks" = rank.prob,
+                                   "relative_effects" = relative.effects,
                                    "forest_plot" = make.plot(function() forest(run)),
                                    "model_plot" = make.plot(function() plot(model)),
                                    "network_plot" = make.plot(function() plot(network)),
@@ -73,6 +92,7 @@ consistency <- function(params)  {
                                               "relative to an arbitrary baseline. A frequency table is",
                                               "constructed from these rankings and normalized by the number of",
                                               "iterations to give the rank probabilities.", sep=" "),
+                                        paste("Relative effects (", ll.call("scale.name", model), ")", sep=""),
                                         "A forest plot for some baseline",
                                         paste("A graph with the treatments as vertices and the comparisons",
                                               "as edges. The lines with arrows represent basic parameters. Other lines represent",
