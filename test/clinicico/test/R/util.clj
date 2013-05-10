@@ -40,6 +40,7 @@
   (testing "Transformation of list of maps"
     (is (= [{"foo" 10} {"bar" 5}] (R/into-clj (R/into-r [{"foo" 10} {"bar" 5}]))))
     (is (= {"b" {"a" [{"foo" 10} {"bar" 5}]}} (R/into-clj (R/into-r {"b" {"a" [{"foo" 10} {"bar" 5}]}}))))
+    (is (= {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]} (R/into-clj (R/into-r {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]}))))
     (is (= {"qux" [{"foo" 10} {"bar" 5}]} (R/into-clj (R/into-r {"qux" [{"foo" 10} {"bar" 5}]}))))))
 
 (deftest test-r-assignments
@@ -60,5 +61,8 @@
     (is (= (R/rget @R "foo") [{"foo" 10} {"bar" 5}])))
   (testing "Assignment of map list of maps"
     (R/assign @R "foo" {"b" {"a" [{"foo" 10} {"bar" 5}]}})
-    (is (= (R/rget @R "foo") {"b" {"a" [{"foo" 10} {"bar" 5}]}}))))
+    (is (= (R/rget @R "foo") {"b" {"a" [{"foo" 10} {"bar" 5}]}})))
+  (testing "Assignment of map list of maps"
+    (R/assign @R "bar" {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]})
+    (is (= (R/rget @R "bar") {"test" [ {"aap" 3 "noot" 4} {"aap" 8 "noot" -5} ]}))))
 

@@ -80,8 +80,7 @@
     (let [response (handler request)]
       (-> response
           (resp/header "Access-Control-Allow-Origin" "*")
-          (resp/header "Access-Control-Allow-Headers" "content-type, x-requested-with")
-          ))))
+          (resp/header "Access-Control-Allow-Headers" "content-type, x-requested-with")))))
 
 (def app
   "Main entry point for all requests."
