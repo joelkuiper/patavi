@@ -43,7 +43,7 @@
       (System/exit 0))
     (dotimes [n (:nworkers options)]
       (let [ch (lch/open conn)]
-        (log/debug (format "[main] Connected worker %d. Channeld id: %d for channel %s" (inc n) (.getChannelNumber ch) qname))
+        (log/info (format "[main] Connected worker %d. Channeld id: %d for channel %s" (inc n) (.getChannelNumber ch) qname))
         (lq/declare ch qname :exclusive false :auto-delete true)
         (start-consumer conn ch qname)))
       (while true (Thread/sleep 100))
