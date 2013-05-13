@@ -2,7 +2,8 @@
   (:use compojure.core
         ring.util.response
         [clojure.string :only [upper-case]])
-  (:require [clojure.tools.logging :as log]))
+  (:require [clojure.tools.logging :as log]
+            [clinicico.server.util :as util]))
 
 (defn wrap-exception-handler
    " Middleware to handle exceptions thrown by the underlying code.
@@ -43,3 +44,28 @@
         (log/warn body remote-addr (upper-case (name request-method)) uri "->" status body)
         (log/debug remote-addr (upper-case (name request-method)) uri "->" status))
       response)))
+
+(defn- with-uri-rewrite
+  "Rewrites a request uri with the result of calling f with the
+   request's original uri.  If f returns nil the handler is not called."
+  [handler f]
+  (fn [request]
+    (let [uri (:uri request)
+          rewrite (f uri)]
+      (if rewrite
+        (handler (assoc request :uri rewrite))
+        nil))))
+
+(defn- uri-snip-slash
+  "Removes a trailing slash from all uris except \"/\"."
+  [uri]
+  (if (and (not (= "/" uri))
+           (.endsWith uri "/"))
+    (util/chop uri)
+    uri))
+
+(defn ignore-trailing-slash
+  "Makes routes match regardless of whether or not a uri ends in a slash."
+  [handler]
+  (with-uri-rewrite handler uri-snip-slash))
+

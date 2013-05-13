@@ -78,6 +78,7 @@
   (->
     (assemble-routes)
     (api)
+    (ignore-trailing-slash)
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)))

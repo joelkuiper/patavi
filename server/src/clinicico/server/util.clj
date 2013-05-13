@@ -40,8 +40,9 @@
 ;; Make joda.time JSONable
 (add-encoder org.joda.time.DateTime
   (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
-    (.writeStartObject jg)
-    (.writeFieldName jg "date")
-    (.writeString jg
-                  (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))
-    (.writeEndObject jg)))
+    (.writeString jg (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))))
+
+(defn chop
+  "Removes the last character of string."
+  [s]
+  (subs s 0 (dec (count s))))
