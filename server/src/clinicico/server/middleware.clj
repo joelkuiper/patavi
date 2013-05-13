@@ -1,20 +1,8 @@
 (ns clinicico.server.middleware
   (:use compojure.core
         ring.util.response
-        [cheshire.custom :only [JSONable]]
         [clojure.string :only [upper-case]])
-  (:require [clojure.tools.logging :as log])
-  (:import (com.fasterxml.jackson.core JsonGenerator)))
-
-(extend java.lang.Exception
-  JSONable
-  {:to-json (fn [^Exception e ^JsonGenerator jg]
-    (.writeStartObject jg)
-    (.writeFieldName jg "exception")
-    (.writeString jg (.getName (class e)))
-    (.writeFieldName jg "message")
-    (.writeString jg (.getMessage e))
-    (.writeEndObject jg))})
+  (:require [clojure.tools.logging :as log]))
 
 (defn wrap-exception-handler
    " Middleware to handle exceptions thrown by the underlying code.

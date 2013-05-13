@@ -1,6 +1,10 @@
 (ns clinicico.server.util
-  (:require
-    [clojure.java.io :as io])
+  (:gen-class)
+  (:require [cheshire.core :refer :all]
+            [clojure.java.io :as io]
+            [cheshire.generate :refer [add-encoder encode-str remove-encoder]])
+  (:import (org.joda.time.format.ISODateTimeFormat)
+           (com.fasterxml.jackson.core JsonGenerator))
   (:use
     [ring.util.mime-type :only [ext-mime-type]]
     [compojure.core :only [routes ANY]]
@@ -23,3 +27,21 @@
          [(.exists f) {::file f}]))
     :handle-ok (fn [{f ::file}] f)
     :last-modified (fn [{f ::file}] (.lastModified f))))
+
+(add-encoder java.lang.Exception
+  (fn [^Exception e ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg "exception")
+    (.writeString jg (.getName (class e)))
+    (.writeFieldName jg "message")
+    (.writeString jg (.getMessage e))
+    (.writeEndObject jg)))
+
+;; Make joda.time JSONable
+(add-encoder org.joda.time.DateTime
+  (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
+    (.writeStartObject jg)
+    (.writeFieldName jg "date")
+    (.writeString jg
+                  (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))
+    (.writeEndObject jg)))
