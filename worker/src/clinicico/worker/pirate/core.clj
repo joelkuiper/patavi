@@ -5,15 +5,16 @@
             [clinicico.worker.pirate.util :as pirate]
             [clojure.tools.logging :as log]
             [cheshire.core :refer :all :as json])
-  (:import (org.rosuda.REngine)
+  (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
 (def ^:private default-packages ["RJSONIO" "Cairo"])
 
-(def ^:private load-template (str "l = tryCatch(require('%1$s'), warning=function(w) w);
-                         if(is(l, 'warning')) print(l[1])"))
+(def ^:private load-template
+  (str "l = tryCatch(require('%1$s'), warning=function(w) w);
+        if(is(l, 'warning')) print(l[1])"))
 
-(def ^:private bootstrap-template "#AUTO-GENERATED \nsource('%s')\n")
+(def ^:private bootstrap-template "#AUTO-GENERATED\nsource('%s')\n")
 
 (defn- create-bootstrap
   [extra-packages]
@@ -42,9 +43,18 @@
         (.voidEval R (str "source('"filename"')"))
         (.removeFile R filename)))))
 
+(defn- cause
+  [^Exception e]
+  (let [cause (.getCause e)]
+    (if (and (not (nil? e)) (instance? REngineException cause))
+      (.getMessage cause)
+      (str e))))
+
 (defn execute
   [file method params]
   (with-open [R (pirate/connect)]
-    (load-file! R file)
-    (pirate/assign R "params" (json/encode params))
-    (json/decode (pirate/parse R (str "exec(" method ", params)")))))
+    (try
+      (load-file! R file)
+      (pirate/assign R "params" (json/encode params))
+      (json/decode (pirate/parse R (str "exec(" method ", params)")))
+      (catch Exception e (throw (Exception. (cause e) e))))))

@@ -15,15 +15,16 @@
 
 (defonce ^:private conn (rmq/connect))
 
-(defn broadcast-update
+(defn update!
   ([id]
-   (broadcast-update id {} "update"))
+   (update! id {} "update"))
   ([id content]
-   (broadcast-update id content "update"))
+   (update! id content "update"))
   ([id content type]
    (with-open [ch (lch/open conn)]
      (let [msg {:content content :id id :type type}]
        (lb/publish ch outgoing type (json/encode-smile msg) :content-type "application/x-jackson-smile")))))
+
 
 (defn- task-handler
   [task-fn]
@@ -31,9 +32,11 @@
     [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
     (log/debug (format "Recieved task %s for %s" delivery-tag routing-key))
     (let [body (json/parse-smile payload true)]
-      (broadcast-update (:id body) {:status "processing" :accepted (java.util.Date.)})
-      (task-fn routing-key body)
-      (broadcast-update (:id body) {:status "completed" :completed (java.util.Date.)}))))
+      (update! (:id body) {:status "processing" :accepted (java.util.Date.)})
+      (try
+        (task-fn routing-key body)
+        (update! (:id body) {:status "completed" :completed (java.util.Date.)})
+        (catch Exception e (update! (:id body) {:status "failed" :cause (.getMessage e)}))))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
