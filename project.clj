@@ -10,6 +10,7 @@
                  [log4j/log4j "1.2.17"]
                  [com.novemberain/monger "1.4.2"]
                  [joda-time/joda-time "2.1"]
+                 [cheshire "5.1.1"]
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]]
   :plugins [[lein-ring "0.8.2"]

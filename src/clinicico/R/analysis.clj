@@ -6,6 +6,7 @@
   (:require [clinicico.R.util :as R]
             [clojure.java.io :as io]
             [clojure.string :as strs]
+            [cheshire.core :refer :all]
             [clojure.tools.logging :as log])
   (:import (org.rosuda.REngine REXP RList)
            (org.rosuda.REngine.Rserve RConnection)
@@ -68,19 +69,10 @@
   (if-not (valid? (get @validators analysis (validation-set)) params)
     (throw (IllegalArgumentException.
              (str "Provided parameters were not valid for analysis " analysis)))
-    (let [files (select-keys params (for [[k v] params :when (contains? v :file)] k))
-          options (into {} (map (fn [[k v]]
-                                  (if (contains? v :file)
-                                    [k {"file" (get-in v [:file :filename])}]
-                                    [k v])) params))]
-      (with-open [^RConnection R (R/connect)]
-        (doall (map
-                 (fn [[k v]]
-                   (copy-to-r! R
-                               (get-in v [:file :tempfile])
-                               (get-in v [:file :filename]))) files))
-        (load-analysis! R analysis)
-        (R/assign R "params" options)
-        {:results {(keyword analysis)
-                   (parse-results
-                     (R/parse R (str analysis "(params)") false))}}))))
+    (do
+      (with-open [R (R/connect)]
+      (load-analysis! R analysis)
+      (.assign ^RConnection R "params" (generate-string params))
+      (let [result (.asStrings ^REXPString (R/parse R (str analysis "(params)") false))
+            json-str (first result)]
+        {:body (parse-string json-str)})))))

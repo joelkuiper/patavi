@@ -44,7 +44,7 @@
 
 (def result-validator (validation-set
                       (presence-of :_id)
-                      (presence-of :results)))
+                      (presence-of :body)))
 
 (defn- get-filename
   [file]
@@ -79,12 +79,12 @@
   [results]
   (assoc results :results
     (into {} (map (fn [[k v]]
-      {k (save-files-for-result v(:_id results) (name k))}) (results :results)))))
+      {k (save-files-for-result v (:_id results) (name k))}) (results :results)))))
 
 (defn save-result
   [results]
   (let [new-result (created-now
-                     (modified-now (save-files (with-oid results))))]
+                     (modified-now (with-oid results)))]
     (if (valid? result-validator new-result)
       (if (ok?
             (collection/insert

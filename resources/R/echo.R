@@ -1,5 +1,5 @@
 echo <- function(params) {
-	print("Echo, Echo")
+	library(RJSONIO)
 	print(params)
-	params
+	print(toJSON(fromJSON(params)))
 }

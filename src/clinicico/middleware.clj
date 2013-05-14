@@ -1,8 +1,8 @@
 ;; ## Middleware
-;; As the Ring authors themselves describe: 
+;; As the Ring authors themselves describe:
 ;;
-;; > Middleware are higher-level functions that add additional functionality to handlers. 
-;; > the first argument of a middleware function should be a handler, 
+;; > Middleware are higher-level functions that add additional functionality to handlers.
+;; > the first argument of a middleware function should be a handler,
 ;; > and its return value should be a new handler function.
 ;;
 ;; See [ring documentation wiki](https://github.com/ring-clojure/ring/wiki/Concepts)
@@ -26,11 +26,11 @@
     (.writeString jg (.getMessage e))
     (.writeEndObject jg))})
 
-(defn wrap-exception-handler 
+(defn wrap-exception-handler
    " Middleware to handle exceptions thrown by the underlying code.
-   
-   - Returns `HTTP/404` when `ResourceNotFound` exception was thrown. 
-   - Returns `HTTP/400` when `InvalidArgumentException` was thrown, 
+
+   - Returns `HTTP/404` when `ResourceNotFound` exception was thrown.
+   - Returns `HTTP/400` when `InvalidArgumentException` was thrown,
      e.g. missing JSON arguments.
    - Returns `HTTP/500` for all unhandled thrown `Exception`.
     "
@@ -40,7 +40,7 @@
       (handler req)
       (catch clinicico.ResourceNotFound e
         (->
-          (response e) 
+          (response e)
           (status 404)))
       (catch IllegalArgumentException e
         (->
@@ -51,7 +51,7 @@
           (response e)
           (status 500))))))
 
-(defn wrap-request-logger 
+(defn wrap-request-logger
   "Logs the request. Log settings can be set in the `resources/log4j.properties.`"
   [handler]
   (fn [req]

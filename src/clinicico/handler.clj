@@ -22,12 +22,13 @@
         [clinicico.config]
         [clinicico.util.util]
         [clinicico.middleware]
-        [ring.middleware.format-response :only [wrap-restful-response
-                                                wrap-json-response]])
+        [ring.middleware.format-params :only [wrap-restful-params]]
+        [ring.middleware.format-response :only [wrap-restful-response]])
   (:require [compojure.handler :as handler]
             [ring.util.response :as resp]
             [clinicico.http :as http]
             [clinicico.jobs :as job]
+            [cheshire.core :refer :all]
             [clinicico.R.analysis :as analysis]
             [clinicico.R.store :as db]
             [ring.middleware [multipart-params :as mp]]
@@ -46,8 +47,8 @@
                     (http/options [:options] {:version *version*}))
            (OPTIONS "/analysis/:method" []
                     (http/options [:post :options :get] {:version *version*}))
-           (POST "/analysis/:method" [method & params]
-                 (let [analysis (fn [] (db/save-result (analysis/dispatch method params)))
+           (POST "/analysis/:method" {body :body {method :method} :params}
+                 (let [analysis (fn [] (db/save-result (analysis/dispatch method (parse-string (slurp body)))))
                        id (job/submit analysis)
                        job (str api-url "/job/" id)]
                    (http/created job (job/status id))))
@@ -86,11 +87,8 @@
   "Main entry point for all requests."
   (->
     (handler/api routes-handler)
-    (ring-json/wrap-json-params)
-    (mp/wrap-multipart-params)
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)
     (handle-cors-headers)
-    (wrap-json-response)
     (wrap-restful-response)))
