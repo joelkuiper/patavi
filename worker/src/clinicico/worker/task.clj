@@ -13,7 +13,7 @@
 (def ^{:const true :private true}
   outgoing "clinicico.updates")
 
-(defonce ^{:private true} conn (rmq/connect))
+(defonce ^:private conn (rmq/connect))
 
 (defn broadcast-update
   ([id]

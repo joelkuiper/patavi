@@ -9,6 +9,7 @@
                  [org.clojure/tools.logging "0.2.4"]
                  [log4j/log4j "1.2.17"]
                  [cheshire "5.1.1"]
+                 [info.hoetzel/clj-nio2 "0.1.0"]
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]
                  [com.novemberain/langohr "1.0.0-beta13"]]

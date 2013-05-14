@@ -8,12 +8,12 @@
   (:import (org.rosuda.REngine)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(def default-packages ["RJSONIO" "Cairo"])
+(def ^:private default-packages ["RJSONIO" "Cairo"])
 
-(def load-template (str "l = tryCatch(require('%1$s'), warning=function(w) w);
+(def ^:private load-template (str "l = tryCatch(require('%1$s'), warning=function(w) w);
                          if(is(l, 'warning')) print(l[1])"))
 
-(def bootstrap-template "#AUTO-GENERATED \nsource('%s')\n")
+(def ^:private bootstrap-template "#AUTO-GENERATED \nsource('%s')\n")
 
 (defn- create-bootstrap
   [extra-packages]
