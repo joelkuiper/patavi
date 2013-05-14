@@ -1,4 +1,4 @@
-(ns clinicico.worker-test
+(ns clinicico.worker.worker-test
   (:require [clojure.test :refer :all]
             [clinicico.worker :refer :all]))
 
