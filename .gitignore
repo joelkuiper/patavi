@@ -2,7 +2,7 @@
 /lib
 /classes
 /checkouts
-/third-party
+**/third-party
 pom.xml
 *.jar
 *.class
@@ -12,3 +12,4 @@ pom.xml
 .lein-env
 *.sw*
 *~
+*.err
