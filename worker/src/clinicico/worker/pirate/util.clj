@@ -36,9 +36,13 @@
     (if (.isConnected ^RConnection conn)
       ^RConnection conn))))
 
+(defn create-file!
+  [^RConnection R filename]
+  (.createFile R filename))
+
 (defn copy!
   [^RConnection R file filename]
-  (with-open [r-file (.createFile R filename)]
+  (with-open [r-file (create-file! R filename)]
     (io/copy file r-file)))
 
 (defn- as-list

@@ -3,7 +3,8 @@ if [ "$(pidof Rserve)" ]
 then
 	exit 1
 else
-	nohup R CMD Rserve --RS-conf resources/Rserve.conf --vanilla > logs/rserve.log 2> logs/rserve.err < /dev/null &
+	workdir=`cd "tmp";pwd`
+	nohup R CMD Rserve --RS-workdir ${workdir} --RS-conf resources/Rserve.conf --vanilla > logs/rserve.log 2> logs/rserve.err < /dev/null &
 	echo "done"
 	exit 0
 fi
