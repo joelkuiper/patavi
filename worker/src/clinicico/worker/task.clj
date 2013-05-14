@@ -29,8 +29,8 @@
   [task-fn]
   (fn
     [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
+    (log/debug (format "Recieved task %s for %s" delivery-tag routing-key))
     (let [body (json/parse-smile payload true)]
-      (log/debug (format "Recieved a task for %s with body %s" routing-key body))
       (broadcast-update (:id body) {:status "processing" :accepted (java.util.Date.)})
       (task-fn routing-key body)
       (broadcast-update (:id body) {:status "completed" :completed (java.util.Date.)}))))
