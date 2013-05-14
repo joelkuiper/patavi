@@ -26,27 +26,31 @@
        (lb/publish ch outgoing type (json/encode-smile msg) :content-type "application/x-jackson-smile")))))
 
 (defn- task-handler
-  [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
-  (let [task (json/parse-smile payload true)]
-    (log/debug (format "Recieved a task for %s with body %s" routing-key task))
-    (broadcast-update (:id task) {:status "processing" :accepted (java.util.Date.)})
-    (Thread/sleep 6000)
-    (broadcast-update (:id task) {:status "completed" :completed (java.util.Date.)})))
+  [task-fn]
+  (fn
+    [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
+    (let [body (json/parse-smile payload true)]
+      (log/debug (format "Recieved a task for %s with body %s" routing-key body))
+      (broadcast-update (:id body) {:status "processing" :accepted (java.util.Date.)})
+      (task-fn routing-key body)
+      (broadcast-update (:id body) {:status "completed" :completed (java.util.Date.)}))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
-  [conn ch method]
+  [conn ch method handler]
   (let [thread (Thread.
                  (fn []
-                   (lc/subscribe ch method task-handler :auto-ack true)))]
+                   (lc/subscribe ch method handler :auto-ack true)))]
     (.start thread)))
 
 (defn initialize
-  [method n]
-(dotimes [n n]
-      (let [ch (lch/open conn)
-            q (.getQueue (lq/declare ch method :durable true :exclusive false :auto-delete true))]
-        (log/info (format "[main] Connected worker %d. Channeld id: %d for channel %s" (inc n) (.getChannelNumber ch) method))
-        (lq/bind ch q incoming :routing-key method)
-        (start-consumer conn (lch/open conn) q)
-        (rmq/close ch))))
+  [method n task]
+  (dotimes [n n]
+    (let [ch (lch/open conn)
+          q (.getQueue
+              (lq/declare ch method :durable true :exclusive false :auto-delete true))
+          handler (task-handler task)]
+      (log/info (format "[main] Connected worker %d. Channeld id: %d for channel %s" (inc n) (.getChannelNumber ch) method))
+      (lq/bind ch q incoming :routing-key method)
+      (start-consumer conn (lch/open conn) q handler)
+      (rmq/close ch))))

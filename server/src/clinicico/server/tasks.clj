@@ -15,7 +15,6 @@
 
 (def ^{:private true} statuses (atom {}))
 
-
 (def ^{:const true :private true}
   outgoing "clinicico.tasks")
 
