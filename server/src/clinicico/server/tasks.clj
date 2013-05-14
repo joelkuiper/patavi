@@ -25,7 +25,7 @@
   [ch metadata ^bytes payload]
   (let [update (json/decode-smile payload true)
         content (into {} (filter (comp not nil? val) (:content update)))
-        status (@statuses (:id update))]
+        status (or (@statuses (:id update)) {})]
     (log/debug (format "[consumer] Received %s" update))
     (swap! statuses assoc (:id update) (merge status content))))
 
