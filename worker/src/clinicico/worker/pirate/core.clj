@@ -12,8 +12,8 @@
 (def ^:private default-packages ["RJSONIO"])
 
 (def ^:private load-template
-  (str "l = tryCatch(require('%1$s'), warning=function(w) w);
-        if(is(l, 'warning')) print(l[1])"))
+  (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
+       "if(is(l, 'warning')) print(l[1])"))
 
 (def ^:private bootstrap-template "#AUTO-GENERATED\nsource('%s')\n")
 
@@ -26,7 +26,9 @@
     (spit (io/resource "bootstrap.R") bootstrap)))
 
 (defn initialize
-  [file packages]
+  "Generates a bootstrap.R file and executes scripts/start.sh in a shell
+   Typically starting a new RServe with the generated file 'sourced'"
+  [packages]
   (create-bootstrap packages)
   (sh (io/as-relative-path "scripts/start.sh")))
 
@@ -52,6 +54,10 @@
       (str e))))
 
 (defn execute
+  "Executes, in R, the method present in the file with the given params.
+   Callback is function taking one argument which can serve to
+   allow OOB updates from the R session
+   See resources/wrap.R for details."
   [file method params callback]
   (with-open [R (pirate/connect)]
     (try
