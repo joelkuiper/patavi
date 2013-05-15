@@ -23,6 +23,6 @@
       (println banner)
       (System/exit 0))
     (pirate/initialize (:file options) (:packages options))
-    (let [task-fn (fn [method params] (pirate/execute file method params))]
+    (let [task-fn (fn [method params callback] (pirate/execute file method params callback))]
       (tasks/initialize method (:nworkers options) task-fn))
     (while true (Thread/sleep 100))))

@@ -25,18 +25,19 @@
      (let [msg {:content content :id id :type type}]
        (lb/publish ch outgoing type (json/encode-smile msg) :content-type "application/x-jackson-smile")))))
 
-
 (defn- task-handler
   [task-fn]
   (fn
     [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
     (log/debug (format "Recieved task %s for %s" delivery-tag routing-key))
-    (let [body (json/parse-smile payload true)]
-      (update! (:id body) {:status "processing" :accepted (java.util.Date.)})
+    (let [body (json/parse-smile payload true)
+          id (:id body)
+          callback (fn [msg] (update! id {:progress msg}))]
+      (update! id {:status "processing" :accepted (java.util.Date.)})
       (try
-        (task-fn routing-key body)
-        (update! (:id body) {:status "completed" :completed (java.util.Date.)})
-        (catch Exception e (update! (:id body) {:status "failed" :cause (.getMessage e)}))))))
+        (task-fn routing-key body callback)
+        (update! id {:status "completed" :completed (java.util.Date.)})
+        (catch Exception e (update! id {:status "failed" :cause (.getMessage e)}))))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"

@@ -1,17 +1,15 @@
 (ns clinicico.worker.pirate.core
   (:use [clojure.java.shell :only [sh]]
-        [nio2.watch]
-        [nio2.files]
         [clojure.string :only [split join]])
   (:require [clojure.java.io :as io]
             [clinicico.worker.pirate.util :as pirate]
+            [clinicico.worker.nio :as nio]
             [clojure.tools.logging :as log]
-            [nio2.io :as io2]
             [cheshire.core :refer :all :as json])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(def ^:private default-packages ["RJSONIO" "Rserve"])
+(def ^:private default-packages ["RJSONIO"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);
@@ -32,7 +30,7 @@
   (create-bootstrap packages)
   (sh (io/as-relative-path "scripts/start.sh")))
 
-(defn- load-file!
+(defn- source-file!
   "Finds the R file with the associated file
    name and load its into an RConnection."
   [^RConnection R file]
@@ -53,31 +51,19 @@
       (.getMessage cause)
       (str e))))
 
-(defn- watch-progress
-  "Reads the changes from the progress file and fires the callback"
-  [file callback]
-  (let [p (io2/path file)]
-    (log/debug "Start watching" file " with " (real-path p))
-    (with-open [rdr (io/reader p)]
-      (log/debug "Reading files")
-      (doseq [e (watch-seq (parent (real-path p)) :modify)]
-        (log/debug (real-path (:path e)) " " (real-path p))
-        ))))
-
 (defn execute
-  [file method params]
+  [file method params callback]
   (with-open [R (pirate/connect)]
     (try
-      (load-file! R file)
+      (source-file! R file)
       (pirate/assign R "params" (json/encode params))
-      (pirate/assign R "id" (:id params))
-      (let [progress-file (str (:id params) ".tmp")
+      (let [id (:id params)
+            progress-file (str id ".tmp")
             workdir (pirate/parse R "getwd()")
             path (str workdir "/" progress-file)]
         (do
           (pirate/create-file! R progress-file)
-          (let [watch-thread (Thread. (watch-progress path (fn [msg] (log/debug msg))))]
-            (.start watch-thread)
-            (json/decode (pirate/parse R (str "exec(" method ", params)")))
-            (.join watch-thread))))
+          (nio/tail-file path :modify callback)
+          (json/decode (pirate/parse R (format "exec(%s, '%s', params)" method id)))
+          (nio/unwatch-file path)))
       (catch Exception e (throw (Exception. (cause e) e))))))
