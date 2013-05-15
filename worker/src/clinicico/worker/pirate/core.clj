@@ -28,7 +28,7 @@
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
-  [packages]
+  [file packages]
   (create-bootstrap packages)
   (sh (io/as-relative-path "scripts/start.sh")))
 

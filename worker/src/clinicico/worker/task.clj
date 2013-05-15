@@ -38,8 +38,8 @@
       (update! id {:status "processing" :accepted (java.util.Date.)})
       (try
         (task-fn routing-key body callback)
-        (update! id {:status "completed" :completed (java.util.Date.)})
-        (catch Exception e (update! id {:status "failed" :cause (.getMessage e)}))))))
+        (update! id {:status "completed" :completed (java.util.Date.) :results true :progress "done"})
+        (catch Exception e (update! id {:status "failed" :progress "none" :cause (.getMessage e)}))))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"

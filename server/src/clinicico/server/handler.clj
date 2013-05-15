@@ -1,13 +1,15 @@
 (ns clinicico.server.handler
   (:gen-class)
   (:use [compojure.core :only [context ANY routes defroutes]]
-        [compojure.handler :only [api]]
+        [compojure.handler :only [api site]]
+        [org.httpkit.server :only  [run-server]]
+            [clinicico.server.util]
+            [clinicico.server.middleware]
         [hiccup.page :only [html5]]
-        [clinicico.server.util]
-        [clinicico.server.middleware]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :only [reader] :as io]
+            [ring.middleware.reload :as reload]
             [cheshire.core :as json]
             [langohr.exchange  :as le]
             [langohr.core      :as rmq]
@@ -17,7 +19,8 @@
             [clinicico.server.tasks :only [initialize publish-task
                                            status task-available?] :as tasks]))
 
-(defn main [] (tasks/initialize))
+
+(declare in-dev?)
 
 (defresource index
   :available-media-types ["text/html"]
@@ -82,3 +85,11 @@
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)))
+
+
+(defn -main [& args] ;; entry point
+  (def in-dev? (= "--development" (first args)))
+  (let [handler (if in-dev? (reload/wrap-reload app) app)]
+    (println in-dev?)
+    (tasks/initialize)
+    (run-server handler {:port 3000})))
