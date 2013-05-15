@@ -8,6 +8,7 @@
                  [org.clojure/tools.logging "0.2.4"]
                  [log4j/log4j "1.2.17"]
                  [inflections "0.8.1"]
+                 [clj-time "0.5.0"]
                  [org.clojure/data.xml "0.0.7"]
                  [com.novemberain/langohr "1.0.0-beta13"]]
   :plugins [[lein-ring "0.8.3"]]

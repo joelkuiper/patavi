@@ -1,7 +1,7 @@
 ;; Handles watching of paths using Java 7 WatchService
 ;; Stolen from https://gist.github.com/moonranger/4023683
 
-(ns clinicico.worker.nio
+(ns clinicico.worker.util.nio
   (:gen-class)
   (:require [clojure.java.io :as io])
   (:import (java.nio.file FileSystems

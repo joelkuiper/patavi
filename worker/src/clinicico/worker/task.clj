@@ -23,7 +23,9 @@
   ([id content type]
    (with-open [ch (lch/open conn)]
      (let [msg {:content content :id id :type type}]
-       (lb/publish ch outgoing type (json/encode-smile msg) :content-type "application/x-jackson-smile")))))
+       (lb/publish ch outgoing
+                   type (json/encode-smile msg)
+                   :content-type "application/x-jackson-smile")))))
 
 (defn- task-handler
   [task-fn]

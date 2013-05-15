@@ -3,7 +3,7 @@
         [clojure.string :only [split join]])
   (:require [clojure.java.io :as io]
             [clinicico.worker.pirate.util :as pirate]
-            [clinicico.worker.nio :as nio]
+            [clinicico.worker.util.nio :as nio]
             [clojure.tools.logging :as log]
             [cheshire.core :refer :all :as json])
   (:import (org.rosuda.REngine REngineException)
@@ -64,6 +64,7 @@
         (do
           (pirate/create-file! R progress-file)
           (nio/tail-file path :modify callback)
-          (json/decode (pirate/parse R (format "exec(%s, '%s', params)" method id)))
-          (nio/unwatch-file path)))
+          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))]
+            (nio/unwatch-file path)
+            (json/decode result))))
       (catch Exception e (throw (Exception. (cause e) e))))))
