@@ -59,8 +59,8 @@ angular.module('clinicico', []).
         }
       }
 
+      var __nonPoll = ["failed", "completed", "canceled"];
       var longPoll = function(url) {
-        var __nonPoll = ["failed", "completed", "canceled"];
         (function doPoll() {
           $http.get(url).success(function(data) {
             update("update", data);
@@ -75,6 +75,9 @@ angular.module('clinicico', []).
         var socket = new WebSocket(url);
         socket.onmessage = function(event) {
           var data = JSON.parse(event.data);
+          if(__nonPoll.indexOf(data.status) === -1) {
+            socket.close();
+          }
           update("update", data);
         };
       }
