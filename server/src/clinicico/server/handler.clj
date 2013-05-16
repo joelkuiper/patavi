@@ -1,7 +1,7 @@
 (ns clinicico.server.handler
   (:gen-class)
   (:use [org.httpkit.server]
-        [compojure.core :only [context ANY routes defroutes]]
+        [compojure.core :only [context ANY GET OPTIONS routes defroutes]]
         [compojure.handler :only [api site]]
         [clinicico.server.util]
         [clinicico.server.middleware]
@@ -72,7 +72,8 @@
 (defresource tasks-resource
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
-  :method-allowed? (request-method-in :post :get)
+  :method-allowed? (request-method-in :options :post :get)
+  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET, POST"})
   :service-available? (fn [ctx]
                         (tasks/task-available?
                           (get-in ctx [:request :route-params :method])))
@@ -88,10 +89,13 @@
 (defresource task-resource
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
-  :method-allowed? (request-method-in :delete :get)
-  :exists? (fn [ctx] (not (nil? (tasks/status (get-in ctx [:request ::id])))))
+  :method-allowed? (request-method-in :options :delete :get)
+  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET, DELETE"})
+  :exists? (fn [ctx] (not (nil?
+                            (tasks/status
+                              (get-in ctx [:request :route-params :id])))))
   :handle-ok (fn [ctx]
-               (let [id (get-in ctx [:request ::id])
+               (let [id (get-in ctx [:request :route-params :id])
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
                  (if (get task :results false)
@@ -119,21 +123,19 @@
       (ANY "/" [] index)
       (ANY "/static/*" [] static)
       (context "/results" []
-               (ANY ["/:id" :id match-uuid] [id]
-                    (-> result-resource
-                        (wrap-binder ::id id))))
+               (ANY ["/:id" :id match-uuid] [id] result-resource))
       (context "/tasks" []
                (ANY "/:method" [method] tasks-resource)
-               (ANY ["/:method/:id/status" :id match-uuid] [method id] task-status)
-               (ANY ["/:method/:id" :id match-uuid] [method id]
-                    (-> task-resource
-                        (wrap-binder ::id id)))))))
+               (GET ["/:method/:id/status" :id match-uuid] [method id] task-status)
+               (OPTIONS ":/method/:id/status" [] (http/options #{:options :get}))
+               (ANY ["/:method/:id" :id match-uuid] [method id] task-resource)))))
 
 (def app
   (->
     (assemble-routes)
     (api)
     (ignore-trailing-slash)
+    (wrap-cors-request)
     (wrap-request-logger)
     (wrap-exception-handler)
     (wrap-response-logger)))

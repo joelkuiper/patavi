@@ -9,6 +9,7 @@
 (defn- wrap-exception
   [req e]
   (log/error (.getMessage e))
+  (.printStackTrace e)
   (json/encode e))
 
 (defn wrap-exception-handler
@@ -74,3 +75,10 @@
   [handler]
   (with-uri-rewrite handler uri-snip-slash))
 
+(defn wrap-cors-request
+  [handler]
+  (fn [request]
+    (let [response (handler request)]
+      (-> response
+          (header "Access-Control-Allow-Origin" "*")
+          (header "Access-Control-Allow-Headers" "content-type, x-requested-with")))))
