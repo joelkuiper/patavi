@@ -1,14 +1,21 @@
 angular.module('example', ["clinicico"]);
 
 function TaskCtrl($scope, tasks) {
-  var slow = tasks.submit("http://localhost:3000/tasks/slow", {"foo":"bar"});
-  slow.on("update", function(status) {
-    $scope.status = status;
-  });
+  $scope.method = "http://localhost:3000/tasks/slow";
+  $scope.input = "";
+  $scope.submit = function(method, input) {
+    var task = tasks.submit(method, input);
 
-  slow.results.then(function(results) {
-    $scope.results = results;
-  });
+    task.on("update", function(status) {
+      $scope.status = status;
+    });
+
+
+    task.results.then(function(results) {
+      $scope.results = results;
+    });
+
+  }
 
 }
 TaskCtrl.$inject = ['$scope', 'tasks'];

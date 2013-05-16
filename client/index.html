@@ -1,18 +1,42 @@
 <!DOCTYPE html>
 <html ng-app="example">
-<head>
-  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-  <title>Client example using AngularJS</title>
-</head>
-<body>
-<h1>Client example using AngularJS</h1>
-<div ng-controller="TaskCtrl">
-  <pre>{{status | json}}</pre>
-  <h2>Results</h2>
-  <pre>{{results | json}}</pre>
-</div>
-<script src="js/vendor/angular.min.js"></script>
-<script src="js/services.js"></script>
-<script src="js/app.js"></script>
-</body>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width" />
+    <title>Client example using AngularJS</title>
+    <link rel="stylesheet" href="css/foundation.min.css" />
+  </head>
+  <body>
+    <div>
+      <div ng-controller="TaskCtrl" class="row">
+        <h1>Client example using AngularJS</h1>
+        <div class="columns large-4">
+          <label>Method</label>
+          <input type="text" ng-model="method">
+          <label>Input (JSON)</label>
+          <textarea ng-model="input">
+          </textarea>
+          <button class="small.button" ng-click="submit(method, input)">Submit new task</button>
+        </div>
+        <div class="columns large-offset-1 large-7">
+          <h5>progress</h5>
+          <div class="progress large-6">
+            <span class="meter" ng-style="{width: (status.progress || 0) + '%'}"></span>
+          </div>
+        </div>
+        <hr>
+        <div class="columns" ng-show="status">
+          <h2 class="subheader">Status</h2>
+          <div class="panel"><pre>{{status | json}}</pre></div>
+        </div>
+        <div class="columns" ng-show="results">
+          <h2 class="subheader">Results</h2>
+          <div class="panel"><pre>{{results | json}}</pre></div>
+        </div>
+      </div>
+      <script src="js/vendor/angular.min.js"></script>
+      <script src="js/services.js"></script>
+      <script src="js/app.js"></script>
+    </div>
+  </body>
 </html>

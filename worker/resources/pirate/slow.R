@@ -1,9 +1,10 @@
 slow <- function(params) {
   print(paste("Accepted ", params['id'], " Zzzzz"))
-  update("Friendly neighbour R calling");
-  Sys.sleep(5)
-  update("It's me again, R!");
-  Sys.sleep(5)
+  N <- 100;
+  for(i in as.single(1:N)) {
+    update(i);
+    Sys.sleep(abs(rnorm(1, 0.01, 0.5)))
+  }
   print(paste("Woke up ", params['id']))
   params
 }
