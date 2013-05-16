@@ -7,7 +7,9 @@
 <body>
 <h1>Client example using AngularJS</h1>
 <div ng-controller="TaskCtrl">
-  {{foo}}
+  <pre>{{status | json}}</pre>
+  <h2>Results</h2>
+  <pre>{{results | json}}</pre>
 </div>
 <script src="js/vendor/angular.min.js"></script>
 <script src="js/services.js"></script>

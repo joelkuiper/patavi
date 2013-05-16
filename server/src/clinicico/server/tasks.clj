@@ -33,7 +33,7 @@
    (let [update (json/decode-smile payload true)
          id (:id update)
          content (into {} (filter
-                            (comp not (and nil? seq? empty?) val) (:content update)))
+                            (comp not nil? val) (:content update)))
          old-status (or (@statuses id) {})
          callback (or (@callbacks id) (fn [_]))]
      (log/debug (format "[consumer] Received %s" update))

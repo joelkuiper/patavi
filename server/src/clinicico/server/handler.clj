@@ -5,10 +5,10 @@
         [compojure.handler :only [api site]]
         [clinicico.server.util]
         [clinicico.server.middleware]
-        [hiccup.page :only [html5]]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :only [reader] :as io]
+            [clojure.string :only [replace] :as s]
             [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
             [cheshire.core :as json]
@@ -20,20 +20,21 @@
 
 (declare in-dev?)
 
-(defresource index
-  :available-media-types ["text/html"]
-  :handle-ok (fn [context]
-               (html5 [:head [:title "Clinicico R web-service wrapper"]]
-                      [:body
-                       [:h1 "Clinicico R web-service wrapper"]])))
-
 (defn represent-task
   [task url]
-  (-> (hal/new-resource url)
-      (hal/add-link :href (str url "status")
-                    :rel "status"
-                    :comment "Comet and WebSocket for status updates")
-      (hal/add-properties task)))
+  (let [status-url (str url (when-not (.endsWith url "/") "/") "status")
+        resource
+        (-> (hal/new-resource url)
+            (hal/add-link :href status-url
+                          :rel "status"
+                          :websocket (s/replace status-url #"http(s)?" "ws")
+                          :comment "XHR long-polling and WebSocket for status updates")
+            (hal/add-properties task))]
+    (if (contains? task :results)
+      (hal/add-link resource
+                    :href (str (http/url-base) "/results/" (:id task))
+                    :rel "results")
+      resource)))
 
 (defn handle-new-task
   [ctx]
@@ -93,9 +94,9 @@
   :generate-options-header (fn [_] {"Allow" "OPTIONS, GET, DELETE"})
   :exists? (fn [ctx] (not (nil?
                             (tasks/status
-                              (get-in ctx [:request :route-params :id])))))
+                              (get-in ctx [:request :params :id])))))
   :handle-ok (fn [ctx]
-               (let [id (get-in ctx [:request :route-params :id])
+               (let [id (get-in ctx [:request :params :id])
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
                  (if (get task :results false)
@@ -109,7 +110,7 @@
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
   :exists? (fn [ctx]
-             (let [id (get-in ctx [:request ::id])
+             (let [id (get-in ctx [:request :params :id])
                    result (store/get-result id)]
                (if (nil? result)
                  [false {}]
@@ -120,15 +121,15 @@
 (defn assemble-routes []
   (->
     (routes
-      (ANY "/" [] index)
-      (ANY "/static/*" [] static)
       (context "/results" []
                (ANY ["/:id" :id match-uuid] [id] result-resource))
       (context "/tasks" []
                (ANY "/:method" [method] tasks-resource)
                (GET ["/:method/:id/status" :id match-uuid] [method id] task-status)
                (OPTIONS ":/method/:id/status" [] (http/options #{:options :get}))
-               (ANY ["/:method/:id" :id match-uuid] [method id] task-resource)))))
+               (ANY ["/:method/:id" :id match-uuid] [method id] task-resource))
+      (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
+      (ANY "/*" [] static))))
 
 (def app
   (->

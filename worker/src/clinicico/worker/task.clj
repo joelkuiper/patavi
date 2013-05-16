@@ -4,6 +4,7 @@
             [langohr.queue     :as lq]
             [langohr.consumers :as lc]
             [langohr.basic     :as lb]
+            [clojure.string :as s :only [blank?]]
             [cheshire.core :refer :all :as json]
             [clojure.tools.logging :as log]))
 
@@ -34,7 +35,7 @@
     (log/debug (format "Recieved task %s for %s" delivery-tag routing-key))
     (let [body (json/parse-smile payload true)
           id (:id body)
-          callback (fn [msg] (update! id {:progress msg}))]
+          callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
       (update! id {:status "processing" :accepted (java.util.Date.)})
       (try
         (task-fn routing-key body callback)
