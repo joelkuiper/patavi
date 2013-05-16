@@ -3,26 +3,31 @@
         ring.util.response
         [clojure.string :only [upper-case]])
   (:require [clojure.tools.logging :as log]
+            [cheshire.core :as json]
             [clinicico.server.util :as util]))
+
+(defn- wrap-exception
+  [req e]
+  (log/error (.getMessage e))
+  (json/encode e))
 
 (defn wrap-exception-handler
    " Middleware to handle exceptions thrown by the underlying code.
 
    - Returns `HTTP/400` when `InvalidArgumentException` was thrown,
      e.g. missing JSON arguments.
-   - Returns `HTTP/500` for all unhandled thrown `Exception`.
-    "
+   - Returns `HTTP/500` for all unhandled thrown `Exception`."
   [handler]
   (fn [req]
     (try
       (handler req)
       (catch IllegalArgumentException e
         (->
-          (response e)
+          (response (wrap-exception req e))
           (status 400)))
       (catch Exception e
         (->
-          (response e)
+          (response (wrap-exception req e))
           (status 500))))))
 
 (defn wrap-request-logger

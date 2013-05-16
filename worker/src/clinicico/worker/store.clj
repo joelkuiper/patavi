@@ -46,8 +46,8 @@
 
 (defn save-result
   [results]
-  (let [new-result (created-now
-                     (modified-now (with-oid results)))]
+  (let [new-result (dissoc-in (created-now
+                     (modified-now (with-oid results))) [:body "id"])]
     (if (valid? result-validator new-result)
       (if (ok?
             (collection/insert

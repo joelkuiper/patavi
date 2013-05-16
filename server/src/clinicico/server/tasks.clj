@@ -14,6 +14,7 @@
 (defonce ^{:private true} conn (rmq/connect))
 
 (def ^{:private true} statuses (atom {}))
+(def ^{:private true} callbacks (atom {}))
 
 (def ^{:const true :private true}
   outgoing "clinicico.tasks")
@@ -21,13 +22,24 @@
 (def ^{:const true :private true}
   incoming "clinicico.updates")
 
+(defn- cleanup
+  [task-id]
+  (swap! callbacks dissoc task-id))
+
 (defn- update-handler
-  [ch metadata ^bytes payload]
-  (let [update (json/decode-smile payload true)
-        content (into {} (filter (comp not nil? val) (:content update)))
-        status (or (@statuses (:id update)) {})]
-    (log/debug (format "[consumer] Received %s" update))
-    (swap! statuses assoc (:id update) (merge status content))))
+  ([ch metadata]
+   (log/debug "[consumer] without payload: " ch " " metadata))
+  ([ch metadata ^bytes payload]
+   (let [update (json/decode-smile payload true)
+         id (:id update)
+         content (into {} (filter 
+                            (comp not (and nil? empty?) val) (:content update)))
+         old-status (or (@statuses id) {})
+         callback (or (@callbacks id) (fn [_]))]
+     (log/debug (format "[consumer] Received %s" update))
+     (swap! statuses assoc id (merge old-status content))
+     (callback (@statuses id))
+     (when (contains? #{"failed" "completed"} (:status content)) (cleanup id)))))
 
 (defn initialize
   []
@@ -54,7 +66,7 @@
     status))
 
 (defn publish-task
-  [method payload]
+  [method payload callback]
   (with-open [ch (lch/open conn)]
     (log/debug (format "Publishing task to %s (%d workers available)" method (lq/consumer-count ch method)))
     (let [id (str (java.util.UUID/randomUUID))
@@ -63,5 +75,5 @@
                   (json/generate-smile msg)
                   :content-type "application/x-jackson-smile" :type "task")
       (swap! statuses assoc id {:id id :status "pending" :created (time/now)})
+      (swap! callbacks assoc id callback)
       (status id))))
-

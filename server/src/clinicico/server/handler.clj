@@ -1,24 +1,22 @@
 (ns clinicico.server.handler
   (:gen-class)
-  (:use [compojure.core :only [context ANY routes defroutes]]
+  (:use [org.httpkit.server]
+        [compojure.core :only [context ANY routes defroutes]]
         [compojure.handler :only [api site]]
-        [org.httpkit.server :only  [run-server]]
-            [clinicico.server.util]
-            [clinicico.server.middleware]
+        [clinicico.server.util]
+        [clinicico.server.middleware]
         [hiccup.page :only [html5]]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :only [reader] :as io]
+            [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
             [cheshire.core :as json]
-            [langohr.exchange  :as le]
-            [langohr.core      :as rmq]
-            [langohr.channel   :as lch]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
+            [clinicico.server.store :as store]
             [clinicico.server.tasks :only [initialize publish-task
                                            status task-available?] :as tasks]))
-
 
 (declare in-dev?)
 
@@ -32,9 +30,13 @@
 (defn represent-task
   [task url]
   (-> (hal/new-resource url)
+      (hal/add-link :href (str url "status")
+                    :rel "status"
+                    :comment "Comet and WebSocket for status updates")
       (hal/add-properties task)))
 
-(defn handle-new-task [ctx]
+(defn handle-new-task
+  [ctx]
   (let [task (:task ctx)
         url (http/url-from (:request ctx) (:id task))
         resource (represent-task task url)]
@@ -42,18 +44,46 @@
      :headers {"Location" url}
      :body (hal/resource->representation resource :json)}))
 
+(def listeners (atom {}))
+
+(defn broadcast-update
+  [task]
+  (let [id (:id task)
+        resource (represent-task task (str (http/url-base) "/tasks/" id "/"))]
+    (doseq [client (get @listeners id)]
+      (send! client (hal/resource->representation resource :json)))))
+
+(defn task-status
+  [request]
+  (with-channel request channel
+    (let [id (get-in request [:route-params :id])
+          status (tasks/status id)
+          current-listeners (get @listeners id #{})]
+      (if (nil? status)
+        (send! channel (resp/status (resp/response "Task not found") 404))
+        (do
+          (swap! listeners assoc id (merge current-listeners channel))
+          (when (or (contains? #{"failed" "completed"} (:status status))
+                    (get-in request [:params :immediate]))
+            (broadcast-update (tasks/status id)))
+          (on-close channel (fn [status]
+                              (swap! listeners dissoc id))))))))
+
 (defresource tasks-resource
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
   :method-allowed? (request-method-in :post :get)
   :service-available? (fn [ctx]
-                        (tasks/task-available? (get-in ctx [:request :route-params :method])))
-  :handle-ok (fn [ctx] "Up and running")
+                        (tasks/task-available?
+                          (get-in ctx [:request :route-params :method])))
+  :handle-ok (fn [ctx] (json/encode {:status "Up and running"}))
   :handle-created handle-new-task
   :post! (fn [ctx]
-           (let [method (get-in ctx [:request :route-params :method])
-                 payload (json/decode-stream (io/reader (get-in ctx [:request :body])))]
-             (assoc ctx :task (tasks/publish-task method payload)))))
+           (let [callback broadcast-update
+                 method (get-in ctx [:request :route-params :method])
+                 payload (json/decode-stream
+                           (io/reader (get-in ctx [:request :body])))]
+             (assoc ctx :task (tasks/publish-task method payload callback)))))
 
 (defresource task-resource
   :available-media-types ["application/json"]
@@ -61,21 +91,43 @@
   :method-allowed? (request-method-in :delete :get)
   :exists? (fn [ctx] (not (nil? (tasks/status (get-in ctx [:request ::id])))))
   :handle-ok (fn [ctx]
-               (let [task (tasks/status (get-in ctx [:request ::id]))
-                     url (http/url-from (:request ctx))]
-                 (hal/resource->representation (represent-task task url) :json))))
+               (let [id (get-in ctx [:request ::id])
+                     task (tasks/status id)
+                     resource (represent-task task (http/url-from (:request ctx)))]
+                 (if (get task :results false)
+                   {:body nil
+                    :status 303
+                    :headers {"Location"
+                              (str (http/url-base (:request ctx)) "/results/" id)}}
+                   (hal/resource->representation resource :json)))))
+
+(defresource result-resource
+  :available-media-types ["application/json"]
+  :available-charsets ["utf-8"]
+  :exists? (fn [ctx]
+             (let [id (get-in ctx [:request ::id])
+                   result (store/get-result id)]
+               (if (nil? result)
+                 [false {}]
+                 {::result result})))
+  :handle-ok (fn [ctx] (json/encode (::result ctx))))
 
 (def match-uuid #"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
-
 (defn assemble-routes []
   (->
     (routes
       (ANY "/" [] index)
       (ANY "/static/*" [] static)
-      (ANY "/tasks/:method" [method] tasks-resource)
-      (ANY ["/tasks/:method/:id" :id match-uuid] [method id]
-           (-> task-resource
-               (wrap-binder ::id id))))))
+      (context "/results" []
+               (ANY ["/:id" :id match-uuid] [id]
+                    (-> result-resource
+                        (wrap-binder ::id id))))
+      (context "/tasks" []
+               (ANY "/:method" [method] tasks-resource)
+               (ANY ["/:method/:id/status" :id match-uuid] [method id] task-status)
+               (ANY ["/:method/:id" :id match-uuid] [method id]
+                    (-> task-resource
+                        (wrap-binder ::id id)))))))
 
 (def app
   (->
@@ -86,10 +138,9 @@
     (wrap-exception-handler)
     (wrap-response-logger)))
 
-
-(defn -main [& args] ;; entry point
+(defn -main
+  [& args]
   (def in-dev? (= "--development" (first args)))
   (let [handler (if in-dev? (reload/wrap-reload app) app)]
-    (println in-dev?)
     (tasks/initialize)
     (run-server handler {:port 3000})))
