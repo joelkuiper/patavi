@@ -34,15 +34,15 @@
   (fn
     [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
     (let [msg (nippy/thaw-from-bytes payload)
-          id (:id msg)
-          body (assoc (json/decode (:body msg) true) :id id)
-          callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
-      (log/debug (format "Recieved task %s for %s with body %s"
-                         id routing-key body))
-      (update! id {:status "processing" :accepted (java.util.Date.)})
+          id (:id msg)]
       (try
-        (task-fn routing-key body callback)
-        (update! id {:status "completed" :completed (java.util.Date.) :results true :progress "done"})
+        (let [body (assoc (json/decode (:body msg) true) :id id)
+              callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
+          (log/debug (format "Recieved task %s for %s with body %s"
+                             id routing-key body))
+          (update! id {:status "processing" :accepted (java.util.Date.)})
+          (task-fn routing-key body callback)
+          (update! id {:status "completed" :completed (java.util.Date.) :results true :progress "done"}))
         (catch Exception e (update! id {:status "failed" :progress "none" :cause (.getMessage e)}))))))
 
 (defn- start-consumer

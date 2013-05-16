@@ -74,7 +74,8 @@ angular.module('clinicico', []).
       var webSocket = function(url) {
         var socket = new WebSocket(url);
         socket.onmessage = function(event) {
-          var data = JSON.parse(event.data);
+          var data = angular.fromJson(event.data);
+          console.log(data);
           if(__nonPoll.indexOf(data.status) === -1) {
             socket.close();
           }
