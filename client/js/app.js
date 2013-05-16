@@ -2,7 +2,8 @@ angular.module('example', ["clinicico"]);
 
 function TaskCtrl($scope, tasks) {
   $scope.method = "http://localhost:3000/tasks/slow";
-  $scope.input = "";
+  $scope.input = {};
+
   $scope.submit = function(method, input) {
     var task = tasks.submit(method, input);
 

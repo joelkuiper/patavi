@@ -6,21 +6,23 @@
 
 (ns clinicico.server.http
   (:use ring.util.response
-        [clojure.string :only [upper-case join]]))
+        [clojure.string :only [upper-case blank? join]]))
 
-(defn url-from
-  [{scheme :scheme server-name :server-name server-port :server-port uri :uri}
-   & path-elements]
-  (str (subs (str scheme) 1) "://" server-name ":" server-port  uri "/" (join "/" path-elements)))
 
 (def base (atom ""))
 (defn url-base
   ([] @base)
   ([{scheme :scheme server-name :server-name server-port :server-port}]
    (let [base-url (str (subs (str scheme) 1) "://" server-name ":" server-port)]
-     (when (not (= @base base-url))
+     (when  (blank? @base)
        (reset! base base-url))
      base-url)))
+
+(defn url-from
+  [{:keys [scheme server-name server-port uri] :as req}
+   & path-elements]
+  (str (url-base req) uri "/" (join "/" path-elements)))
+
 
 (defn options
   "The OPTIONS method represents a request for information about the communication
