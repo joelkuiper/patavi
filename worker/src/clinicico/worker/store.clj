@@ -41,8 +41,7 @@
   (assoc result :modified (time/now)))
 
 (def result-validator (validation-set
-                        (presence-of :_id)
-                        (presence-of :body)))
+                        (presence-of :_id)))
 
 (defn save-result
   [results]

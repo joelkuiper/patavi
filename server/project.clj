@@ -4,6 +4,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
                  [ring/ring-devel "1.1.8"]
+                 [com.taoensso/nippy "1.2.0"]
                  [http-kit "2.1.2"]
                  [cheshire "5.1.1"]
                  [liberator "0.8.0"]

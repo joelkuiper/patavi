@@ -83,8 +83,8 @@
   :post! (fn [ctx]
            (let [callback broadcast-update
                  method (get-in ctx [:request :route-params :method])
-                 payload (json/decode-stream
-                           (io/reader (get-in ctx [:request :body])))]
+                 body (get-in ctx [:request :body])
+                 payload (when body (slurp body))]
              (assoc ctx :task (tasks/publish-task method payload callback)))))
 
 (defresource task-resource

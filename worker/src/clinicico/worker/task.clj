@@ -4,6 +4,7 @@
             [langohr.queue     :as lq]
             [langohr.consumers :as lc]
             [langohr.basic     :as lb]
+            [taoensso.nippy :as nippy]
             [clojure.string :as s :only [blank?]]
             [cheshire.core :refer :all :as json]
             [clojure.tools.logging :as log]))
@@ -32,10 +33,12 @@
   [task-fn]
   (fn
     [ch {:keys [content-type delivery-tag type routing-key] :as meta} ^bytes payload]
-    (log/debug (format "Recieved task %s for %s" delivery-tag routing-key))
-    (let [body (json/parse-smile payload true)
-          id (:id body)
+    (let [msg (nippy/thaw-from-bytes payload)
+          id (:id msg)
+          body (assoc (json/decode (:body msg) true) :id id)
           callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
+      (log/debug (format "Recieved task %s for %s with body %s"
+                         id routing-key body))
       (update! id {:status "processing" :accepted (java.util.Date.)})
       (try
         (task-fn routing-key body callback)

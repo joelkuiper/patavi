@@ -3,6 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as json]
             [clj-time.core :as time]
+            [taoensso.nippy :as nippy]
             [langohr.exchange  :as le]
             [langohr.core      :as rmq]
             [langohr.channel   :as lch]
@@ -70,10 +71,10 @@
   (with-open [ch (lch/open conn)]
     (log/debug (format "Publishing task to %s (%d workers available)" method (lq/consumer-count ch method)))
     (let [id (str (java.util.UUID/randomUUID))
-          msg (assoc payload :id id)]
+          msg {:id id :body payload}]
       (lb/publish ch outgoing method
-                  (json/generate-smile msg)
-                  :content-type "application/x-jackson-smile" :type "task")
+                  (nippy/freeze-to-bytes msg)
+                  :content-type "application/nippy" :type "task")
       (swap! statuses assoc id {:id id :status "pending" :created (time/now)})
       (swap! callbacks assoc id callback)
       (status id))))
