@@ -3,7 +3,7 @@
 /* Services */
 angular.module('clinicico', []).
   value('version', '0.1').
-  factory('tasks', function ($q, $rootScope, $http) {
+  factory('clinicico.tasks', function ($q, $rootScope, $http) {
     var config = {};
     config.baseUrl = "http://localhost:3000/tasks/";
 

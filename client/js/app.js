@@ -18,4 +18,4 @@ function TaskCtrl($scope, tasks) {
   }
 
 }
-TaskCtrl.$inject = ['$scope', 'tasks'];
+TaskCtrl.$inject = ['$scope', 'clinicico.tasks'];
