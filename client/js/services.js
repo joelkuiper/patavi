@@ -4,12 +4,14 @@
 angular.module('clinicico', []).
   value('version', '0.1').
   factory('tasks', function ($q, $rootScope, $http) {
+    var config = {};
+    config.baseUrl = "http://localhost:3000/tasks/";
 
-    var Task = function(url, data) {
+    var Task = function(method, data) {
       var scope = $rootScope.$new(true);
       var self = this;
-
-      this.url = url;
+      this.method = method;
+      this.url = config.baseUrl + method;
       this.data = data;
       var resultsFuture = $q.defer();
       this.results = resultsFuture.promise;
@@ -77,7 +79,7 @@ angular.module('clinicico', []).
         };
       }
 
-      $http.post(url, data).success(function(data) {
+      $http.post(this.url, data).success(function(data) {
         scope.$broadcast("update", data);
         angular.forEach(data._links, function(link) {
           if(link.rel === "status") {
@@ -92,6 +94,6 @@ angular.module('clinicico', []).
     }
 
     return {
-      submit: function(url, data) { return new Task(url, data); }
+      submit: function(method, data) { return new Task(method, data); }
     }
   });
