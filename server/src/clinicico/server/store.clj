@@ -22,4 +22,7 @@
 
 (defn get-result
   [id]
-  (dissoc (collection/find-map-by-id "results" id) :_id))
+  (let [result (collection/find-map-by-id "results" id)]
+    (if result
+      (assoc
+        (dissoc result :_id) :id id))))

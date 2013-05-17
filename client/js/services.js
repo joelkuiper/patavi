@@ -4,17 +4,20 @@
 angular.module('clinicico', []).
   value('version', '0.1').
   factory('clinicico.tasks', function ($q, $rootScope, $http) {
-    var config = {};
-    config.baseUrl = "http://localhost:3000/tasks/";
+    // Bind config to window
+    window.clinicico = {};
+    window.clinicico.config = {};
+    window.clinicico.config.baseUrl = "http://localhost:3000/tasks/";
 
     var Task = function(method, data) {
-      var scope = $rootScope.$new(true);
       var self = this;
-      this.method = method;
-      this.url = config.baseUrl + method;
-      this.data = data;
+      var scope = $rootScope.$new(true);
       var resultsFuture = $q.defer();
+
+      this.method = method;
+      this.url = clinicico.config.baseUrl + method;
       this.results = resultsFuture.promise;
+      this.lastStatus = null;
 
       this.on = function(eventName, callback) {
         scope.$on(eventName, function(e, data) {
@@ -41,6 +44,8 @@ angular.module('clinicico', []).
         scope.safeApply(function() {
           scope.$broadcast(eventName, data);
         });
+        self.lastStatus = data;
+
         if(data.results) {
           angular.forEach(data._links, function(link) {
             if(link.rel === "results") {
@@ -50,7 +55,6 @@ angular.module('clinicico', []).
                     resultsFuture.resolve(results);
                   }).
                 error(function(data, status) {
-                  console.log(data);
                   scope.$broadcast("error", data);
                   resultsFuture.reject("Failed to fetch results" + status);
               });
@@ -82,18 +86,23 @@ angular.module('clinicico', []).
         };
       }
 
-      $http.post(this.url, data).success(function(data) {
-        scope.$broadcast("update", data);
-        angular.forEach(data._links, function(link) {
-          if(link.rel === "status") {
-            if(window.WebSocket && link.websocket) {
-              webSocket(link.websocket);
-            } else {
-              longPoll(link.href);
+      $http.post(this.url, data)
+        .success(function(data) {
+          scope.$broadcast("update", data);
+          angular.forEach(data._links, function(link) {
+            if(link.rel === "status") {
+              if(window.WebSocket && link.websocket) {
+                webSocket(link.websocket);
+              } else {
+                longPoll(link.href);
+              }
             }
-          }
+          });
+        })
+        .error(function(data, status) {
+          scope.$broadcast("error", data);
+          resultsFuture.reject("Failed to fetch results" + status);
         });
-      });
     }
 
     return {

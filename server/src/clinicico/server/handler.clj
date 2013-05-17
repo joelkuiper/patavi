@@ -66,7 +66,7 @@
         (do
           (swap! listeners assoc id (merge current-listeners channel))
           (when (or (contains? #{"failed" "completed"} (:status status))
-                    (get-in request [:params :immediate]))
+                    (get-in request [:params :latest]))
             (broadcast-update status))
           (on-close channel (fn [_]
                               (swap! listeners dissoc id))))))))

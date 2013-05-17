@@ -29,7 +29,7 @@
 (set-db! (get-db (mongo-options :db)))
 
 (defn- with-oid
-  [results id]
+  [id results]
   (assoc results :_id id))
 
 (defn- created-now
@@ -46,7 +46,7 @@
 (defn save-result
   [id results]
   (let [new-result (created-now
-                     (modified-now (with-oid results id)))]
+                     (modified-now (with-oid id results)))]
     (if (valid? result-validator new-result)
       (if (ok?
             (collection/insert
