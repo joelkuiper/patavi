@@ -32,7 +32,9 @@
   [file packages]
   (reset! script-file file)
   (create-bootstrap packages)
-  (sh (io/as-relative-path "scripts/start.sh")))
+  (let [start (sh (io/as-relative-path "scripts/start.sh"))]
+    (log/info "[Rserve]" (:out start))
+    start))
 
 (defn- source-file!
   "Finds the R file with the associated file
