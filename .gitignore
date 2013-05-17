@@ -14,3 +14,4 @@ pom.xml
 *~
 *.err
 tags
+**/.lein-repl-history
