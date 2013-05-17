@@ -43,7 +43,8 @@
         url (http/url-from (:request ctx) (:id task))
         resource (represent-task task url)]
     {:status 202
-     :headers {"Location" url}
+     :headers {"Location" url
+               "Content-Type" "application/json"}
      :body (hal/resource->representation resource :json)}))
 
 (def listeners (atom {}))
