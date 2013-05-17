@@ -5,8 +5,13 @@ exec <- function(method, id, params) {
   }
   assign("update", update, envir=parent.env(environment()))
 
-  params <- fromJSON(params)
-  result <- do.call(method, list(params))
-  unlink(paste(id, ".tmp", sep=""))
-  toJSON(result)
+  if(!is.null(params) && isValidJSON(params, asText=T)) {
+    params <- fromJSON(params)
+    result <- do.call(method, list(params))
+    unlink(paste(id, ".tmp", sep=""))
+    toJSON(result)
+  } else {
+    unlink(paste(id, ".tmp", sep=""))
+    stop("Provided JSON was invalid")
+  }
 }

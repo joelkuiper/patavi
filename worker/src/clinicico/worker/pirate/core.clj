@@ -25,10 +25,12 @@
         bootstrap (str (format bootstrap-template wrapper) (join "\n" commands))]
     (spit (io/resource "bootstrap.R") bootstrap)))
 
+(def script-file (atom ""))
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
   [file packages]
+  (reset! script-file file)
   (create-bootstrap packages)
   (sh (io/as-relative-path "scripts/start.sh")))
 
@@ -58,10 +60,10 @@
    Callback is function taking one argument which can serve to
    allow OOB updates from the R session
    See resources/wrap.R for details."
-  [file method id params callback]
+  [method id params callback]
   (with-open [R (pirate/connect)]
     (try
-      (source-file! R file)
+      (source-file! R @script-file)
       (pirate/assign R "params" params)
       (let [progress-file (str id ".tmp")
             workdir (pirate/parse R "getwd()")

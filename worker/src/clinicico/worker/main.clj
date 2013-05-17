@@ -8,11 +8,9 @@
 
 
 (defn run
-  [file]
-  (fn
-    [method id params callback]
-    (let [results (pirate/execute file method id params callback)]
-      (store/save-result id {:body results :id (:id params)}))))
+  [method id params callback]
+  (let [results (pirate/execute method id params callback)]
+    (store/save-result id {:body results :id (:id params)})))
 
 (defn -main
   [& args]
@@ -32,5 +30,5 @@
       (println banner)
       (System/exit 0))
     (pirate/initialize (:file options) (:packages options))
-    (tasks/initialize method (:nworkers options) (run file))
+    (tasks/initialize method (:nworkers options) run)
     (while true (Thread/sleep 100))))
