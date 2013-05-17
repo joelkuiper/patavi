@@ -49,7 +49,7 @@ angular.module('clinicico', []).
         if(data.results) {
           angular.forEach(data._links, function(link) {
             if(link.rel === "results") {
-              $http.get(link.href).
+              $http.jsonp(link.href + "?callback=JSON_CALLBACK").
                 success(function(results) {
                     scope.$broadcast("results", results);
                     resultsFuture.resolve(results);

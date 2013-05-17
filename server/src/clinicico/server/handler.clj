@@ -5,6 +5,7 @@
         [compojure.handler :only [api site]]
         [clinicico.server.util]
         [clinicico.server.middleware]
+        [ring.middleware.jsonp]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :only [reader] :as io]
@@ -137,6 +138,7 @@
 (def app
   (->
     (assemble-routes)
+    (wrap-json-with-padding)
     (api)
     (ignore-trailing-slash)
     (wrap-cors-request)
