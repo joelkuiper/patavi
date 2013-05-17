@@ -75,6 +75,6 @@
       (lb/publish ch outgoing method
                   (nippy/freeze-to-bytes msg)
                   :content-type "application/nippy" :type "task")
-      (swap! statuses assoc id {:id id :status "pending" :created (time/now)})
+      (swap! statuses assoc id {:id id :method method :status "pending" :created (time/now)})
       (swap! callbacks assoc id callback)
       (status id))))

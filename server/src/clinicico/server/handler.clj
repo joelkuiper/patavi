@@ -50,7 +50,8 @@
 (defn broadcast-update
   [task]
   (let [id (:id task)
-        resource (represent-task task (str (http/url-base) "/tasks/" id "/"))]
+        method (:method task)
+        resource (represent-task task (str (http/url-base) "/tasks/" method "/" id "/"))]
     (doseq [client (get @listeners id)]
       (send! client (hal/resource->representation resource :json)))))
 
@@ -66,8 +67,8 @@
           (swap! listeners assoc id (merge current-listeners channel))
           (when (or (contains? #{"failed" "completed"} (:status status))
                     (get-in request [:params :immediate]))
-            (broadcast-update (tasks/status id)))
-          (on-close channel (fn [status]
+            (broadcast-update status))
+          (on-close channel (fn [_]
                               (swap! listeners dissoc id))))))))
 
 (defresource tasks-resource

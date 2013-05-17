@@ -2,6 +2,7 @@ angular.module('example', ["clinicico"]);
 
 function TaskCtrl($scope, tasks) {
   $scope.method = "slow";
+  $scope.input = "{}";
 
   $scope.submit = function(method, input) {
     var task = tasks.submit(method, angular.fromJson(input));
