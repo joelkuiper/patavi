@@ -10,10 +10,9 @@
 (defn run
   [file]
   (fn
-    [method params callback]
-    (let [results (pirate/execute file method params callback)]
-      (log/debug results)
-      (store/save-result {:body results :id (:id params)}))))
+    [method id params callback]
+    (let [results (pirate/execute file method id params callback)]
+      (store/save-result id {:body results :id (:id params)}))))
 
 (defn -main
   [& args]

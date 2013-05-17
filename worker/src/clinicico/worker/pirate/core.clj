@@ -58,13 +58,12 @@
    Callback is function taking one argument which can serve to
    allow OOB updates from the R session
    See resources/wrap.R for details."
-  [file method params callback]
+  [file method id params callback]
   (with-open [R (pirate/connect)]
     (try
       (source-file! R file)
-      (pirate/assign R "params" (json/encode params))
-      (let [id (:id params)
-            progress-file (str id ".tmp")
+      (pirate/assign R "params" params)
+      (let [progress-file (str id ".tmp")
             workdir (pirate/parse R "getwd()")
             path (str workdir "/" progress-file)]
         (do

@@ -7,7 +7,6 @@ exec <- function(method, id, params) {
 
   params <- fromJSON(params)
   result <- do.call(method, list(params))
-  result['id'] <- id
   unlink(paste(id, ".tmp", sep=""))
   toJSON(result)
 }

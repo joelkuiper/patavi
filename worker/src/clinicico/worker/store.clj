@@ -29,8 +29,8 @@
 (set-db! (get-db (mongo-options :db)))
 
 (defn- with-oid
-  [results]
-  (assoc results :_id (:id results)))
+  [results id]
+  (assoc results :_id id))
 
 (defn- created-now
   [results]
@@ -44,9 +44,9 @@
                         (presence-of :_id)))
 
 (defn save-result
-  [results]
-  (let [new-result (dissoc-in (created-now
-                     (modified-now (with-oid results))) [:body "id"])]
+  [id results]
+  (let [new-result (created-now
+                     (modified-now (with-oid results id)))]
     (if (valid? result-validator new-result)
       (if (ok?
             (collection/insert

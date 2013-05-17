@@ -36,12 +36,10 @@
     (let [msg (nippy/thaw-from-bytes payload)
           id (:id msg)]
       (try
-        (let [body (assoc (json/decode (:body msg) true) :id id)
-              callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
-          (log/debug (format "Recieved task %s for %s with body %s"
-                             id routing-key body))
+        (let [callback (fn [msg] (when (not (s/blank? msg)) (update! id {:progress msg})))]
+          (log/debug (format "Recieved task %s for %s" id routing-key))
           (update! id {:status "processing" :accepted (java.util.Date.)})
-          (task-fn routing-key body callback)
+          (task-fn routing-key id (:body msg) callback)
           (update! id {:status "completed" :completed (java.util.Date.) :results true :progress "done"}))
         (catch Exception e (update! id {:status "failed" :progress "none" :cause (.getMessage e)}))))))
 
