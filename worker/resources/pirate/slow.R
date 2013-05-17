@@ -1,10 +1,14 @@
 slow <- function(params) {
-  print(paste("Accepted ", params['id'], " Zzzzz"))
+  print(paste("Accepted...", " Zzzzz"))
   N <- 100;
+  x <- abs(rnorm(N, 0.001, 0.05))
   for(i in as.single(1:N)) {
     update(i);
-    Sys.sleep(abs(rnorm(1, 0.01, 0.5)))
+    Sys.sleep(x[[i]])
   }
-  print(paste("Woke up ", params['id']))
+
+  save.plot(function() hist(x), "duration", type="PNG")
+  save.plot(function() hist(x), "foobar", type="PNG")
+
   params
 }

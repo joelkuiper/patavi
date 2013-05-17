@@ -62,10 +62,10 @@
     (response body)))
 
 (defn not-implemented
-  "The server does not support the functionality required to fulfill the request.
-   This is the appropriate response when the server does not recognize the
+  "the server does not support the functionality required to fulfill the request.
+   this is the appropriate response when the server does not recognize the
    request method and is not capable of supporting it for any resource.
-   Source: [HTTP Spec.](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.5.2)"
+   source: [http spec.](http://www.w3.org/protocols/rfc2616/rfc2616-sec10.html#sec10.5.2)"
   []
   (->
     (response nil)

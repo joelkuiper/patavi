@@ -7,14 +7,17 @@
   (:use [clinicico.worker.config]
         [clinicico.worker.util.util]
         [validateur.validation]
+        [monger.gridfs :only  [store-file make-input-file filename content-type metadata]]
         [monger.core :only [connect! set-db! get-db]]
         [monger.result :only [ok?]]
         [monger.conversion :only [from-db-object]])
   (:require [clojure.walk :as walk]
             [clojure.tools.logging :as log]
+            [clojure.java.io :as io :only [input-stream]]
             [monger.collection :as collection]
             [monger.conversion :as conv]
             [monger.json]
+            [monger.gridfs :as gfs]
             [monger.util :as util]
             [monger.joda-time]
             [clj-time.core :as time]))
@@ -56,3 +59,20 @@
          :stored (time/now)}
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException. "Could not save invalid result set")))))
+
+
+(defn- save-file
+  [file path]
+  (store-file (make-input-file (io/input-stream (byte-array (get file "content"))))
+              (metadata (get file "metadata"))
+              (content-type (get file "mime"))
+              (filename path)))
+
+
+(defn save-files
+  [id files]
+  (doall
+    (map
+      (fn [file]
+        (save-file file (str id "/" (get file "name")))) files)))
+

@@ -11,7 +11,7 @@
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(def ^:private default-packages ["RJSONIO"])
+(def ^:private default-packages ["RJSONIO" "Cairo"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
@@ -68,13 +68,16 @@
     (try
       (source-file! R @script-file)
       (pirate/assign R "params" params)
+      (pirate/assign R "files" [])
       (let [progress-file (str id ".tmp")
             workdir (pirate/parse R "getwd()")
             path (str workdir "/" progress-file)]
         (do
           (pirate/create-file! R progress-file)
           (nio/tail-file path :modify callback)
-          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))]
+          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))
+                files (pirate/retrieve R "files")]
             (nio/unwatch-file path)
-            (json/decode result))))
+            {:files (if (map? files) [files] files)
+             :results (json/decode result)})))
       (catch Exception e (throw (Exception. (cause e) e))))))

@@ -1,4 +1,5 @@
 (ns clinicico.worker.main
+  (:gen-class)
   (:use [clojure.string :only [split trim capitalize]]
         [clojure.tools.cli :only [cli]])
   (:require [clinicico.worker.task :as tasks :only [initialize]]
@@ -9,8 +10,13 @@
 
 (defn run
   [method id params callback]
-  (let [results (pirate/execute method id params callback)]
-    (store/save-result id {:body results :id (:id params)})))
+  (let [{:keys [files results]} (pirate/execute method id params callback)]
+    (do
+      (store/save-files id files)
+      (store/save-result id {:body results
+                             :files (map (fn [f] {:name (get f "name")
+                                                  :mime (get f "mime")}) files)
+                             :id (:id params)}))))
 
 (defn -main
   [& args]

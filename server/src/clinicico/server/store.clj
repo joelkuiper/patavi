@@ -1,6 +1,5 @@
 ;; ## Store
-;; A simple MongoDB storage for the produced results.
-;; Takes any map that includes a results field.
+;;  simple MongoDB access for the produced results.
 
 (ns clinicico.server.store
   (:use [clinicico.server.config]
@@ -9,6 +8,7 @@
         [monger.conversion :only [from-db-object]])
   (:require [clojure.walk :as walk]
             [clojure.tools.logging :as log]
+            [monger.gridfs :as gfs]
             [monger.collection :as collection]))
 
 (def mongo-options
@@ -26,3 +26,7 @@
     (if result
       (assoc
         (dissoc result :_id) :id id))))
+
+(defn get-file
+  [id filename]
+  (-> (gfs/find-one  {:filename  (str id "/" filename)})))

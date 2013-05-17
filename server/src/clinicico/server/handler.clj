@@ -109,6 +109,17 @@
                               (str (http/url-base (:request ctx)) "/results/" id)}}
                    (hal/resource->representation resource :json)))))
 
+(defn represent-result
+  [result]
+  (let [location (str (http/url-base) "/results/" (:id result) "/")
+        self {:rel "self" :href location}
+        files (:files result)
+        embedded (map (fn [x] {:href (str location (:name x))
+                               :type (:mime x)}) files)]
+    (assoc
+      (dissoc result :files) :_links [self] :_embedded {:_files embedded})))
+
+
 (defresource result-resource
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
@@ -120,13 +131,20 @@
                (if (nil? result)
                  [false {}]
                  {::result result})))
-  :handle-ok (fn [ctx] (json/encode (::result ctx))))
+  :handle-ok (fn [ctx] (json/encode (represent-result (::result ctx)))))
 
 (def match-uuid #"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 (defn assemble-routes []
   (->
     (routes
       (context "/results" []
+               (GET "/:id/:file" [id file]
+                    (let [record (store/get-file id file)]
+                      (if (nil? record)
+                        (resp/not-found nil)
+                        (-> (resp/response (.getInputStream record))
+                            (resp/content-type (:content-type (.getContentType record)))
+                            (resp/header "Content-Length" (.getLength record))))))
                (ANY ["/:id" :id match-uuid] [id] result-resource))
       (context "/tasks" []
                (ANY "/:method" [method] tasks-resource)

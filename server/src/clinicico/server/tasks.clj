@@ -25,7 +25,9 @@
 
 (defn- cleanup
   [task-id]
-  (swap! callbacks dissoc task-id))
+  (do
+    (log/debug "Done with task " task-id (@statuses task-id))
+    (swap! callbacks dissoc task-id)))
 
 (defn- update-handler
   ([ch metadata]
@@ -37,7 +39,6 @@
                             (comp not nil? val) (:content update)))
          old-status (or (@statuses id) {})
          callback (or (@callbacks id) (fn [_]))]
-     (log/debug (format "[consumer] Received %s" update))
      (swap! statuses assoc id (merge old-status content))
      (callback (@statuses id))
      (when (contains? #{"failed" "completed"} (:status content)) (cleanup id)))))
