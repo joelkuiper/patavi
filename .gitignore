@@ -1,7 +1,3 @@
-/target
-/lib
-/classes
-/checkouts
 **/third-party
 pom.xml
 *.jar
