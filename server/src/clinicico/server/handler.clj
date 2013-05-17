@@ -110,6 +110,8 @@
 (defresource result-resource
   :available-media-types ["application/json"]
   :available-charsets ["utf-8"]
+  :method-allowed? (request-method-in :options :get)
+  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET"})
   :exists? (fn [ctx]
              (let [id (get-in ctx [:request :params :id])
                    result (store/get-result id)]
