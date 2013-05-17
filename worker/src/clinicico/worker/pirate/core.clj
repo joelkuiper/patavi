@@ -5,7 +5,9 @@
             [clinicico.worker.pirate.util :as pirate]
             [clinicico.worker.util.nio :as nio]
             [clojure.tools.logging :as log]
-            [cheshire.core :refer :all :as json])
+            [cheshire.core :refer :all :as json]
+            [crypto.random :as crypto]
+            [nio.core :as nio2 :only [mmap]])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
@@ -30,7 +32,7 @@
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
   [file packages]
-  (reset! script-file file)
+  (reset! script-file (nio2/mmap file))
   (create-bootstrap packages)
   (let [start (sh (io/as-relative-path "scripts/start.sh"))]
     (log/info "[Rserve]" (:out start))
@@ -39,12 +41,11 @@
 (defn- source-file!
   "Finds the R file with the associated file
    name and load its into an RConnection."
-  [^RConnection R file]
-  (let [script (io/as-file file)
-        filename (.getName script)]
+  [^RConnection R script]
+  (let [filename (crypto.random/hex 8)]
     (if (nil? script)
       (throw (IllegalArgumentException.
-               (str "Could not find specified file " file)))
+               (str "Could not source script file to R")))
       (do
         (pirate/copy! R script filename)
         (.voidEval R (str "source('"filename"')"))

@@ -43,7 +43,7 @@
 (defn copy!
   [^RConnection R file filename]
   (with-open [r-file (create-file! R filename)]
-    (io/copy file r-file)))
+    (io/copy (slurp file) r-file)))
 
 (defn- as-list
   "Converts a
