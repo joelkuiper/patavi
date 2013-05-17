@@ -7,8 +7,8 @@ slow <- function(params) {
     Sys.sleep(x[[i]])
   }
 
-  save.plot(function() hist(x), "duration", type="PNG")
-  save.plot(function() hist(x), "foobar", type="PNG")
+  save.plot(function() hist(x), "duration", type="png")
+  save.plot(function() hist(x), "duration", type="svg")
 
   params
 }

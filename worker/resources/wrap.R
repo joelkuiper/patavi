@@ -16,20 +16,23 @@ exec <- function(method, id, params) {
   }
 }
 
-save.plot <- function(plot.fn, filename, type="PNG") {
-  mimes <- list("PNG"="image/png", "SVG"="image/svg+xml")
+save.plot <- function(plot.fn, name, type="PNG") {
+  mimes <- list("png"="image/png", "jpeg"="image/jpeg", "svg"="image/svg+xml")
+
   if(!(type %in% names(mimes))) { stop("File format not supported") }
 
   tmp <- tempfile()
-  do.call(paste("Cairo", type, sep=""), list(tmp))
+  do.call("Cairo", list(file=tmp, type=type, dpi=90))
   plot.fn()
   dev.off()
+  if(type == "svg") { tmp <- paste(tmp, ".svg", sep="") }
   content <- readBin(tmp, 'raw', 1024*1024) #1MB filesize limit
   unlink(tmp)
-  file <- list(name=paste(filename, tolower(type), sep="."),
+  file <- list(name=paste(name, type, sep="."),
                content=content,
                mime=mimes[[type]])
-  assign("files", c(files, file), envir=parent.env(environment()))
+
+  assign("files", append(files, list(file)), envir=parent.env(environment()))
 }
 
 
