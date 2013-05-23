@@ -16,7 +16,7 @@ exec <- function(method, id, params) {
   }
 }
 
-save.plot <- function(plot.fn, name, type="PNG") {
+save.plot <- function(plot.fn, name, type="png") {
   mimes <- list("png"="image/png", "jpeg"="image/jpeg", "svg"="image/svg+xml")
 
   if(!(type %in% names(mimes))) { stop("File format not supported") }
