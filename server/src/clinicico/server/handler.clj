@@ -147,9 +147,9 @@
                             (resp/header "Content-Length" (.getLength record))))))
                (ANY ["/:id" :id match-uuid] [id] result-resource))
       (context "/tasks" []
-               (ANY "/:method" [method] tasks-resource)
+               (OPTIONS ["/:method/:id/status" :id match-uuid] [] (http/options #{:options :get}))
                (GET ["/:method/:id/status" :id match-uuid] [method id] task-status)
-               (OPTIONS ":/method/:id/status" [] (http/options #{:options :get}))
+               (ANY "/:method" [method] tasks-resource)
                (ANY ["/:method/:id" :id match-uuid] [method id] task-resource))
       (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
       (ANY "/*" [] static))))
