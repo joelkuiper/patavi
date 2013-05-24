@@ -6,12 +6,14 @@
         [clinicico.server.util]
         [clinicico.server.middleware]
         [ring.middleware.jsonp]
+        [clojure.tools.cli :only [cli]]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.java.io :only [reader] :as io]
-            [clojure.string :only [replace] :as s]
+            [clojure.string :only [replace split] :as s]
             [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
+            [clojure.tools.nrepl.server :only (start-server stop-server) :as repl]
             [cheshire.core :as json]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
@@ -21,9 +23,13 @@
 
 (declare in-dev?)
 
+(defn strip-slash
+  [url]
+  (str url (when-not (.endsWith url "/") "/") "status"))
+
 (defn represent-task
   [task url]
-  (let [status-url (str url (when-not (.endsWith url "/") "/") "status")
+  (let [status-url (strip-slash url)
         resource
         (-> (hal/new-resource url)
             (hal/add-link :href status-url
@@ -70,8 +76,7 @@
           (when (or (contains? #{"failed" "completed"} (:status status))
                     (get-in request [:params :latest]))
             (broadcast-update status))
-          (on-close channel (fn [_]
-                              (swap! listeners dissoc id))))))))
+          (on-close channel (fn [_] (swap! listeners dissoc id))))))))
 
 (defresource tasks-resource
   :available-media-types ["application/json"]
@@ -114,7 +119,8 @@
   (let [location (str (http/url-base) "/results/" (:id result) "/")
         self {:rel "self" :href location}
         files (:files result)
-        embedded (map (fn [x] {:href (str location (:name x))
+        embedded (map (fn [x] {:name (first (s/split (:name x) #"\."))
+                               :href (str location (:name x))
                                :type (:mime x)}) files)]
     (assoc
       (dissoc result :files) :_links [self] :_embedded {:_files embedded})))
@@ -147,10 +153,10 @@
                             (resp/header "Content-Length" (.getLength record))))))
                (ANY ["/:id" :id match-uuid] [id] result-resource))
       (context "/tasks" []
-               (OPTIONS ["/:method/:id/status" :id match-uuid] [] (http/options #{:options :get}))
-               (GET ["/:method/:id/status" :id match-uuid] [method id] task-status)
                (ANY "/:method" [method] tasks-resource)
-               (ANY ["/:method/:id" :id match-uuid] [method id] task-resource))
+               (ANY ["/:method/:id" :id match-uuid] [method id] task-resource)
+               (OPTIONS ["/:method/:id/status" :id match-uuid] [] (http/options #{:options :get}))
+               (GET ["/:method/:id/status" :id match-uuid] [method id] task-status))
       (GET "/" [] (resp/resource-response "index.html" {:root "public"}))
       (ANY "/*" [] static))))
 
@@ -167,7 +173,18 @@
 
 (defn -main
   [& args]
-  (def in-dev? (= "--development" (first args)))
-  (let [handler (if in-dev? (reload/wrap-reload app) app)]
-    (tasks/initialize)
-    (run-server handler {:port 3000})))
+  (let [[options args banner]
+        (cli args
+             ["-h" "--help" "Show Help" :default false :flag true]
+             ["-p" "--port" "Port to listen to" :default 3000 :parse-fn #(Integer. %)]
+             ["-r" "--repl" "nREPL port to listen to" :default 7888 :parse-fn #(Integer. %)]
+             ["-d" "--development" "Run server in development mode" :default false :flag true])]
+    (def in-dev? (:development options))
+    (when (:help options)
+      (println banner)
+      (System/exit 0))
+    (let [handler (if in-dev? (reload/wrap-reload app) app)]
+      (log/info "Running server on port" (:port options) "nREPL running on" (:repl options))
+      (defonce repl-server (repl/start-server :port (:repl options)))
+      (tasks/initialize)
+      (run-server handler {:port (:port options)}))))
