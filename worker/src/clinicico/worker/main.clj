@@ -7,7 +7,6 @@
             [clinicico.worker.pirate.core :as pirate]
             [clojure.tools.logging :as log]))
 
-
 (defn run
   [method id params callback]
   (let [{:keys [files results]} (pirate/execute method id params callback)]
@@ -32,7 +31,7 @@
              ["-f" "--file" "R file to execute" :default "resources/pirate/echo.R"])
         method (:method options)
         file (:file options)]
-    (when (or (:help options))
+    (when (:help options)
       (println banner)
       (System/exit 0))
     (pirate/initialize (:file options) (:packages options))

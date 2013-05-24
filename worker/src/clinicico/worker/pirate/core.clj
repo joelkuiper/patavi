@@ -6,8 +6,7 @@
             [clinicico.worker.util.nio :as nio]
             [clojure.tools.logging :as log]
             [cheshire.core :refer :all :as json]
-            [crypto.random :as crypto]
-            [nio.core :as nio2 :only [mmap]])
+            [crypto.random :as crypto])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
@@ -76,9 +75,8 @@
               path (str workdir "/" progress-file)]
           (pirate/create-file! R progress-file)
           (nio/tail-file path :modify callback)
-          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))
-                files (pirate/retrieve R "files")]
+          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))]
             (nio/unwatch-file path)
-            {:files (if (map? files) [files] files)
+            {:files (pirate/retrieve R "files")
              :results (json/decode result)})))
       (catch Exception e (throw (Exception. (cause e) e))))))

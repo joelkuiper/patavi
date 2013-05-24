@@ -2,7 +2,7 @@
 ;; These functions provide helpers for creating Ring responses.
 ;; They should only be used when appropriate, see associated HTTP Spec. for
 ;; detaills. Note that each of the Middleware handlers can abort the request
-;; handling and can sent its own HTTP status.
+;; handling and can sent its own response body.
 
 (ns clinicico.server.http
   (:use ring.util.response

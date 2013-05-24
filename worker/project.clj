@@ -14,10 +14,8 @@
                  [com.novemberain/langohr "1.0.0-beta13"]
                  [com.novemberain/monger "1.6.0-beta2"]
                  [clj-time "0.5.0"]
-                 [nio "1.0.0"]
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]]
   :main clinicico.worker.main
   :profiles
-  {:dev {:dependencies [[lein-marginalia "0.7.1"]
-                        [ring-mock "0.1.3"]]}})
+  {:dev {:dependencies [[lein-marginalia "0.7.1"]]}})
