@@ -179,12 +179,12 @@
              ["-p" "--port" "Port to listen to" :default 3000 :parse-fn #(Integer. %)]
              ["-r" "--repl" "nREPL port to listen to" :default 7888 :parse-fn #(Integer. %)]
              ["-d" "--development" "Run server in development mode" :default false :flag true])]
-    (def in-dev? (:development options))
+    (defonce in-dev? (:development options))
     (when (:help options)
       (println banner)
       (System/exit 0))
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
-      (log/info "Running server on port" (:port options) "nREPL running on" (:repl options))
+      (log/info "Running server on port" (:port options) ";nREPL running on" (:repl options))
       (defonce repl-server (repl/start-server :port (:repl options)))
       (tasks/initialize)
       (run-server handler {:port (:port options)}))))
