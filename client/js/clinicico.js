@@ -4,11 +4,13 @@
 angular.module('clinicico', []).
   value('version', '0.1').
   factory('clinicico.tasks', function ($q, $rootScope, $http) {
-  // Bind config to window
+
+  var clinicico = {};
+  // Load default config if none found
   if(!angular.isDefined(window.clinicico)) {
-    window.clinicico = {};
-    window.clinicico.config = {};
-    window.clinicico.config.baseUrl = "http://localhost:3000/tasks/";
+    clinicico = angular.extend(clinicico, { config: { baseUrl: "http://localhost:3000/tasks/" } })
+  } else {
+    clinicico = window.clinicico;
   }
 
   var Task = function(method, data) {
