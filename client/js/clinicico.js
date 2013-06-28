@@ -50,6 +50,10 @@ angular.module('clinicico', []).
       });
       self.lastStatus = data;
 
+      if(data.status === "failed") {
+        resultsFuture.reject(data);
+      }
+
       if(data.results) {
         angular.forEach(data._links, function(link) {
           if(link.rel === "results") {
@@ -94,16 +98,19 @@ angular.module('clinicico', []).
     $http.post(this.url, data)
     .success(function(data) {
       angular.forEach(data._links, function(link) {
-        if(link.rel === "status") {
-          if(window.WebSocket && link.websocket) {
-            webSocket(link.websocket);
-          } else {
-            longPoll(link.href);
-          }
-        } else if (link.rel === "self") {
+        if(link.rel === "self") {
           $http.get(link.href).success(function(data) {
             update("update", data);
           });
+        } else if (link.rel === "status") {
+          var done = self.lastStatus && __nonPoll.indexOf(self.lastStatus.status) !== -1;
+          if(!done) {
+            if(window.WebSocket && link.websocket) {
+              webSocket(link.websocket);
+            } else {
+              longPoll(link.href);
+            }
+          }
         }
       });
     })

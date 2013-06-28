@@ -73,7 +73,7 @@
         (send! channel (resp/status (resp/response "Task not found") 404))
         (do
           (swap! listeners assoc id (merge current-listeners channel))
-          (when (or (contains? #{"failed" "completed"} (:status status))
+          (when (or (contains? #{"failed" "canceled" "completed"} (:status status))
                     (get-in request [:params :latest]))
             (broadcast-update status))
           (on-close channel (fn [_] (swap! listeners dissoc id))))))))
