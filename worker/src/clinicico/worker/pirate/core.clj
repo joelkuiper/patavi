@@ -10,6 +10,8 @@
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
+(def script-file (atom nil))
+
 (def ^:private default-packages ["RJSONIO" "Cairo"])
 
 (def ^:private load-template
@@ -26,7 +28,6 @@
         bootstrap (str (format bootstrap-template wrapper) (join "\n" commands))]
     (spit (io/resource "bootstrap.R") bootstrap)))
 
-(def script-file (atom ""))
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
@@ -67,6 +68,7 @@
   (with-open [R (pirate/connect)]
     (try
       (do
+        (compare-and-set! script-file nil (io/as-file file))
         (source-file! R @script-file)
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
