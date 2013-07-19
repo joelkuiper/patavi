@@ -31,13 +31,14 @@
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
-  [file packages]
+  [file packages start?]
   (do
     (reset! script-file (io/as-file file))
-    (create-bootstrap packages)
-    (let [start (sh (io/as-relative-path "scripts/start.sh"))]
-      (log/info "[Rserve]" (:out start))
-      start)))
+    (when start?
+      (create-bootstrap packages)
+      (let [start (sh (io/as-relative-path "scripts/start.sh"))]
+        (log/info "[Rserve]" (:out start))
+        start))))
 
 (defn- source-file!
   "Finds the R file with the associated file
@@ -68,7 +69,6 @@
   (with-open [R (pirate/connect)]
     (try
       (do
-        (compare-and-set! script-file nil (io/as-file file))
         (source-file! R @script-file)
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
