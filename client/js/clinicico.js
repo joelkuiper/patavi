@@ -44,6 +44,24 @@ angular.module('clinicico', []).
       }
     };
 
+    // Thanks to Modernizr
+    // https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js
+    function hasWebsockets() {
+      var protocol = 'https:'==location.protocol?'wss':'ws',
+      protoBin;
+
+      if("WebSocket" in window) {
+        if( protoBin = "binaryType" in WebSocket.prototype ) {
+          return protoBin;
+        }
+        try {
+          return !!(new WebSocket(protocol+'://.').binaryType);
+        } catch (e){}
+      }
+
+      return false;
+    }
+
     function update(eventName, data) {
       scope.safeApply(function() {
         scope.$broadcast(eventName, data);
@@ -105,7 +123,7 @@ angular.module('clinicico', []).
         } else if (link.rel === "status") {
           var done = self.lastStatus && __nonPoll.indexOf(self.lastStatus.status) !== -1;
           if(!done) {
-            if(window.WebSocket && link.websocket) {
+            if(hasWebsockets() && link.websocket) {
               webSocket(link.websocket);
             } else {
               longPoll(link.href);
