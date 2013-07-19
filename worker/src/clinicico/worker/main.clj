@@ -22,6 +22,7 @@
   (let [[options args banner]
         (cli args
              ["-h" "--help" "Show help" :default false :flag true]
+             ["-r" "--rserve" "Start RServe from application" :default false :flag true]
              ["-n" "--nworkers" "Amount of worker threads to start"
               :default (.availableProcessors (Runtime/getRuntime))
               :parse-fn #(Integer. %)]
@@ -34,6 +35,6 @@
     (when (:help options)
       (println banner)
       (System/exit 0))
-    (pirate/initialize (:file options) (:packages options))
+    (when (:rserve options) (pirate/initialize (:file options) (:packages options)))
     (tasks/initialize method (:nworkers options) run)
     (while true (Thread/sleep 100))))
