@@ -35,6 +35,6 @@
     (when (:help options)
       (println banner)
       (System/exit 0))
-    (pirate/initialize (:file options) (:packages options) (:reserve options))
+    (pirate/initialize (:file options) (:packages options) (:rserve options))
     (tasks/initialize method (:nworkers options) run)
     (while true (Thread/sleep 100))))
