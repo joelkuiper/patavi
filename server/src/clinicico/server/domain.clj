@@ -12,8 +12,8 @@
             [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
 
 (defn add-slash
-  [url]
-  (str url (when-not (.endsWith url "/") "/")))
+  [string]
+  (str string (when-not (.endsWith string "/") "/")))
 
 (defn represent-task
   [task url]
@@ -108,7 +108,6 @@
                                :type (:mime x)}) files)]
     (assoc
       (dissoc result :files) :_links [self] :_embedded {:_files embedded})))
-
 
 (defresource result-resource
   :available-media-types ["application/json"]
