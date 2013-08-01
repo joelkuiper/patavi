@@ -64,8 +64,7 @@
 
 (defn status
   [id]
-  (let [status (@statuses id)]
-    status))
+  (@statuses id))
 
 (defn publish-task
   [method payload callback]
