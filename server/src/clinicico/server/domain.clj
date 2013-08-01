@@ -1,25 +1,23 @@
 (ns clinicico.server.domain
   (:gen-class)
   (:use [org.httpkit.server]
+        [liberator.representation :only [ring-response]]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
-            [cheshire.core :as json]
             [ring.util.response :as resp]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
             [clinicico.server.store :as store]
-            [clinicico.server.tasks :only [publish-task
-                                           status task-available?] :as tasks]))
+            [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
 
-
-(defn strip-slash
+(defn add-slash
   [url]
-  (str url (when-not (.endsWith url "/") "/") "status"))
+  (str url (when-not (.endsWith url "/") "/")))
 
 (defn represent-task
   [task url]
-  (let [status-url (strip-slash url)
+  (let [status-url (str (add-slash url) "status")
         resource
         (-> (hal/new-resource url)
             (hal/add-link :href status-url
@@ -32,16 +30,6 @@
                     :href (str (http/url-base) "/results/" (:id task))
                     :rel "results")
       resource)))
-
-(defn handle-new-task
-  [ctx]
-  (let [task (:task ctx)
-        url (http/url-from (:request ctx) (:id task))
-        resource (represent-task task url)]
-    {:status 202
-     :headers {"Location" url
-               "Content-Type" "application/json"}
-     :body (hal/resource->representation resource :json)}))
 
 (def listeners (atom {}))
 
@@ -68,11 +56,19 @@
             (broadcast-update status))
           (on-close channel (fn [_] (swap! listeners dissoc id))))))))
 
+(defn handle-new-task
+  [ctx]
+  (let [task (:task ctx)
+        url (http/url-from (:request ctx) (:id task))
+        resource (represent-task task url)]
+    (ring-response {:status 202
+                    :headers {"Location" url
+                              "Content-Type" "application/json"}
+                    :body (hal/resource->representation resource :json)})))
+
 (defresource tasks-resource
   :available-media-types ["application/json"]
-  :available-charsets ["utf-8"]
-  :method-allowed? (request-method-in :options :post :get)
-  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET, POST"})
+  :allowed-methods [:options :post :get]
   :service-available? (fn [ctx]
                         (tasks/task-available?
                           (get-in ctx [:request :route-params :method])))
@@ -87,9 +83,7 @@
 
 (defresource task-resource
   :available-media-types ["application/json"]
-  :available-charsets ["utf-8"]
-  :method-allowed? (request-method-in :options :delete :get)
-  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET, DELETE"})
+  :allowed-methods [:options :delete :get]
   :exists? (fn [ctx] (not (nil?
                             (tasks/status
                               (get-in ctx [:request :params :id])))))
@@ -98,10 +92,10 @@
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
                  (if (get task :results false)
-                   {:body nil
-                    :status 303
-                    :headers {"Location"
-                              (str (http/url-base (:request ctx)) "/results/" id)}}
+                   (ring-response {:body nil
+                                   :status 303
+                                   :headers {"Location"
+                                             (str (http/url-base (:request ctx)) "/results/" id)}})
                    (hal/resource->representation resource :json)))))
 
 (defn represent-result
@@ -118,9 +112,7 @@
 
 (defresource result-resource
   :available-media-types ["application/json"]
-  :available-charsets ["utf-8"]
-  :method-allowed? (request-method-in :options :get)
-  :generate-options-header (fn [_] {"Allow" "OPTIONS, GET"})
+  :allowed-methods [:options :get]
   :exists? (fn [ctx]
              (let [id (get-in ctx [:request :params :id])
                    result (store/get-result id)]

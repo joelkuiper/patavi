@@ -9,7 +9,7 @@
                  [com.taoensso/nippy "2.0.0"]
                  [http-kit "2.1.8"]
                  [cheshire "5.2.0"]
-                 [liberator "0.8.0"]
+                 [liberator "0.9.0"]
                  [log4j/log4j "1.2.17"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [inflections "0.8.1"]

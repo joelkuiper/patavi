@@ -44,8 +44,8 @@ angular.module('clinicico', []).
       }
     };
 
-    // Thanks to Modernizr
-    // https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js
+    /* Thanks to Modernizr
+     https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js */
     function hasWebsockets() {
       var protocol = 'https:'==location.protocol?'wss':'ws',
       protoBin;
