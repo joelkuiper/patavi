@@ -18,4 +18,4 @@
                  [org.clojure/data.xml "0.0.7"]
                  [com.novemberain/monger "1.6.0-beta2"]
                  [com.novemberain/langohr "1.0.0-beta13"]]
-  :main clinicico.server.handler)
+  :main clinicico.server.server)
