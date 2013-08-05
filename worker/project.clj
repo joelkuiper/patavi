@@ -16,6 +16,4 @@
                  [clj-time "0.5.1"]
                  [local/RserveEngine "1.7.0"]
                  [local/REngine "1.7.0"]]
-  :main clinicico.worker.main
-  :profiles
-  {:dev {:dependencies [[lein-marginalia "0.7.1"]]}})
+  :main clinicico.worker.main)
