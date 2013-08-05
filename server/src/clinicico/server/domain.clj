@@ -6,6 +6,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
             [ring.util.response :as resp]
+            [cheshire.core :as json]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
             [clinicico.server.store :as store]
@@ -91,7 +92,7 @@
                (let [id (get-in ctx [:request :params :id])
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
-                 (if (get task :results false)
+                 (if (get task :results true)
                    (ring-response {:body nil
                                    :status 303
                                    :headers {"Location"

@@ -11,7 +11,6 @@
             [clojure.tools.nrepl.server :only (start-server stop-server) :as repl]
             [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
-            [cheshire.core :as json]
             [clinicico.server.domain :as domain]
             [clinicico.server.http :as http]
             [clinicico.server.store :as store]
