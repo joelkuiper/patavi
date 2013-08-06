@@ -1,27 +1,20 @@
 (ns clinicico.server.tasks
   (:gen-class)
   (:require [clojure.tools.logging :as log]
-            [cheshire.core :as json]
             [clj-time.core :as time]
-            [taoensso.nippy :as nippy]
-            [langohr.exchange  :as le]
-            [langohr.core      :as rmq]
-            [langohr.channel   :as lch]
-            [langohr.queue     :as lq]
-            [langohr.consumers :as lcm]
-            [langohr.consumers :as lc]
-            [langohr.basic     :as lb]))
-
-(defonce ^{:private true} conn (rmq/connect))
+            [zeromq.zmq :as zmq]
+            [taoensso.nippy :as nippy]))
 
 (def ^{:private true} statuses (atom {}))
 (def ^{:private true} callbacks (atom {}))
 
-(def ^{:const true :private true}
-  outgoing "clinicico.tasks")
+(defonce context (zmq/context 2))
 
-(def ^{:const true :private true}
-  incoming "clinicico.updates")
+(def ventilator-socket
+  (zmq/bind (zmq/socket context :push) "tcp://*:7710"))
+
+(def updates-socket
+  (zmq/subscribe (zmq/bind (zmq/socket context :sub) "tcp://*:7720") ""))
 
 (defn- cleanup
   [task-id]
@@ -29,38 +22,38 @@
     (log/debug "Done with task " task-id (@statuses task-id))
     (swap! callbacks dissoc task-id)))
 
-(defn- update-handler
-  ([ch metadata]
-   (log/debug "[consumer] without payload: " ch " " metadata))
-  ([ch metadata ^bytes payload]
-   (let [update (json/decode-smile payload true)
-         id (:id update)
-         content (into {} (filter
-                            (comp not nil? val) (:content update)))
-         old-status (or (@statuses id) {})
-         callback (or (@callbacks id) (fn [_]))]
-     (swap! statuses assoc id (merge old-status content))
-     (callback (@statuses id))
-     (when (contains? #{"failed" "completed"} (:status content)) (cleanup id)))))
+(defn- task-update
+  [update]
+  (let [id (:id update)
+        content (into {} (filter
+                           (comp not nil? val) (:content update)))
+        old-status (or (@statuses id) {})
+        callback (or (@callbacks id) (fn [_]))]
+    (swap! statuses assoc id (merge old-status content))
+    (callback (@statuses id))
+    (when (contains? #{"failed" "canceled" "completed"} (:status content))
+      (cleanup id))))
 
+
+(defn- update-handler
+  [update]
+  (when (= (:type update) "task") (task-update update)))
+
+;; FIXME: see https://github.com/ptaoussanis/nippy/issues/23
 (defn initialize
   []
-  (with-open [ch (lch/open conn)]
-    (le/declare ch incoming "fanout")
-    (le/declare ch outgoing "direct")
-    (let [updates (.getQueue (lq/declare ch "update" :exclusive false :auto-delete true))]
-      (lq/bind ch updates incoming)
-      (lcm/subscribe (lch/open conn) updates update-handler :auto-ack true))))
+  (.start
+    (Thread.
+      (fn []
+        (while (not (.. Thread currentThread isInterrupted))
+          (let [msg (zmq/receive updates-socket)]
+            (try
+              (update-handler (nippy/thaw msg {:read-eval? true}))
+              (catch Exception e (log/warn "failed to process message" (.getMessage e))))))))))
 
 (defn task-available?
   [method]
-  (try
-    (with-open [ch (lch/open conn)]
-      (and (rmq/open? ch) (> (:consumer-count (lq/status ch method) 0))))
-    (catch Exception e
-      (do
-        (log/error (format "Could not publish task for %s : %s" method (.getMessage e)))
-        false))))
+  true)
 
 (defn status
   [id]
@@ -68,13 +61,10 @@
 
 (defn publish-task
   [method payload callback]
-  (with-open [ch (lch/open conn)]
-    (log/debug (format "Publishing task to %s (%d workers available)" method (lq/consumer-count ch method)))
     (let [id (str (java.util.UUID/randomUUID))
-          msg {:id id :body payload}]
-      (lb/publish ch outgoing method
-                  (nippy/freeze-to-bytes msg)
-                  :content-type "application/nippy" :type "task")
+          msg {:id id :body payload :method method :type "task"}]
+      (log/debug (format "Publishing task to %s" method))
+      (zmq/send ventilator-socket (nippy/freeze msg))
       (swap! statuses assoc id {:id id :method method :status "pending" :created (time/now)})
       (swap! callbacks assoc id callback)
-      (status id))))
+      (status id)))
