@@ -49,7 +49,8 @@
           (let [msg (zmq/receive updates-socket)]
             (try
               (update-handler (nippy/thaw msg {:read-eval? true}))
-              (catch Exception e (log/warn "failed to process message" (.getMessage e))))))))))
+              (catch Exception e
+                (log/warn "failed to process message:" (.getMessage e))))))))))
 
 (defn task-available?
   [method]

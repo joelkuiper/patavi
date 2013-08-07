@@ -3,16 +3,16 @@
         [clojure.string :only [split join]])
   (:require [clojure.java.io :as io]
             [clinicico.worker.pirate.util :as pirate]
-            [clinicico.worker.util.nio :as nio]
             [clojure.tools.logging :as log]
-            [cheshire.core :refer :all :as json]
+            [zeromq.zmq :as zmq]
+            [cheshire.core :as json :only [decode]]
             [crypto.random :as crypto])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
 (def script-file (atom nil))
 
-(def ^:private default-packages ["RJSONIO" "Cairo"])
+(def ^:private default-packages ["RJSONIO" "rzmq" "Cairo"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
@@ -60,6 +60,23 @@
       (.getMessage cause)
       (str e))))
 
+(def context (zmq/context))
+
+(defn listen-for-updates
+  [callback]
+  (let [port (zmq/first-free-port)
+        socket (zmq/socket context :sub)
+        listener (Thread. (fn []
+                            (while (not (.. Thread currentThread isInterrupted))
+                              (callback (zmq/receive-str socket)))))]
+    (zmq/bind (zmq/subscribe socket  "") (str "tcp://*:" port))
+    (.start listener)
+    {:socket socket
+     :port port
+     :close (fn [] (try
+                     (do (.interrupt listener) (.close socket) (.join listener))
+                     (catch Throwable e (log/warn e))))}))
+
 (defn execute
   "Executes, in R, the method present in the file with the given params.
    Callback is function taking one argument which can serve to
@@ -72,13 +89,9 @@
         (source-file! R @script-file)
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
-        (let [progress-file (str id ".tmp")
-              workdir (pirate/parse R "getwd()")
-              path (str workdir "/" progress-file)]
-          (pirate/create-file! R progress-file)
-          (nio/tail-file path :modify callback)
-          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))]
-            (nio/unwatch-file path)
-            {:files (pirate/retrieve R "files")
-             :results (json/decode result)})))
+        (let [updates (listen-for-updates callback)
+              result (pirate/parse R (format "exec(%s, '%s', params)" method (:port updates)))]
+          {:files (pirate/retrieve R "files")
+           :results (json/decode result)}
+          ((:close updates))))
       (catch Exception e (throw (Exception. (cause e) e))))))

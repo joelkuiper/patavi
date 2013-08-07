@@ -24,12 +24,17 @@
     (let [method (:method task)
           id (:id task)]
       (try
-        (let [callback (fn [task] (when (not (s/blank? task)) (update! id {:progress task})))]
+        (do
           (log/debug (format "Recieved task %s" id))
           (update! id {:status "processing" :accepted (java.util.Date.)})
-          (task-fn method id (:body task) callback)
-          (update! id {:status "completed" :completed (java.util.Date.) :results true :progress "done"}))
-        (catch Exception e (update! id {:status "failed" :progress "none" :cause (.getMessage e)}))))))
+          (task-fn method id (:body task) #(update! id {:progress %}))
+          (update! id {:status "completed"
+                       :completed (java.util.Date.)
+                       :results true
+                       :progress "done"}))
+        (catch Exception e (update! id {:status "failed"
+                                        :progress "none"
+                                        :cause (.getMessage e)}))))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
