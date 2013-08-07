@@ -71,21 +71,8 @@ angular.module('clinicico', []).
         if(data.status === "failed") {
           resultsFuture.reject(data);
         }
-
         if(data.results) {
-          angular.forEach(data._links, function(link) {
-            if(link.rel === "results") {
-              $http.jsonp(link.href + "?callback=JSON_CALLBACK").
-                success(function(results) {
-                scope.$broadcast("results", results);
-                resultsFuture.resolve(results);
-              }).
-                error(function(data, status) {
-                scope.$broadcast("error", data);
-                resultsFuture.reject("Failed to fetch results" + status);
-              });
-            }
-          });
+          resultsFuture.resolve(data.results);
         }
       });
     }

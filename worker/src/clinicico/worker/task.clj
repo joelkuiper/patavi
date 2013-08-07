@@ -1,13 +1,12 @@
 (ns clinicico.worker.task
+  (:import [org.zeromq ZMQ])
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
 
 (defonce context (zmq/context 3))
-(def ventilator "tcp://localhost:7710")
 (def updates (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720"))
-(def sink (zmq/connect (zmq/socket context :push) "tcp://localhost:7730"))
 
 (defn update!
   ([id content]
@@ -15,10 +14,6 @@
   ([id content type]
    (let [update {:content content :id id :type type}]
      (zmq/send updates (nippy/freeze update)))))
-
-(defn sink!
-  [results]
-  (zmq/send sink (nippy/freeze results)))
 
 (defn- task-handler
   [task-fn]
@@ -30,29 +25,37 @@
         (do
           (log/debug (format "Recieved task %s" id))
           (update! id {:status "processing" :accepted (java.util.Date.)})
-          (sink! (task-fn method id (:body task) #(update! id {:progress %})))
-          (update! id {:status "completed"
-                       :completed (java.util.Date.)
-                       :result true}))
+          (let [results (task-fn method id (:body task) #(update! id {:progress %}))]
+            (update! id {:progress "done"
+                         :completed (java.util.Date.)})
+            results))
         (catch Exception e
           (update! id {:status "failed"
                        :progress "none"
-                       :cause (.getMessage e)}))))))
+                       :cause (.getMessage e)})
+          nil)))))
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
-  [method handler]
-  (let [socket (zmq/connect (zmq/socket context :pull) ventilator)
-        thread (Thread.
-                 (fn []
-                   (while (not (.. Thread currentThread isInterrupted))
-                     (let [msg (nippy/thaw (zmq/receive socket))]
-                       (when (= (:method msg) method) (handler msg))))))]
-    (.start thread)))
+  [n method handler]
+  (.start (Thread. (fn []
+                     (let [ident (str method "-" n)
+                           socket (zmq/socket context :req)]
+                       (zmq/set-identity socket (.getBytes ident))
+                       (zmq/connect socket "tcp://localhost:7740")
+                       (zmq/send socket (.getBytes "READY"))
+                       (log/debug "READY sent to router by" ident)
+                       (while true
+                         (let [address (zmq/receive socket)
+                               _ (zmq/receive socket)
+                               response (handler (nippy/thaw (zmq/receive socket)))]
+                           (zmq/send socket address ZMQ/SNDMORE)
+                           (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
+                           (zmq/send socket (nippy/freeze response)))))))))
 
 (defn initialize
   [method n task-fn]
   (dotimes [n n]
     (let [handler (task-handler task-fn)]
-      (start-consumer method handler)
+      (start-consumer n method handler)
       (log/info (format "[main] Connected worker %d. for %s" (inc n) method)))))
