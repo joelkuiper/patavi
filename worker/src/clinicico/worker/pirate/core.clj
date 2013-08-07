@@ -90,8 +90,11 @@
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
         (let [updates (listen-for-updates callback)
-              result (pirate/parse R (format "exec(%s, '%s', params)" method (:port updates)))]
+              call (format "exec(%s, '%s', params)" method (:port updates))
+              result (pirate/parse R call)]
           ((:close updates))
-          {:files (pirate/retrieve R "files")
+          {:id id
+           :method method
+           :files (pirate/retrieve R "files")
            :results (json/decode result)}))
       (catch Exception e (throw (Exception. (cause e) e))))))

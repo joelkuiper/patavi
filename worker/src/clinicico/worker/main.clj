@@ -3,19 +3,8 @@
   (:use [clojure.string :only [split trim capitalize]]
         [clojure.tools.cli :only [cli]])
   (:require [clinicico.worker.task :as tasks :only [initialize]]
-            [clinicico.worker.store :as store]
             [clinicico.worker.pirate.core :as pirate]
             [clojure.tools.logging :as log]))
-
-(defn run
-  [method id params callback]
-  (let [{:keys [files results]} (pirate/execute method id params callback)]
-    (do
-      (store/save-files id files)
-      (store/save-result id {:body results
-                             :files (map (fn [f] {:name (get f "name")
-                                                  :mime (get f "mime")}) files)
-                             :id (:id params)}))))
 
 (defn -main
   [& args]
@@ -36,5 +25,5 @@
       (println banner)
       (System/exit 0))
     (pirate/initialize (:file options) (:packages options) (:rserve options))
-    (tasks/initialize method (:nworkers options) run)
+    (tasks/initialize method (:nworkers options) pirate/execute)
     (while true (Thread/sleep 100))))

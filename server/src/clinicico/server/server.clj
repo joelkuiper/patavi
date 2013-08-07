@@ -1,7 +1,6 @@
 (ns clinicico.server.server
   (:gen-class)
   (:use [org.httpkit.server]
-        [clinicico.server.util]
         [clinicico.server.middleware]
         [ring.middleware.jsonp]
         [clojure.tools.cli :only [cli]]
@@ -12,8 +11,8 @@
             [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
             [clinicico.server.domain :as domain]
-            [clinicico.server.http :as http]
             [clinicico.server.store :as store]
+            [clinicico.server.http :as http]
             [clinicico.server.tasks :as tasks :only [initialize]]))
 
 (declare in-dev?)
@@ -21,21 +20,21 @@
 (defn assemble-routes []
   (->
     (routes
-      (context "/results" []
-               (GET "/:id/:file" [id file]
+      (context "/tasks" []
+               ;; Resources managed by liberator
+               (ANY "/:method" [method] domain/tasks-resource)
+               (ANY ["/:method/:id" :id match-uuid] [method id] domain/task-resource)
+               ;; Handle retrieval of file
+               (GET "/:method/:id/files/:file" [id file]
                     (let [record (store/get-file id file)]
                       (if (nil? record)
                         (resp/not-found nil)
                         (-> (resp/response (.getInputStream record))
                             (resp/content-type (:content-type (.getContentType record)))
                             (resp/header "Content-Length" (.getLength record))))))
-               (ANY ["/:id" :id match-uuid] [id] domain/result-resource))
-      (context "/tasks" []
-               (ANY "/:method" [method] domain/tasks-resource)
-               (ANY ["/:method/:id" :id match-uuid] [method id] domain/task-resource)
+               ;; Handle status routes (for WebSockets / Comet)
                (OPTIONS ["/:method/:id/status" :id match-uuid] [] (http/options #{:options :get}))
                (GET ["/:method/:id/status" :id match-uuid] [method id] domain/task-status)))))
-
 
 (def app
   (->
@@ -61,7 +60,7 @@
       (println banner)
       (System/exit 0))
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
-      (log/info "Running server on port" (:port options) "; nREPL running on" (:repl options))
+      (log/info "Running server on :" (:port options) "and nREPL running on :" (:repl options))
       (defonce repl-server (repl/start-server :port (:repl options)))
       (tasks/initialize)
       (run-server handler {:port (:port options)}))))
