@@ -1,9 +1,9 @@
 slow <- function(params) {
   print(paste("Accepted...", " Zzzzz"))
-  N <- 100;
+  N <- 10;
   x <- abs(rnorm(N, 0.001, 0.05))
   for(i in as.single(1:N)) {
-    update(i);
+    update(i * 10);
     Sys.sleep(x[[i]])
   }
 
