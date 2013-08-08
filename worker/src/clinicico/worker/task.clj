@@ -2,6 +2,7 @@
   (:import [org.zeromq ZMQ])
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
+            [clinicico.common.zeromq :as q]
             [crypto.random :as crypto]
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
@@ -43,19 +44,12 @@
                      (let [socket (zmq/socket context :req)]
                        (zmq/set-identity socket (.getBytes ident))
                        (zmq/connect socket "tcp://localhost:7740")
-                       (zmq/send socket (.getBytes method) ZMQ/SNDMORE)
-                       (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
-                       (zmq/send socket (.getBytes "READY"))
+                       (q/send-frame socket method "READY")
                        (while true
-                         (let [address (zmq/receive socket)
-                               _ (zmq/receive socket)
-                               response (handler (nippy/thaw (zmq/receive socket)))]
-                           (log/debug "Sending response for" (String. address))
-                           (zmq/send socket (.getBytes method) ZMQ/SNDMORE)
-                           (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
-                           (zmq/send socket address ZMQ/SNDMORE)
-                           (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
-                           (zmq/send socket (nippy/freeze response)))))))))
+                         (let [[address request] (q/take socket [String zmq/bytes-type])
+                                response (handler (nippy/thaw request))]
+                           (log/debug "Sending response for" address)
+                           (q/send-frame socket method address (nippy/freeze response)))))))))
 
 (defn initialize
   [method n task-fn]
