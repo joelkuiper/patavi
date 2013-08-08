@@ -25,15 +25,12 @@
    :db (str (:mongo-db config))
    :collection "statuses"})
 
-
-(defn- megabytes
-  [^long n]
-  (* n 1024 1024))
-
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
-(collection/create (mongo-options :collection) {:capped true :size (-> 16 megabytes)})
-(collection/ensure-index (mongo-options :collection) {:modified 1} {:expireAfterSeconds 120})
+(if (not (collection/exists? (mongo-options :collection)))
+  (do
+    (collection/create (mongo-options :collection) {})
+    (collection/ensure-index (mongo-options :collection) {:modified 1} {:expireAfterSeconds 120})))
 
 (defn retrieve
   [id]
