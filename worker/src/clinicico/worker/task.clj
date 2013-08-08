@@ -43,11 +43,16 @@
                      (let [socket (zmq/socket context :req)]
                        (zmq/set-identity socket (.getBytes ident))
                        (zmq/connect socket "tcp://localhost:7740")
+                       (zmq/send socket (.getBytes method) ZMQ/SNDMORE)
+                       (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
                        (zmq/send socket (.getBytes "READY"))
                        (while true
                          (let [address (zmq/receive socket)
                                _ (zmq/receive socket)
                                response (handler (nippy/thaw (zmq/receive socket)))]
+                           (log/debug "Sending response for" (String. address))
+                           (zmq/send socket (.getBytes method) ZMQ/SNDMORE)
+                           (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
                            (zmq/send socket address ZMQ/SNDMORE)
                            (zmq/send socket (byte-array 0) ZMQ/SNDMORE)
                            (zmq/send socket (nippy/freeze response)))))))))

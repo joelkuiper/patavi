@@ -3,6 +3,7 @@
   (:use [clinicico.server.router])
   (:require [clojure.tools.logging :as log]
             [clj-time.core :as time]
+            [clinicico.common.zeromq :as q]
             [zeromq.zmq :as zmq]
             [clinicico.server.store :as status]
             [taoensso.nippy :as nippy]))
@@ -19,7 +20,7 @@
 (defn- cleanup
   [task-id]
   (do
-    (log/debug "Done with task " task-id)
+    (log/debug "[tasks] done with task " task-id)
     (swap! callbacks dissoc task-id)))
 
 (defn- task-update
@@ -81,14 +82,16 @@
     (swap! callbacks assoc id callback)
     (zmq/set-identity socket (.getBytes id))
     (zmq/connect socket frontend-address)
-    (zmq/send socket (nippy/freeze msg))
+    (q/send-frame socket method (nippy/freeze msg))
     (status/insert! id {:id id
                         :method method
                         :status "pending"
                         :created (java.util.Date.)})
     (.start (Thread.
-              #(do
-                 (save-results! (nippy/thaw (zmq/receive socket)))
+              #(let [[status result] (q/take socket 2 zmq/bytes-type)]
+                 (if (q/status-ok? status)
+                   (save-results! (nippy/thaw result))
+                   (status/update! id {:status "failed" :cause (String. result)}))
                  ((@callbacks id) (status/retrieve id))
                  (cleanup id)
                  (.close socket))))

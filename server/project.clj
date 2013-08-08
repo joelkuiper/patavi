@@ -3,6 +3,7 @@
   :url "http://example.com/FIXME"
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
+                 [clinicico.common "0.1.0-SNAPSHOT"]
                  [ring/ring-devel "1.2.0"]
                  [ring.middleware.jsonp "0.1.3"]
                  [org.clojure/tools.cli "0.2.2"]
@@ -11,14 +12,10 @@
                  [cheshire "5.2.0"]
                  [liberator "0.9.0"]
                  [log4j/log4j "1.2.17"]
-                 [com.google.guava/guava "14.0.1"]
                  [org.clojure/tools.nrepl "0.2.3"]
                  [inflections "0.8.1"]
-                 [clj-time "0.5.1"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/data.xml "0.0.7"]
-                 [com.novemberain/monger "1.6.0"]
-                 [org.zeromq/jzmq "2.2.3"]
-                 [org.zeromq/cljzmq "0.1.1"]]
+                 [com.novemberain/monger "1.6.0"]]
   :jvm-opts ["-Djava.library.path=/usr/lib:/usr/local/lib"]
   :main clinicico.server.server)
