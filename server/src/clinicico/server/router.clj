@@ -15,7 +15,6 @@
     (swap! queues assoc method (pop queue))
     worker))
 
-
 (defrecord Router [frontend-address backend-address]
   Runnable
   (run [this]
@@ -40,20 +39,24 @@
               (if (not (nil? worker-addr))
                 (do
                   (log/debug "[router] dispatching" worker-method "from" client-addr "to" worker-addr)
-                  (q/send-frame backend worker-addr client-addr request))
+                  (q/send-frame backend worker-addr q/MSG-REQ client-addr request))
                 (do
                   (log/debug "[router] no workers for" worker-method)
                   (q/send-frame frontend client-addr q/STATUS-ERROR "No workers available"))))))
         (if (zmq/check-poller items 1 :pollin)
           (do
             (log/debug "[router] backend poll")
-            (let [[worker-addr worker-method] (q/take backend [String String])]
-              (put-worker worker-queues worker-method worker-addr)
-              (let [[client-addr] (q/take-more backend [String])]
-                (log/debug "[router] message from" worker-addr "for" worker-method "client-addr" client-addr)
-                (if (not= "READY" client-addr)
-                  (let [[reply] (q/take-more backend [zmq/bytes-type])]
-                    (q/send-frame frontend client-addr q/STATUS-OK reply))))))))
+            (let [[worker-addr msg-type worker-method] (q/take backend [String clinicico.common.zeromq.MsgType String])]
+              (case (:id msg-type)
+                2 (do (log/debug "[router] PING from" worker-addr)
+                      (q/send-frame backend worker-addr q/MSG-PONG)
+                      )
+                1 (do
+                              (log/debug "[router] READY from" worker-addr "for" worker-method)
+                              (put-worker worker-queues worker-method worker-addr))
+                5 (let [[client-addr reply] (q/take-more backend [String zmq/bytes-type])]
+                              (log/debug "[router] REPLY from" worker-addr "for" worker-method "client-addr" client-addr)
+                              (q/send-frame frontend client-addr q/STATUS-OK reply)))))))
       (.close frontend)
       (.close backend)
       (.term ctx))))
