@@ -37,9 +37,9 @@
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
-  [n method handler]
+  [method handler]
   (.start (Thread. (fn []
-                     (let [ident (str method "-" n)
+                     (let [ident (str method "-" (java.util.UUID/randomUUID))
                            socket (zmq/socket context :req)]
                        (zmq/set-identity socket (.getBytes ident))
                        (zmq/connect socket "tcp://localhost:7740")
@@ -57,5 +57,5 @@
   [method n task-fn]
   (dotimes [n n]
     (let [handler (task-handler task-fn)]
-      (start-consumer n method handler)
+      (start-consumer method handler)
       (log/info (format "[main] Connected worker %d. for %s" (inc n) method)))))

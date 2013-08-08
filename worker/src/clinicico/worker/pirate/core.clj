@@ -60,22 +60,30 @@
       (.getMessage cause)
       (str e))))
 
-(def context (zmq/context))
+(defn- create-listener
+  [context socket]
+  (let [poller (zmq/poller context)]
+    (fn []
+      (zmq/register poller socket :pollin)
+      (while (not (.. Thread currentThread isInterrupted))
+        (.poll poller)
+        (if (.pollin poller 0)
+          (callback (zmq/receive-str socket)))))))
 
 (defn listen-for-updates
   [callback]
-  (let [port (zmq/first-free-port)
+  (let [context (zmq/context)
+        port (zmq/first-free-port)
         socket (zmq/socket context :sub)
-        listener (Thread. (fn []
-                            (while (not (.. Thread currentThread isInterrupted))
-                              (callback (zmq/receive-str socket)))))]
+        listener (Thread. (create-listener context socket))]
     (zmq/bind (zmq/subscribe socket  "") (str "tcp://*:" port))
     (.start listener)
     {:socket socket
      :port port
-     :close (fn [] (try
-                     (do (.interrupt listener) (.close socket) (.join listener))
-                     (catch Throwable e (log/warn e))))}))
+     :close (fn []
+              (try
+                (do (.interrupt listener) (.close socket) (.join listener))
+                (catch Throwable e (log/warn e))))}))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.
@@ -84,17 +92,17 @@
    See resources/wrap.R for details."
   [method id params callback]
   (with-open [R (pirate/connect)]
-    (try
-      (do
-        (source-file! R @script-file)
-        (pirate/assign R "params" params)
-        (pirate/assign R "files" [])
-        (let [updates (listen-for-updates callback)
-              call (format "exec(%s, '%s', params)" method (:port updates))
-              result (pirate/parse R call)]
-          ((:close updates))
-          {:id id
-           :method method
-           :files (pirate/retrieve R "files")
-           :results (json/decode result)}))
-      (catch Exception e (throw (Exception. (cause e) e))))))
+    (let [updates (listen-for-updates callback)]
+      (try
+        (do
+          (source-file! R @script-file)
+          (pirate/assign R "params" params)
+          (pirate/assign R "files" [])
+          (let [call (format "exec(%s, '%s', params)" method (:port updates))
+                result (pirate/parse R call)]
+            {:id id
+             :method method
+             :files (pirate/retrieve R "files")
+             :results (json/decode result)}))
+        (catch Exception e (throw (Exception. (cause e) e)))
+        (finally ((:close updates)))))))

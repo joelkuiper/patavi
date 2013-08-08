@@ -17,7 +17,7 @@
   [string]
   (str string (when-not (.endsWith string "/") "/")))
 
-(defn embedded-files
+(defn- embedded-files
   [task url]
   (if (task :results)
     (let [result (task :results)
@@ -100,26 +100,3 @@
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
                  (hal/resource->representation resource :json))))
-
-;(defn represent-result
-  ;[result]
-  ;(let [location (str (http/url-base) "/results/" (:id result) "/")
-        ;self {:rel "self" :href location}
-        ;files (:files result)
-        ;embedded (map (fn [x] {:name (first (s/split (:name x) #"\."))
-                               ;:href (str location (:name x))
-                               ;:type (:mime x)}) files)]
-    ;(assoc
-      ;(dissoc result :files) :_links [self] :_embedded {:_files embedded})))
-
-;(defresource result-resource
-  ;:available-media-types ["application/json"]
-  ;:allowed-methods [:options :get]
-  ;:exists? (fn [ctx]
-             ;(let [id (get-in ctx [:request :params :id])
-                   ;result (store/get-result id)]
-               ;(if (nil? result)
-                 ;[false {}]
-                 ;{::result result})))
-  ;:handle-ok (fn [ctx] (json/encode (represent-result (::result ctx)))))
-
