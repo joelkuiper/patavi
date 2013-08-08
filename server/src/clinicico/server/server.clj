@@ -53,7 +53,7 @@
         (cli args
              ["-h" "--help" "Show Help" :default false :flag true]
              ["-p" "--port" "Port to listen to" :default 3000 :parse-fn #(Integer. %)]
-             ["-r" "--repl" "nREPL port to listen to" :default 7888 :parse-fn #(Integer. %)]
+             ["-r" "--repl" "nREPL port to listen to if in production" :default 7888 :parse-fn #(Integer. %)]
              ["-d" "--development" "Run server in development mode" :default false :flag true])]
     (defonce in-dev? (:development options))
     (when (:help options)
@@ -61,6 +61,6 @@
       (System/exit 0))
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
       (log/info "Running server on :" (:port options) "and nREPL running on :" (:repl options))
-      (defonce repl-server (repl/start-server :port (:repl options)))
+      (if (not in-dev?) (defonce repl-server (repl/start-server :port (:repl options))))
       (tasks/initialize)
       (run-server handler {:port (:port options)}))))
