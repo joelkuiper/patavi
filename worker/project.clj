@@ -11,6 +11,7 @@
                  [com.taoensso/nippy "2.2.0-RC1"]
                  [log4j/log4j "1.2.17"]
                  [cheshire "5.2.0"]
+                 [org.zeromq/jzmq "2.2.3"]
                  [org.zeromq/cljzmq "0.1.1"]
                  [com.google.guava/guava "14.0.1"]
                  [local/RserveEngine "1.7.0"]

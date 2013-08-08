@@ -61,13 +61,13 @@
       (str e))))
 
 (defn- create-listener
-  [context socket]
+  [context socket callback]
   (let [poller (zmq/poller context)]
     (fn []
       (zmq/register poller socket :pollin)
       (while (not (.. Thread currentThread isInterrupted))
         (.poll poller)
-        (if (.pollin poller 0)
+        (when (.pollin poller 0)
           (callback (zmq/receive-str socket)))))))
 
 (defn listen-for-updates
@@ -75,15 +75,13 @@
   (let [context (zmq/context)
         port (zmq/first-free-port)
         socket (zmq/socket context :sub)
-        listener (Thread. (create-listener context socket))]
+        listener (Thread. (create-listener context socket callback))]
     (zmq/bind (zmq/subscribe socket  "") (str "tcp://*:" port))
     (.start listener)
     {:socket socket
      :port port
      :close (fn []
-              (try
-                (do (.interrupt listener) (.close socket) (.join listener))
-                (catch Throwable e (log/warn e))))}))
+              (do (.interrupt listener) (.close socket) (.join listener)))}))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.

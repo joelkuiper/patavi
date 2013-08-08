@@ -60,7 +60,7 @@
           (zmq/register items updates-socket :pollin) ;; item 0
           (while (not (.. Thread currentThread isInterrupted))
             (zmq/poll items)
-            (when (zmq/check-poller items 0 :pollin) ;; process updates
+            (when (.pollin items 0) ;; process updates
               (update-handler
                 (nippy/thaw (zmq/receive updates-socket))))))))))
 
@@ -91,5 +91,5 @@
                  (save-results! (nippy/thaw (zmq/receive socket)))
                  ((@callbacks id) (status/retrieve id))
                  (cleanup id)
-                 (try (.close socket) (catch Throwable e (log/warn e))))))
+                 (.close socket))))
     (status id)))

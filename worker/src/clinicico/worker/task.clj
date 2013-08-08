@@ -2,10 +2,11 @@
   (:import [org.zeromq ZMQ])
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
+            [crypto.random :as crypto]
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
 
-(defonce context (zmq/context 3))
+(defonce context (zmq/context 2))
 (def updates (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720"))
 
 (defn update!
@@ -37,14 +38,12 @@
 
 (defn- start-consumer
   "Starts a consumer in a separate thread"
-  [method handler]
+  [ident method handler]
   (.start (Thread. (fn []
-                     (let [ident (str method "-" (java.util.UUID/randomUUID))
-                           socket (zmq/socket context :req)]
+                     (let [socket (zmq/socket context :req)]
                        (zmq/set-identity socket (.getBytes ident))
                        (zmq/connect socket "tcp://localhost:7740")
                        (zmq/send socket (.getBytes "READY"))
-                       (log/debug "READY sent to router by" ident)
                        (while true
                          (let [address (zmq/receive socket)
                                _ (zmq/receive socket)
@@ -56,6 +55,8 @@
 (defn initialize
   [method n task-fn]
   (dotimes [n n]
-    (let [handler (task-handler task-fn)]
-      (start-consumer method handler)
-      (log/info (format "[main] Connected worker %d. for %s" (inc n) method)))))
+    (let [ident (str method "-" (crypto.random/hex 8))
+          handler (task-handler task-fn)]
+      (start-consumer ident method handler)
+      (log/info (format "[main] Connected worker %s. for %s" ident method)))))
+
