@@ -81,7 +81,7 @@
     {:socket socket
      :port port
      :close (fn []
-              (do (.interrupt listener) (.close socket) (.join listener)))}))
+              (do (.interrupt listener) (.close socket) (.join listener 10)))}))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.
