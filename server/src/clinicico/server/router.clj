@@ -34,7 +34,7 @@
         (if (zmq/check-poller items 0 :pollin)
           (do
             (log/debug "[router] frontend poll")
-            (let [[client-addr worker-method request] (q/take frontend [String String zmq/bytes-type])
+            (let [[client-addr worker-method request] (q/receive frontend [String String zmq/bytes-type])
                   worker-addr (get-worker worker-queues worker-method)]
               (if (not (nil? worker-addr))
                 (do
@@ -46,17 +46,15 @@
         (if (zmq/check-poller items 1 :pollin)
           (do
             (log/debug "[router] backend poll")
-            (let [[worker-addr msg-type worker-method] (q/take backend [String clinicico.common.zeromq.MsgType String])]
-              (case (:id msg-type)
-                2 (do (log/debug "[router] PING from" worker-addr)
-                      (q/send-frame backend worker-addr q/MSG-PONG)
-                      )
-                1 (do
-                              (log/debug "[router] READY from" worker-addr "for" worker-method)
-                              (put-worker worker-queues worker-method worker-addr))
-                5 (let [[client-addr reply] (q/take-more backend [String zmq/bytes-type])]
-                              (log/debug "[router] REPLY from" worker-addr "for" worker-method "client-addr" client-addr)
-                              (q/send-frame frontend client-addr q/STATUS-OK reply)))))))
+            (let [[worker-addr msg-type worker-method] (q/receive backend [String Byte String])]
+              (condp = msg-type
+                q/MSG-PING (do (log/debug "[router] PING from" worker-addr)
+                               (q/send-frame backend worker-addr q/MSG-PONG))
+                q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" worker-method)
+                                (put-worker worker-queues worker-method worker-addr))
+                q/MSG-REP (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
+                            (log/debug "[router] REPLY from" worker-addr "for" worker-method "client-addr" client-addr)
+                            (q/send-frame frontend client-addr q/STATUS-OK reply)))))))
       (.close frontend)
       (.close backend)
       (.term ctx))))

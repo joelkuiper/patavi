@@ -88,7 +88,7 @@
                         :status "pending"
                         :created (java.util.Date.)})
     (.start (Thread.
-              #(let [[status result] (q/take socket 2 zmq/bytes-type)]
+              #(let [[status result] (q/receive socket 2 zmq/bytes-type)]
                  (if (q/status-ok? status)
                    (save-results! (nippy/thaw result))
                    (status/update! id {:status "failed" :cause (String. result)}))

@@ -3,11 +3,12 @@
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
             [clinicico.common.zeromq :as q]
+            [clinicico.worker.consumer :as consumer]
             [crypto.random :as crypto]
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
 
-(defonce context (zmq/context 2))
+(defonce context (zmq/context))
 (def updates (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720"))
 
 (defn update!
@@ -37,48 +38,10 @@
                        :cause (.getMessage e)})
           nil)))))
 
-(def HEARTBEAT-INTERVAL 1000)
-
-(defn create-heartbeat-handler [socket method]
-  (proxy [ZLoop$IZLoopHandler] []
-    (handle [^ZLoop _ ^ZMQ$PollItem _ ^Object _]
-      (q/send-frame-delim socket q/MSG-PING method) 0)))
-
-(defn create-poll-handler [socket method handler]
-  (proxy [ZLoop$IZLoopHandler] []
-    (handle [^ZLoop _ ^ZMQ$PollItem _ ^Object _]
-      (let [[msg-type] (q/take-more socket [clinicico.common.zeromq.MsgType])]
-        (case (:id msg-type)
-          3 (log/debug "PONG from router")
-          4 (let
-              [[address request] (q/take-more socket [String zmq/bytes-type])]
-              (log/debug "REQ for" address)
-              (q/send-frame-delim socket q/MSG-REP method address (nippy/freeze (handler (nippy/thaw request))))
-              (q/send-frame-delim socket q/MSG-READY method))))
-      0)))
-
-(defn- start-consumer
-  "Starts a consumer in a separate thread"
-  [ident method handler]
-  (.start (Thread. (fn []
-                     (let [socket (zmq/socket context :dealer)
-                           zloop (ZLoop.)
-                           heartbeat-handler (create-heartbeat-handler socket method)
-                           poller (zmq/poller context 1)
-                           poll-handler (create-poll-handler socket method handler) ]
-                       (zmq/set-identity socket (.getBytes ident))
-                       (zmq/connect socket "tcp://localhost:7740")
-                       (q/send-frame-delim socket q/MSG-READY method)
-                       (.addTimer zloop HEARTBEAT-INTERVAL 0 heartbeat-handler (Object.))
-                       (zmq/register poller socket :pollin)
-                       (.addPoller zloop (.getItem poller 0) poll-handler (Object.))
-                       (.start zloop))))))
-
 (defn initialize
   [method n task-fn]
   (dotimes [n n]
-    (let [ident (str method "-" (crypto.random/hex 8))
-          handler (task-handler task-fn)]
-      (start-consumer ident method handler)
-      (log/info (format "[main] Connected worker %s. for %s" ident method)))))
+    (let [ handler (task-handler task-fn)]
+      (consumer/start method handler)
+      (log/info (format "[main] started worker for %s" method)))))
 
