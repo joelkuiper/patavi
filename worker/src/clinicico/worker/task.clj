@@ -41,7 +41,6 @@
 (defn initialize
   [method n task-fn]
   (dotimes [n n]
-    (let [ handler (task-handler task-fn)]
-      (consumer/start method handler)
-      (log/info (format "[main] started worker for %s" method)))))
+    (consumer/start method (task-handler task-fn))
+    (log/info (format "[main] started worker for %s" method))))
 
