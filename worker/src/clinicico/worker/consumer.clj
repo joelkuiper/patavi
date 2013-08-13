@@ -16,7 +16,7 @@
 (defprotocol Protocol
   (send! [this socket messages]))
 
-(defn insert [vec pos item] 
+(defn insert [vec pos item]
     (apply merge (subvec vec 0 pos) item (subvec vec pos)))
 
 (defrecord MessageProtocol [method]
@@ -55,7 +55,7 @@
         pong (fn [_] (do (reset! reconnecter (create-reconnecter consumer))
                         (swap! consumer assoc :liveness heartbeat-liveness)))
         ping #(do (send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING]))
-        heartbeat (fn [] 
+        heartbeat (fn []
                     (when (contains? @consumer :socket)
                       (let [next-liveness (dec (get @consumer :liveness (inc heartbeat-liveness)))]
                         (swap! consumer assoc :liveness next-liveness)
@@ -74,7 +74,7 @@
           response (handler (nippy/thaw request))]
       (send! protocol socket [q/MSG-REP address (nippy/freeze response)])
       (send! protocol socket [q/MSG-READY]))))
- 
+
 (defn- handle-incoming
   [consumer]
   (fn []
@@ -109,7 +109,7 @@
     ((@consumer :initialize))
     (.start (Thread. #(.start zloop)))
     consumer))
-  
+
 (defn start
   [method handler]
   (with-heartbeat (create-consumer method handler)))
