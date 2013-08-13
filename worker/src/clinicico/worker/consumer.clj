@@ -33,46 +33,42 @@
       (zmq/set-identity
         (zmq/socket context type) (.getBytes ident)) address)))
 
-(defn- create-reconnecter 
+(defn- create-reconnecter
   [consumer]
   (let [reconnect (q/zloop-handler
-                   (fn [] (doseq [f [(@consumer :connect) (@consumer :initialize)]]
-                            (f)) 0))
+                   (fn []
+                     (doseq [f [:connect :initialize]]
+                       ((get @consumer f))) 0))
         interval (atom interval-init)]
-    (fn [] 
-      (swap! interval (max (* 2 @interval) interval-max))
-      (log/debug "[consumer] connection to router lost reconnecting in" @interval)
-      (.addTimer (@consumer :zloop) @interval 1 reconnect (Object.)))))
+    (fn []
+      (.close (@consumer :socket))
+      (swap! consumer dissoc :socket)
+      (.removePoller (@consumer :zloop) (.getItem (@consumer :poller) 0))
+      (.addTimer (@consumer :zloop) @interval 1 reconnect (Object.))
+      (reset! interval (max (* 2 @interval) interval-max)))))
 
 (defn- with-heartbeat
   [consumer]
   (let [reconnecter (atom (create-reconnecter consumer))
         pong (fn [_] (do (log/debug "[consumer] pong")
-                         (reset! reconnecter (create-reconnecter consumer))
-                         (send consumer assoc :liveness heartbeat-liveness)))
-        ping #(do (log/debug "[consumer] ping!") (send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING]))
+                        (reset! reconnecter (create-reconnecter consumer))
+                        (swap! consumer assoc :liveness heartbeat-liveness)))
+        ping #(do (log/debug "[consumer] ping!")
+                  (send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING]))
         heartbeat (fn [] 
-                    (when-not (agent-error consumer)
+                    (when (contains? @consumer :socket)
                       (let [next-liveness (dec (get @consumer :liveness (inc heartbeat-liveness)))]
-                        (log/debug "[consumer] invoked hearbeat")
-                        (send consumer assoc :liveness next-liveness)
+                        (swap! consumer assoc :liveness next-liveness)
                         (if (> next-liveness 0)
                           (ping)
-                          (send consumer #(throw (Exception. "Connection to router lost")))))))]
-    (send consumer assoc :handlers (merge (@consumer :handlers) {q/MSG-PONG pong}))
+                          (@reconnecter)))))]
+    (swap! consumer assoc :handlers (merge (@consumer :handlers) {q/MSG-PONG pong}))
     (.addTimer (@consumer :zloop) heartbeat-interval 0 (q/zloop-handler (fn [] (do (heartbeat) (int 0)))) (Object.))
-    (set-error-handler! consumer (fn [ag ex]
-                                   (log/warn "[client]" (.printStackTrace ex))
-                                   (.close (@ag :socket))
-                                   (.removePoller (@ag :zloop) (.getItem (@ag :poller) 0))
-                                   (restart-agent consumer)
-                                   (@reconnecter)))
-    consumer))
-
+  consumer))
 
 (defn- handle-request
   [consumer handler]
-  (fn []
+  (fn [_]
     (let [protocol (@consumer :protocol)
           socket (@consumer :socket)
           [address request] (q/receive-more socket [String zmq/bytes-type])
@@ -94,32 +90,31 @@
   [method handler]
   (let [protocol (MessageProtocol. method)
         context (zmq/context)
-        obj {:handlers  {}
-             :protocol protocol
-             :zloop (ZLoop.)
-             :poller (zmq/poller context)
-             :socket nil}
-        consumer (agent obj)
-        connect #(send-off consumer assoc :socket (create-socket context :dealer "tcp://localhost:7740"))
+        consumer (atom {:handlers  {}
+                         :protocol protocol
+                         :zloop (ZLoop.) 
+                         :poller (zmq/poller context)
+                         :socket nil})
+        connect #(swap! consumer assoc :socket (create-socket context :dealer "tcp://localhost:7740"))
         initialize #(do
-                      (await consumer)
                       (zmq/register (@consumer :poller) (@consumer :socket) :pollin)
                       (.addPoller (@consumer :zloop)
                                   (.getItem (@consumer :poller) 0)
                                   (q/zloop-handler (fn [] ((handle-incoming consumer)) (int 0)))
                                   (Object.))
-                      (.start (Thread. (fn [] (.start (@consumer :zloop)))))
                       (send! protocol (@consumer :socket) [q/MSG-READY]) consumer)]
-    (send-off consumer assoc
-              :handlers {q/MSG-REQ (handle-request consumer handler)}
-              :initialize initialize
-              :connect connect)
-    (await consumer)
-    (doseq [f [(@consumer :connect) (@consumer :initialize)]]
-      (f))
-    (println consumer)
+    (dosync
+     (swap! consumer assoc
+            :handlers {q/MSG-REQ (handle-request consumer handler)}
+            :initialize initialize
+            :connect connect)
+     (doseq [f [:connect :initialize]]
+       ((get @consumer f))))
     consumer))
   
 (defn start
   [method handler]
-  (with-heartbeat (create-consumer method handler)))
+  (let [consumer (with-heartbeat (create-consumer method handler))
+        zloop (@consumer :zloop)
+        loop (agent {})]
+    (.start (Thread. #(.start zloop)))))

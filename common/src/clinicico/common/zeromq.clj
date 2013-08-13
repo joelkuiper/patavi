@@ -51,9 +51,9 @@
        [msg]
        (do
          (receive-empty socket)
-         (cons msg (receive socket (rest types)))))))
-  ([^ZMQ$Socket socket ^Number n ^Class t]
-   (receive socket (repeat n t))))
+         (cons msg (receive socket (rest types))))))
+   ([^ZMQ$Socket socket ^Number n ^Class t]
+      (receive socket (repeat n t)))))
 
 (defn receive-more
   ([^ZMQ$Socket socket ^Iterable types]
@@ -67,5 +67,5 @@
   [handle-fn]
   (proxy [ZLoop$IZLoopHandler] []
     (handle [^ZLoop _ ^ZMQ$PollItem _ ^Object _]
-     (handle-fn))))
+      (handle-fn))))
 
