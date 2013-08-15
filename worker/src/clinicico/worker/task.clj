@@ -1,5 +1,4 @@
 (ns clinicico.worker.task
-  (:import [org.zeromq ZMQ ZMQ$PollItem ZLoop ZLoop$IZLoopHandler])
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
             [clinicico.common.zeromq :as q]
@@ -43,4 +42,3 @@
   (dotimes [n n]
     (consumer/start method (task-handler task-fn))
     (log/info (format "[main] started worker for %s" method))))
-

@@ -5,7 +5,7 @@
             [crypto.random :as crypto]
             [clinicico.common.zeromq :as q]
             [clojure.tools.logging :as log])
-  (:import [org.zeromq ZMQ ZMQ$PollItem ZLoop ZLoop$IZLoopHandler]))
+  (:import [org.zeromq ZLoop]))
 
 (def ^:const heartbeat-interval 1000)
 (def ^:const heartbeat-liveness 3)
@@ -63,7 +63,7 @@
                           (ping)
                           (@reconnecter)))))]
     (swap! consumer assoc :handlers (merge (@consumer :handlers) {q/MSG-PONG pong}))
-    (.addTimer (@consumer :zloop) heartbeat-interval 0 (q/zloop-handler (fn [] (do (heartbeat) (int 0)))) (Object.))))
+    (.addTimer (@consumer :zloop) heartbeat-interval 0 (q/zloop-handler #(do (heartbeat) 0)) (Object.))))
 
 (defn- handle-request
   [consumer handler]
