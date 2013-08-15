@@ -4,9 +4,7 @@
             [clojure.tools.logging :as log]))
 
 (defn put-worker [queues method worker]
-  (let [queue (if (contains? @queues method)
-                (get @queues method)
-                clojure.lang.PersistentQueue/EMPTY)]
+  (let [queue (get @queues method clojure.lang.PersistentQueue/EMPTY)]
     (swap! queues assoc method (conj queue worker))))
 
 (defn get-worker [queues method]
@@ -21,21 +19,19 @@
     (let [ctx (zmq/context)
           frontend (zmq/socket ctx :router)
           backend (zmq/socket ctx :router)
-          worker-queues (atom {})
+          workers (atom {})
           items (zmq/poller ctx 2)]
       (log/debug "Starting router on" frontend-address "and" backend-address)
       (zmq/bind frontend frontend-address)
       (zmq/bind backend backend-address)
+      (zmq/register items frontend :pollin)
+      (zmq/register items backend :pollin)
       (while (not (.. Thread currentThread isInterrupted))
-        (zmq/register items frontend :pollin)
-        (zmq/register items backend :pollin)
         (zmq/poll items)
-        (log/debug "[router] polling!")
         (if (zmq/check-poller items 0 :pollin)
           (do
-            (log/debug "[router] frontend poll")
             (let [[client-addr worker-method request] (q/receive frontend [String String zmq/bytes-type])
-                  worker-addr (get-worker worker-queues worker-method)]
+                  worker-addr (get-worker workers worker-method)]
               (if (not (nil? worker-addr))
                 (do
                   (log/debug "[router] dispatching" worker-method "from" client-addr "to" worker-addr)
@@ -45,16 +41,15 @@
                   (q/send-frame frontend client-addr q/STATUS-ERROR "No workers available"))))))
         (if (zmq/check-poller items 1 :pollin)
           (do
-            (log/debug "[router] backend poll")
             (let [[worker-addr msg-type worker-method] (q/receive backend [String Byte String])]
               (condp = msg-type
-                q/MSG-PING (do (log/debug "[router] PING from" worker-addr)
-                               (q/send-frame backend worker-addr q/MSG-PONG))
+                q/MSG-PING  (do (log/debug "[router] PING from" worker-addr)
+                                (q/send-frame backend worker-addr q/MSG-PONG))
                 q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" worker-method)
-                                (put-worker worker-queues worker-method worker-addr))
-                q/MSG-REP (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
-                            (log/debug "[router] REPLY from" worker-addr "for" worker-method "client-addr" client-addr)
-                            (q/send-frame frontend client-addr q/STATUS-OK reply)))))))
+                                (put-worker workers worker-method worker-addr))
+                q/MSG-REP   (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
+                              (log/debug "[router] REPLY from" worker-addr "for" worker-method "client-addr" client-addr)
+                              (q/send-frame frontend client-addr q/STATUS-OK reply)))))))
       (.close frontend)
       (.close backend)
       (.term ctx))))

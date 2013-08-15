@@ -43,7 +43,7 @@
                        ((@consumer :initialize))
                        (swap! consumer assoc :liveness heartbeat-liveness)) 0))]
     (fn []
-      (log/debug "[consumer] connection to router lost; reconnecting in" @interval)
+      (log/warn "[consumer] connection to router lost; reconnecting in" @interval)
       (.close (@consumer :socket))
       (swap! consumer dissoc :socket)
       (.removePoller (@consumer :zloop) (.getItem (@consumer :poller) 0))
