@@ -63,7 +63,7 @@
 
 (defn create-router-fn [frontend-address backend-address]
   (let [[frontend backend :as sides]
-          (map (partial bind-socket context :router) [frontend-address backend-address])
+        (map (partial bind-socket context :router) [frontend-address backend-address])
         poller (zmq/poller context 2)]
     (doseq [side sides] (zmq/register poller side :pollin))
     (fn []
@@ -82,13 +82,11 @@
         (if (zmq/check-poller poller 1 :pollin)
           (let [[worker-addr msg-type method] (q/receive backend [String Byte String])]
             (condp = msg-type
-              q/MSG-PING  (do (log/debug "[router] PING from" worker-addr)
-                              (update-ttl worker-pool method worker-addr (now))
+              q/MSG-PING  (do (update-ttl worker-pool method worker-addr (now))
                               (q/send-frame backend worker-addr q/MSG-PONG))
               q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" method)
                               (put-worker worker-pool method worker-addr))
               q/MSG-REP   (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
-                            (log/debug "[router] REPLY from" worker-addr "for" method "client-addr" client-addr)
                             (q/send-frame frontend client-addr q/STATUS-OK reply)))))))))
 
 (defn start
