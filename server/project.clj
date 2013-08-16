@@ -17,5 +17,4 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/data.xml "0.0.7"]
                  [com.novemberain/monger "1.6.0"]]
-  :jvm-opts ["-Djava.library.path=/usr/lib:/usr/local/lib"]
   :main clinicico.server.server)
