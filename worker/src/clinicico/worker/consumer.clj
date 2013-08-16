@@ -2,7 +2,6 @@
   (:gen-class)
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
-            [crypto.random :as crypto]
             [clinicico.common.zeromq :as q]
             [clojure.tools.logging :as log])
   (:import [org.zeromq ZLoop]))
@@ -23,15 +22,6 @@
   Protocol
   (send! [this socket messages]
     (apply (partial q/send-frame-delim socket) (insert messages 1 (.getBytes (get this :method))))))
-
-(defn create-socket
-  ([context type address]
-   (create-socket context type address (crypto.random/hex 8)))
- ([context type address ident]
-    (log/debug "[consumer] connecting a socket with identity" ident)
-    (zmq/connect
-      (zmq/set-identity
-        (zmq/socket context type) (.getBytes ident)) address)))
 
 (defn- create-reconnecter
   [consumer]
@@ -95,7 +85,7 @@
                         :zloop zloop
                         :socket nil})
         initialize #(let [poller (zmq/poller context 1)
-                          socket (create-socket context :dealer "tcp://localhost:7740")]
+                          socket (q/create-connected-socket context :dealer "tcp://localhost:7740")]
                       (swap! consumer assoc :socket socket :poller poller)
                       (zmq/register poller socket :pollin)
                       (.addPoller (@consumer :zloop)

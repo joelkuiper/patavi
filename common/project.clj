@@ -10,5 +10,6 @@
                  [com.taoensso/nippy "2.2.0-RC1"]
                  [log4j/log4j "1.2.17"]
                  [clj-time "0.5.1"]
+                 [crypto-random "1.1.0"]
                  [org.jeromq/jeromq "0.3.0-SNAPSHOT"]
                  [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]])

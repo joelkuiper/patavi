@@ -1,6 +1,7 @@
 (ns clinicico.common.zeromq
   (:gen-class)
-  (:require [zeromq.zmq :as zmq])
+  (:require [zeromq.zmq :as zmq]
+            [crypto.random :as crypto])
   (:import [org.zeromq ZMQ ZMQ$Socket ZMQ$PollItem ZLoop ZLoop$IZLoopHandler]))
 
 (def STATUS-OK (byte-array (byte 1)))
@@ -19,6 +20,14 @@
 (defmethod bytes-from String [arg] (.getBytes arg))
 (defmethod bytes-from Byte [arg] (byte-array [arg]))
 (defmethod bytes-from zmq/bytes-type [arg] arg)
+
+(defn create-connected-socket
+  ([context type address]
+     (create-connected-socket context type address (crypto.random/hex 8)))
+  ([context type address ident]
+     (zmq/connect
+      (zmq/set-identity
+       (zmq/socket context type) (.getBytes ident)) address)))
 
 (defn send-frame
   [socket & args]

@@ -16,14 +16,13 @@
             [clinicico.server.tasks :as tasks :only [initialize]]))
 
 (declare in-dev?)
-(def match-uuid #"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
 (defn assemble-routes []
   (->
     (routes
       (context "/tasks" []
                ;; Resources managed by liberator
                (ANY "/:method" [method] domain/tasks-resource)
-               (ANY ["/:method/:id" :id match-uuid] [method id] domain/task-resource)
+               (ANY ["/:method/:id"] [method id] domain/task-resource)
                ;; Handle retrieval of file
                (GET "/:method/:id/files/:file" [id file]
                     (let [record (store/get-file id file)]
@@ -33,8 +32,8 @@
                             (resp/content-type (:content-type (.getContentType record)))
                             (resp/header "Content-Length" (.getLength record))))))
                ;; Handle status routes (for WebSockets / Comet)
-               (OPTIONS ["/:method/:id/status" :id match-uuid] [] (http/options #{:options :get}))
-               (GET ["/:method/:id/status" :id match-uuid] [method id] domain/task-status)))))
+               (OPTIONS ["/:method/:id/status"] [] (http/options #{:options :get}))
+               (GET ["/:method/:id/status"] [method id] domain/task-status)))))
 
 (def app
   (->

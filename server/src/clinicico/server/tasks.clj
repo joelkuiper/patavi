@@ -5,6 +5,8 @@
             [clj-time.core :as time]
             [clinicico.common.zeromq :as q]
             [zeromq.zmq :as zmq]
+            [crypto.random :as crypto]
+            [clinicico.server.router :as router]
             [clinicico.server.store :as status]
             [taoensso.nippy :as nippy]))
 
@@ -33,7 +35,6 @@
     (status/update! id new-status)
     ((@callbacks id) new-status)))
 
-
 (defn- update-handler
   [update]
   (when (= (:type update) "task") (task-update update)))
@@ -51,19 +52,27 @@
     (status/update! id (merge old-status new-status))))
 
 
+(defn- start-update-handler
+  []
+  (.start
+   (Thread.
+    (fn []
+      (let [items (zmq/poller context)]
+        (zmq/register items updates-socket :pollin) ;; item 0
+        (while (not (.. Thread currentThread isInterrupted))
+          (zmq/poll items)
+          (when (.pollin items 0) ;; process updates
+            (update-handler
+             (nippy/thaw (zmq/receive updates-socket))))))))))
+
+(defn- start-router
+  []
+  (router/start frontend-address "tcp://*:7740"))
+
 (defn initialize
   []
-  (.start (Thread. (clinicico.server.router.Router. frontend-address "tcp://*:7740")))
-  (.start
-    (Thread.
-      (fn []
-        (let [items (zmq/poller context 1)]
-          (zmq/register items updates-socket :pollin) ;; item 0
-          (while (not (.. Thread currentThread isInterrupted))
-            (zmq/poll items)
-            (when (.pollin items 0) ;; process updates
-              (update-handler
-                (nippy/thaw (zmq/receive updates-socket))))))))))
+  (start-router)
+  (start-update-handler))
 
 (defn task-available?
   [method]
@@ -75,13 +84,11 @@
 
 (defn publish-task
   [method payload callback]
-  (let [id (str (java.util.UUID/randomUUID))
+  (let [id  (crypto.random/url-part 5)
         msg {:id id :body payload :method method :type "task"}
-        socket (zmq/socket context :req)]
+        socket (q/create-connected-socket context :req frontend-address id)]
     (log/debug (format "Publishing task to %s" method))
     (swap! callbacks assoc id callback)
-    (zmq/set-identity socket (.getBytes id))
-    (zmq/connect socket frontend-address)
     (q/send-frame socket method (nippy/freeze msg))
     (status/insert! id {:id id
                         :method method

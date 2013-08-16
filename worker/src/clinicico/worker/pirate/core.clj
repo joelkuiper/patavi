@@ -40,7 +40,7 @@
         (log/info "[Rserve]" (:out start))
         start))))
 
-(defn- source-file!
+(defn- source-script!
   "Finds the R file with the associated file
    name and load its into an RConnection."
   [^RConnection R script]
@@ -60,28 +60,33 @@
       (.getMessage cause)
       (str e))))
 
-(defn- create-listener
-  [context socket callback]
-  (let [poller (zmq/poller context)]
-    (fn []
-      (zmq/register poller socket :pollin)
-      (while (not (.. Thread currentThread isInterrupted))
-        (.poll poller)
-        (when (.pollin poller 0)
-          (callback (zmq/receive-str socket)))))))
+(defn- create-listener-fn
+  [poller socket callback run?]
+  (fn []
+    (while @run?
+      (.poll poller)
+      (when (.pollin poller 0)
+        (callback (zmq/receive-str socket))))))
 
 (defn listen-for-updates
   [callback]
   (let [context (zmq/context)
         port (zmq/first-free-port)
+        poller (zmq/poller context)
+        run? (atom true)
         socket (zmq/socket context :sub)
-        listener (Thread. (create-listener context socket callback))]
+        listener (Thread. (create-listener-fn poller socket callback run?))]
+    (zmq/register poller socket :pollin)
     (zmq/bind (zmq/subscribe socket  "") (str "tcp://*:" port))
     (.start listener)
     {:socket socket
      :port port
      :close (fn []
-              (do (.interrupt listener) (.close socket) (.join listener 10)))}))
+              (do
+                (.close socket)
+                (zmq/unregister poller socket)
+                (reset! run? false)
+                (.join listener 100)))}))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.
@@ -93,7 +98,7 @@
     (let [updates (listen-for-updates callback)]
       (try
         (do
-          (source-file! R @script-file)
+          (source-script! R @script-file)
           (pirate/assign R "params" params)
           (pirate/assign R "files" [])
           (let [call (format "exec(%s, '%s', params)" method (:port updates))
