@@ -34,10 +34,6 @@
     (status/update! id new-status)
     ((@callbacks id) new-status)))
 
-(defn- update-handler
-  [update]
-  (when (= (:type update) "task") (task-update update)))
-
 (defn save-results!
   [results]
   (let [id (results :id)
@@ -47,9 +43,8 @@
                               :files (map (fn [f] {:name (get f "name")
                                                    :mime (get f "mime")})
                                           (results :files))}}]
-    (status/save-files! id (results :files))
+    (status/save-files! id (get results :files {}))
     (status/update! id (merge old-status new-status))))
-
 
 (defn- start-update-handler
   []
@@ -61,7 +56,7 @@
         (while (not (.. Thread currentThread isInterrupted))
           (zmq/poll items)
           (when (.pollin items 0) ;; process updates
-            (update-handler
+            (task-update
              (nippy/thaw (zmq/receive updates-socket))))))))))
 
 (defn- start-router

@@ -12,17 +12,16 @@
 
 (defn update!
   ([id content]
-   (update! id content "task"))
-  ([id content type]
-   (let [update {:content content :id id :type type}]
+   (update! id content))
+  ([id content]
+   (let [update {:content content :id id}]
      (zmq/send updates (nippy/freeze update)))))
 
 (defn- task-handler
   [task-fn]
   (fn
     [task]
-    (let [method (:method task)
-          id (:id task)]
+    (let [id (:id task)]
       (try
         (do
           (log/debug (format "Recieved task %s" id))

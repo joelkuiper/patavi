@@ -1,7 +1,8 @@
 (ns clinicico.worker.pirate.core
-  (:use [clojure.java.shell :only [sh]]
-        [clojure.string :only [split join]])
   (:require [clojure.java.io :as io]
+            [clojure.core.async :as async :refer :all]
+            [clojure.string :refer [split join]]
+            [clojure.java.shell :refer [sh]]
             [clinicico.worker.pirate.util :as pirate]
             [clojure.tools.logging :as log]
             [zeromq.zmq :as zmq]
@@ -10,7 +11,7 @@
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(def script-file (atom nil))
+(def ^:private script-file (atom nil))
 
 (def ^:private default-packages ["RJSONIO" "rzmq" "Cairo"])
 
@@ -60,33 +61,19 @@
       (.getMessage cause)
       (str e))))
 
-(defn- create-listener-fn
-  [poller socket callback run?]
-  (fn []
-    (while @run?
-      (.poll poller)
-      (when (.pollin poller 0)
-        (callback (zmq/receive-str socket))))))
-
 (defn listen-for-updates
   [callback]
-  (let [context (zmq/context)
+  (let [updates (chan)
+        context (zmq/context)
         port (zmq/first-free-port)
-        poller (zmq/poller context)
-        run? (atom true)
-        socket (zmq/socket context :sub)
-        listener (Thread. (create-listener-fn poller socket callback run?))]
-    (zmq/register poller socket :pollin)
-    (zmq/bind (zmq/subscribe socket  "") (str "tcp://*:" port))
-    (.start listener)
-    {:socket socket
-     :port port
-     :close (fn []
-              (do
-                (.close socket)
-                (zmq/unregister poller socket)
-                (reset! run? false)
-                (.join listener 100)))}))
+        socket (zmq/socket context :sub)]
+    (zmq/bind (zmq/subscribe socket "") (str "tcp://*:" port))
+    (go (loop [upd (zmq/receive-str socket)]
+          (>! updates upd)
+          (recur (zmq/receive-str socket))))
+    (go (while true (callback (<! updates))))
+    {:port port
+     :close (fn [] (close! updates))}))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.

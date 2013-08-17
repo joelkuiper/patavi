@@ -37,5 +37,3 @@ save.plot <- function(plot.fn, name, type="png") {
 
   assign("files", append(files, list(file)), envir=parent.env(environment()))
 }
-
-
