@@ -4,19 +4,13 @@
   (:require [zeromq.zmq :as zmq]
             [overtone.at-at :as at]
             [clinicico.common.zeromq :as q]
+            [clinicico.common.util :refer [now update-vals]]
             [clojure.tools.logging :as log]))
 
 (def ^:private worker-pool (ref {}))
 (def ^:private context (zmq/context 2))
 (def ^:private max-ttl 5000) ;; in millis
 (def ^:private ttl-pool (at/mk-pool))
-
-(defn update-vals [map vals f]
-  (reduce #(update-in % [%2] f) map vals))
-
-(defn- now
-  []
-  (System/currentTimeMillis))
 
 (defn- check-workers
   [pool]
@@ -91,5 +85,6 @@
 
 (defn start
   [frontend-address backend-address]
-  (let [router-fn (create-router-fn frontend-address backend-address)]
-    (.start (Thread. router-fn))))
+  (let [router-fn (create-router-fn frontend-address backend-address)
+        router (agent 0)]
+    (send-off router (fn [_] (router-fn)))))

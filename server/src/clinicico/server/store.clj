@@ -2,7 +2,7 @@
 ;; Simple mongodb access and storage of statuses and document
 (ns clinicico.server.store
   (:use [clinicico.server.config]
-        [clinicico.server.util]
+        [clinicico.common.util]
         [validateur.validation]
         [monger.gridfs :only  [store-file make-input-file filename content-type metadata]]
         [monger.core :only [connect! set-db! get-db]]
@@ -88,4 +88,3 @@
     (map
       (fn [file]
         (save-file! file (str id "/" (get file "name")))) files)))
-

@@ -4,7 +4,7 @@
         [clojure.string :only [upper-case]])
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as json]
-            [clinicico.server.util :as util]))
+            [clinicico.common.util :as util]))
 
 (defn- wrap-exception
   [req e]

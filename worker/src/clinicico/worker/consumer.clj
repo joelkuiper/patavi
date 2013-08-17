@@ -3,6 +3,7 @@
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
             [clinicico.common.zeromq :as q]
+            [clinicico.common.util :refer [insert]]
             [clojure.tools.logging :as log])
   (:import [org.zeromq ZLoop]))
 
@@ -15,8 +16,6 @@
 (defprotocol Protocol
   (send! [this socket messages]))
 
-(defn insert [vec pos item]
-    (apply merge (subvec vec 0 pos) item (subvec vec pos)))
 
 (defrecord MessageProtocol [method]
   Protocol
@@ -53,7 +52,8 @@
                           (ping)
                           (@reconnecter)))))]
     (swap! consumer assoc :handlers (merge (@consumer :handlers) {q/MSG-PONG pong}))
-    (.addTimer (@consumer :zloop) heartbeat-interval 0 (q/zloop-handler #(do (heartbeat) 0)) (Object.))))
+    (.addTimer (@consumer :zloop) heartbeat-interval 0
+               (q/zloop-handler #(do (heartbeat) 0)) (Object.))))
 
 (defn- handle-request
   [consumer handler]
@@ -83,9 +83,11 @@
         consumer (atom {:handlers  {}
                         :protocol protocol
                         :zloop zloop
+                        :consumer (agent 0)
                         :socket nil})
         initialize #(let [poller (zmq/poller context 1)
-                          socket (q/create-connected-socket context :dealer "tcp://localhost:7740")]
+                          socket (q/create-connected-socket
+                                  context :dealer "tcp://localhost:7740")]
                       (swap! consumer assoc :socket socket :poller poller)
                       (zmq/register poller socket :pollin)
                       (.addPoller (@consumer :zloop)
@@ -93,11 +95,12 @@
                                   (q/zloop-handler (fn [] ((handle-incoming consumer)) (int 0)))
                                   (Object.))
                       (send! protocol socket [q/MSG-READY]))]
+    (log/info "[consumer] started consumer for" method)
     (swap! consumer assoc
            :handlers {q/MSG-REQ (handle-request consumer handler)}
            :initialize initialize)
     ((@consumer :initialize))
-    (.start (Thread. #(.start zloop)))
+    (send (@consumer :consumer) (fn [_] (.start zloop)))
     consumer))
 
 (defn start

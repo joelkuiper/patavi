@@ -2,12 +2,12 @@
   (:gen-class)
   (:use [org.httpkit.server]
         [liberator.representation :only [ring-response]]
-        [clinicico.server.util]
         [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
             [ring.util.response :as resp]
             [cheshire.core :as json]
+            [clinicico.common.util :refer [dissoc-in]]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
             [clinicico.server.store :as store]

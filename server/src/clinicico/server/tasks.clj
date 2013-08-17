@@ -1,12 +1,11 @@
 (ns clinicico.server.tasks
   (:gen-class)
-  (:use [clinicico.server.router])
   (:require [clojure.tools.logging :as log]
             [clj-time.core :as time]
             [clinicico.common.zeromq :as q]
             [zeromq.zmq :as zmq]
             [crypto.random :as crypto]
-            [clinicico.server.router :as router]
+            [clinicico.server.router :as router :refer :all]
             [clinicico.server.store :as status]
             [taoensso.nippy :as nippy]))
 
