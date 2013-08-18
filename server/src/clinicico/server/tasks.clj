@@ -41,19 +41,24 @@
     (status/update! id new-status)
     ((get @callbacks id (fn [_])) new-status)))
 
+(defn psy [alpha beta]
+  "Infinite Stream function.  Starts two go routines, one perpetually pushing
+   using a function with no arguments (alpha), and one processing then with
+   a function taking the channel output as argument (beta)."
+  (let [c (chan)]
+    (go(loop [x (alpha)]
+         (>! c x)
+         (recur (alpha))))
+    (go (loop [y (<! c)]
+          (beta y)
+          (recur (<! c))))))
+
 (defn- start-update-handler
   []
   (let [updates (chan)
         socket (zmq/socket context :sub)]
     (zmq/bind (zmq/subscribe socket "") "tcp://*:7720")
-    (go (loop [upd (zmq/receive socket)]
-          (>! updates (nippy/thaw upd))
-          (recur (zmq/receive socket))))
-    (go
-     (loop [upd (<! updates)]
-       (do
-         (update! upd)
-         (recur (<! updates)))))))
+    (psy #(zmq/receive socket) #(update! (nippy/thaw %)))))
 
 (defn initialize
   []

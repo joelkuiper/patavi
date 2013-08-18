@@ -78,9 +78,8 @@
                 (recur (zmq/receive-str socket)))))))
     (go (loop [upd (<! updates)]
           (when-not (nil? upd)
-            (do
-              (callback upd)
-              (recur (<! updates))))))))
+            (callback upd)
+            (recur (<! updates)))))))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.
