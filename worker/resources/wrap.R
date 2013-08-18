@@ -8,15 +8,17 @@ exec <- function(method, port, params) {
       send.socket(updates.socket, msg, serialize=FALSE)
     })
   }
-  assign("update", update.fn(), envir=parent.env(environment()))
+  update <- update.fn()
+  assign("update", update, envir=parent.env(environment()))
 
-  if(!is.null(params) && isValidJSON(params, asText=TRUE)) {
+  results <- if(!is.null(params) && isValidJSON(params, asText=TRUE)) {
     params <- fromJSON(params)
     result <- do.call(method, list(params))
-    toJSON(result)
   } else {
     stop("Provided JSON was invalid")
   }
+  update("!!term") # fixme magic value
+  toJSON(result)
 }
 
 save.plot <- function(plot.fn, name, type="png") {

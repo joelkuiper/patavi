@@ -62,18 +62,25 @@
       (str e))))
 
 (defn listen-for-updates
-  [callback]
-  (let [updates (chan)
-        context (zmq/context)
-        port (zmq/first-free-port)
-        socket (zmq/socket context :sub)]
-    (zmq/bind (zmq/subscribe socket "") (str "tcp://*:" port))
-    (go (loop [upd (zmq/receive-str socket)]
-          (>! updates upd)
-          (recur (zmq/receive-str socket))))
-    (go (while true (callback (<! updates))))
-    {:port port
-     :close (fn [] (close! updates))}))
+  [callback port]
+  (let [updates (chan)]
+    (go (let [context (zmq/context)
+              socket (zmq/socket context :sub)]
+          (zmq/bind (zmq/subscribe socket "") (str "tcp://*:" port))
+          (loop [upd (zmq/receive-str socket)]
+            (if (= upd "!!term")
+              (do ; Cleanup
+                (.close socket)
+                (.term context)
+                (close! updates))
+              (do
+                (>! updates upd)
+                (recur (zmq/receive-str socket)))))))
+    (go (loop [upd (<! updates)]
+          (when-not (nil? upd)
+            (do
+              (callback upd)
+              (recur (<! updates))))))))
 
 (defn execute
   "Executes, in R, the method present in the file with the given params.
@@ -82,17 +89,17 @@
    See resources/wrap.R for details."
   [method id params callback]
   (with-open [R (pirate/connect)]
-    (let [updates (listen-for-updates callback)]
-      (try
-        (do
-          (source-script! R @script-file)
-          (pirate/assign R "params" params)
-          (pirate/assign R "files" [])
-          (let [call (format "exec(%s, '%s', params)" method (:port updates))
-                result (pirate/parse R call)]
-            {:id id
-             :method method
-             :files (pirate/retrieve R "files")
-             :results (json/decode result)}))
-        (catch Exception e (throw (Exception. (cause e) e)))
-        (finally ((:close updates)))))))
+    (try
+      (do
+        (source-script! R @script-file)
+        (pirate/assign R "params" params)
+        (pirate/assign R "files" [])
+        (let [updates-port (zmq/first-free-port)
+              updates (listen-for-updates callback updates-port)
+              call (format "exec(%s, '%s', params)" method updates-port)
+              result (pirate/parse R call)]
+          {:id id
+           :method method
+           :files (pirate/retrieve R "files")
+           :results (json/decode result)}))
+      (catch Exception e (throw (Exception. (cause e) e))))))

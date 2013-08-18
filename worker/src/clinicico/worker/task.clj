@@ -12,13 +12,11 @@
 
 (defn update!
   ([id content]
-   (update! id content))
-  ([id content]
    (let [update {:content content :id id}]
      (zmq/send updates (nippy/freeze update)))))
 
 (defn- task-handler
-  [task-fn]
+  [task-fn method]
   (fn
     [task]
     (let [id (:id task)]
@@ -39,5 +37,5 @@
 (defn initialize
   [method n task-fn]
   (dotimes [n n]
-    (consumer/start method (task-handler task-fn))
+    (consumer/start method (task-handler task-fn method))
     (log/info (format "[main] started worker for %s" method))))
