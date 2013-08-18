@@ -28,7 +28,7 @@
         new-status {:status "completed"
                     :results {:body (results :results)
                               :files (map (fn [f] {:name (get f "name")
-                                                   :mime (get f "mime")})
+                                                  :mime (get f "mime")})
                                           (results :files))}}]
     (status/save-files! id (get results :files {}))
     (status/update! id (merge old-status new-status))))
@@ -41,14 +41,14 @@
     (status/update! id new-status)
     ((get @callbacks id (fn [_])) new-status)))
 
-(defn psy [alpha beta]
+(defn psi [alpha beta]
   "Infinite Stream function. Starts two go routines, one perpetually pushing
    using a function with no arguments (alpha), and one processing then with
    a function taking the channel output as argument (beta)."
   (let [c (chan)]
-    (go(loop [x (alpha)]
-         (>! c x)
-         (recur (alpha))))
+    (go (loop [x (alpha)]
+          (>! c x)
+          (recur (alpha))))
     (go (loop [y (<! c)]
           (beta y)
           (recur (<! c))))))
@@ -58,7 +58,7 @@
   (let [updates (chan)
         socket (zmq/socket context :sub)]
     (zmq/bind (zmq/subscribe socket "") "tcp://*:7720")
-    (psy #(zmq/receive socket) #(update! (nippy/thaw %)))))
+    (psi #(zmq/receive socket) #(update! (nippy/thaw %)))))
 
 (defn initialize
   []
@@ -77,26 +77,26 @@
   "Sends the message and returns a promise to results"
   [msg]
   (let [{:keys [method id]} msg
-        socket (q/create-connected-socket context :req frontend-address id)
-        reply #(q/receive socket 2 zmq/bytes-type)]
+        socket (q/create-connected-socket context :req frontend-address id)]
     (q/send-frame socket method (nippy/freeze msg))
-    (future (reply))))
+    (cons id (q/receive socket 2 zmq/bytes-type))))
 
 (defn publish-task
   [method payload callback]
   (let [id  (crypto.random/url-part 6)
-        msg {:id id :body payload :method method}]
+        msg {:id id :body payload :method method}
+        work (chan)]
     (log/debug (format "Publishing task to %s" method))
     (swap! callbacks assoc id callback)
     (status/insert! id {:id id
                         :method method
                         :status "pending"
                         :created (java.util.Date.)})
-    (.start (Thread.
-              #(let [[status result] @(process msg)]
-                 (if (q/status-ok? status)
-                   (save-results! (nippy/thaw result))
-                   (status/update! id {:status "failed" :cause (String. result)}))
-                 ((@callbacks id) (status/retrieve id))
-                 (cleanup id))))
+    (go (>! work (process msg)))
+    (go (let [[id status result] (<! work)]
+          (if (q/status-ok? status)
+            (save-results! (nippy/thaw result))
+            (status/update! id {:status "failed" :cause (String. result)}))
+          ((@callbacks id) (status/retrieve id))
+          (cleanup id)))
     (status id)))

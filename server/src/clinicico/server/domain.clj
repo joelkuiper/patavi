@@ -11,7 +11,7 @@
             [clinicico.server.http :as http]
             [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
 
-(defn add-slash
+(defn- add-slash
   [string]
   (str string (when-not (.endsWith string "/") "/")))
 
@@ -37,7 +37,7 @@
                       :comment "Comet long-polling and WebSocket for status updates")
         (hal/add-properties task))))
 
-(def listeners (atom {}))
+(def ^:private listeners (atom {}))
 
 (defn broadcast-update
   [task]
