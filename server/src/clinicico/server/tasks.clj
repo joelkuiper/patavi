@@ -5,7 +5,7 @@
             [clinicico.common.zeromq :as q]
             [zeromq.zmq :as zmq]
             [crypto.random :as crypto]
-            [clinicico.server.router :as router]
+            [clinicico.server.network.broker :as broker]
             [clinicico.server.store :as status]
             [taoensso.nippy :as nippy]))
 
@@ -62,12 +62,12 @@
 
 (defn initialize
   []
-  (router/start frontend-address "tcp://*:7740")
+  (broker/start frontend-address "tcp://*:7740")
   (start-update-handler))
 
 (defn task-available?
   [method]
-  true)
+  (broker/service-available? method))
 
 (defn status
   [id]
@@ -92,7 +92,6 @@
                         :method method
                         :status "pending"
                         :created (java.util.Date.)})
-
     (.start (Thread.
               #(let [[status result] @(process msg)]
                  (if (q/status-ok? status)

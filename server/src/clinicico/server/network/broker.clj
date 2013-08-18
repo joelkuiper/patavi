@@ -1,4 +1,4 @@
-(ns clinicico.server.router
+(ns clinicico.server.network.broker
   (:import clojure.lang.PersistentQueue)
   (:use [clojure.set :only [select]])
   (:require [zeromq.zmq :as zmq]
@@ -43,24 +43,30 @@
      (alter pool assoc-in [method :ttl address] (now))
      (alter pool assoc-in [method :queue] (conj queue address)))))
 
-(defn pop-worker [pool method]
+(defn pop-worker
+  [pool method]
   (dosync
    (let [queue (get-in @pool [method :queue])
          worker (peek queue)]
      (alter pool assoc-in [method :queue] (pop queue))
      worker)))
 
+(defn service-available?
+  [service]
+  (> (count (get-in @worker-pool [service :ttl])) 0))
+
 (defn- update-ttl
   [pool method address ttl]
   (dosync
    (alter pool assoc-in [method :ttl address] ttl)))
 
-(defn create-router-fn [frontend-address backend-address]
+(defn router-fn
+  [frontend-address backend-address]
   (let [[frontend backend :as sides]
         (map (partial bind-socket context :router) [frontend-address backend-address])
         poller (zmq/poller context 2)]
-    (doseq [side sides] (zmq/register poller side :pollin))
     (fn []
+      (doseq [side sides] (zmq/register poller side :pollin))
       (while (not (.. Thread currentThread isInterrupted))
         (zmq/poll poller)
         (if (zmq/check-poller poller 0 :pollin)
@@ -85,6 +91,6 @@
 
 (defn start
   [frontend-address backend-address]
-  (let [router-fn (create-router-fn frontend-address backend-address)
+  (let [router-fn (router-fn frontend-address backend-address)
         router (agent 0)]
     (send-off router (fn [_] (router-fn)))))

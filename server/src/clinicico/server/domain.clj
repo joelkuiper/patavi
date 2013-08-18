@@ -79,11 +79,10 @@
   :handle-ok (fn [_] (json/encode {:status "Up and running"}))
   :handle-created handle-new-task
   :post! (fn [ctx]
-           (let [callback broadcast-update
-                 method (get-in ctx [:request :route-params :method])
+           (let [method (get-in ctx [:request :route-params :method])
                  body (get-in ctx [:request :body])
                  payload (when body (slurp body))]
-             (assoc ctx :task (tasks/publish-task method payload callback)))))
+             (assoc ctx :task (tasks/publish-task method payload broadcast-update)))))
 
 (defresource task-resource
   :available-media-types ["application/json"]
