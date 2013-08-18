@@ -1,13 +1,8 @@
 (ns clinicico.server.util
   (:gen-class)
-  (:require [cheshire.core :refer :all]
-            [clojure.java.io :as io]
-            [clojure.string :as s])
-  (:import (org.joda.time.format.ISODateTimeFormat)
-           (com.fasterxml.jackson.core JsonGenerator))
-  (:use [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
-        clojure.java.io
-        clojure.walk))
+  (:require [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
+            [cheshire.core :refer :all])
+  (:import (com.fasterxml.jackson.core JsonGenerator)))
 
 (add-encoder java.lang.Exception
   (fn [^Exception e ^JsonGenerator jg]

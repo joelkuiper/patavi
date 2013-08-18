@@ -19,7 +19,8 @@
 (defrecord MessageProtocol [method]
   Protocol
   (send! [this socket messages]
-    (apply (partial q/send-frame-delim socket) (insert messages 1 (.getBytes (get this :method))))))
+    (apply (partial q/send-frame-delim socket)
+       (insert messages 1 (.getBytes (get this :method))))))
 
 (defn- create-reconnecter
   [consumer]
@@ -35,25 +36,24 @@
       (.close (@consumer :socket))
       (swap! consumer dissoc :socket)
       (.removePoller (@consumer :zloop) (.getItem (@consumer :poller) 0))
-      (.addTimer (@consumer :zloop) @interval 1 reconnect (Object.)))))
+      (.addTimer (@consumer :zloop) @interval 1 reconnect {}))))
 
 (defn- with-heartbeat
   [consumer]
   (let [reconnecter (atom (create-reconnecter consumer))
         pong (fn [_] (do (reset! reconnecter (create-reconnecter consumer))
                         (swap! consumer assoc :liveness heartbeat-liveness)))
-        ping #(do (send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING]))
+        ping #(send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING])
         heartbeat (fn []
                     (when (contains? @consumer :socket)
                       (let [next-liveness (dec (get @consumer :liveness heartbeat-liveness))]
                         (swap! consumer assoc :liveness next-liveness)
-                        (if (> next-liveness 0)
+                        (if (pos? next-liveness)
                           (ping)
                           (@reconnecter)))))]
     (swap! consumer assoc :handlers (merge (@consumer :handlers) {q/MSG-PONG pong}))
     (.addTimer (@consumer :zloop) heartbeat-interval 0
                (q/zloop-handler #(do (heartbeat) 0)) {})))
-
 
 (defn- handle-request
   [consumer handler]
@@ -91,14 +91,14 @@
                       (zmq/register poller socket :pollin)
                       (.addPoller (@consumer :zloop)
                                   (.getItem poller 0)
-                                  (q/zloop-handler (fn [] ((handle-incoming consumer)) (int 0)))
+                                  (q/zloop-handler (fn [] ((handle-incoming consumer)) 0))
                                   {})
                       (send! protocol socket [q/MSG-READY]))]
-    (log/info "[consumer] started consumer for" method)
     (swap! consumer assoc
            :handlers {q/MSG-REQ (handle-request consumer handler)}
            :initialize initialize)
     ((@consumer :initialize))
+
     ; mysterious hack required to start the zloop
     (.addTimer zloop 1000 0 (q/zloop-handler #(do (Thread/sleep 1) 0)) {})
 

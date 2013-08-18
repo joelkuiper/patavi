@@ -42,7 +42,7 @@
     ((get @callbacks id (fn [_])) new-status)))
 
 (defn psy [alpha beta]
-  "Infinite Stream function.  Starts two go routines, one perpetually pushing
+  "Infinite Stream function. Starts two go routines, one perpetually pushing
    using a function with no arguments (alpha), and one processing then with
    a function taking the channel output as argument (beta)."
   (let [c (chan)]

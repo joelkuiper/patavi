@@ -1,9 +1,9 @@
 (ns clinicico.worker.main
   (:gen-class)
-  (:use [clojure.string :only [split trim capitalize]]
-        [clojure.tools.cli :only [cli]])
   (:require [clinicico.worker.task :as tasks :only [initialize]]
             [clinicico.worker.pirate.core :as pirate]
+            [clojure.tools.cli :refer [cli]]
+            [clojure.string :refer [split trim capitalize]]
             [clojure.tools.logging :as log]))
 
 (defn -main

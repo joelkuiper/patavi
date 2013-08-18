@@ -1,16 +1,14 @@
 (ns clinicico.server.domain
-  (:gen-class)
-  (:use [org.httpkit.server]
-        [liberator.representation :only [ring-response]]
-        [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
+            [org.httpkit.server :refer [send! with-channel on-close]]
+            [liberator.representation :refer [ring-response]]
+            [liberator.core :refer [resource defresource request-method-in]]
             [ring.util.response :as resp]
             [cheshire.core :as json]
             [clinicico.common.util :refer [dissoc-in]]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
-            [clinicico.server.store :as store]
             [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
 
 (defn add-slash
@@ -45,7 +43,8 @@
   [task]
   (let [id (:id task)
         method (:method task)
-        resource (represent-task task (str (http/url-base) "/tasks/" method "/" id "/"))]
+        url (str (http/url-base) "/tasks/" method "/" id "/")
+        resource (represent-task task url)]
     (doseq [client (get @listeners id)]
       (send! client (hal/resource->representation resource :json)))))
 
@@ -69,10 +68,7 @@
   (let [task (:task ctx)
         url (http/url-from (:request ctx) (:id task))
         resource (represent-task task url)]
-    (ring-response {:status 202
-                    :headers {"Location" url
-                              "Content-Type" "application/json"}
-                    :body (hal/resource->representation resource :json)})))
+    (hal/resource->representation resource :json)))
 
 (defresource tasks-resource
   :available-media-types ["application/json"]
@@ -80,7 +76,7 @@
   :service-available? (fn [ctx]
                         (tasks/task-available?
                           (get-in ctx [:request :route-params :method])))
-  :handle-ok (fn [ctx] (json/encode {:status "Up and running"}))
+  :handle-ok (fn [_] (json/encode {:status "Up and running"}))
   :handle-created handle-new-task
   :post! (fn [ctx]
            (let [callback broadcast-update

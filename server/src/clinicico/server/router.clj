@@ -22,12 +22,12 @@
              expired (select-keys curr (for [[addr ttl] curr :when (> (- (now) ttl) max-ttl)] addr))
              expired? (fn [addr] (some #(= addr %) (keys expired)))
              queue (get-in @pool [method :queue])]
-         (when-not (empty? expired) (log/warn (count expired) "workers were expired:" (keys expired)))
+         (when (seq expired) (log/warn (count expired) "workers were expired:" (keys expired)))
          (alter pool assoc-in [method :ttl] (apply (partial dissoc curr) (keys expired)))
          (alter pool assoc-in [method :queue]
                 (into PersistentQueue/EMPTY
                       (select (comp not expired?)
-                              (into #{} (take (count queue) queue))))))))
+                              (set (take (count queue) queue))))))))
     @pool)))
 
 ;; Periodically check the workers
@@ -66,7 +66,7 @@
         (if (zmq/check-poller poller 0 :pollin)
           (let [[client-addr method request] (q/receive frontend [String String zmq/bytes-type])
                 worker-addr (pop-worker worker-pool method)]
-            (if (not (nil? worker-addr))
+            (if-not (nil? worker-addr)
               (do
                 (log/debug "[router] dispatching" method "from" client-addr "to" worker-addr)
                 (q/send-frame backend worker-addr q/MSG-REQ client-addr request))

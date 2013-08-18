@@ -5,8 +5,8 @@
 ;; handling and can sent its own response body.
 
 (ns clinicico.server.http
-  (:use ring.util.response
-        [clojure.string :only [upper-case blank? join]]))
+  (:require [ring.util.response :refer :all]
+            [clojure.string :refer [upper-case blank? join]]))
 
 
 (def base (atom ""))
@@ -22,7 +22,6 @@
   [{:keys [scheme server-name server-port uri] :as req}
    & path-elements]
   (str (url-base req) uri "/" (join "/" path-elements)))
-
 
 (defn options
   "The OPTIONS method represents a request for information about the communication

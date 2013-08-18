@@ -1,23 +1,20 @@
 ;; ## Store
 ;; Simple mongodb access and storage of statuses and document
 (ns clinicico.server.store
-  (:use [clinicico.server.config]
-        [clinicico.common.util]
-        [validateur.validation]
-        [monger.gridfs :only  [store-file make-input-file filename content-type metadata]]
-        [monger.core :only [connect! set-db! get-db]]
-        [monger.result :only [ok?]]
-        [monger.conversion :only [from-db-object]])
   (:require [clojure.walk :as walk]
             [clojure.tools.logging :as log]
+            [clinicico.server.config :refer :all]
+            [clinicico.common.util :refer :all]
             [clojure.java.io :as io :only [input-stream]]
+            [validateur.validation :refer :all]
+            [monger.gridfs :refer  [store-file make-input-file filename content-type metadata]]
+            [monger.core :refer [connect! set-db! get-db]]
             [monger.collection :as collection]
-            [monger.conversion :as conv]
+            [monger.result :refer [ok?]]
+            [monger.conversion :as conv :refer [from-db-object]]
             [monger.json]
             [monger.gridfs :as gfs]
-            [monger.util :as util]
-            [monger.joda-time]
-            [clj-time.core :as time]))
+            [monger.util :as util]))
 
 (def mongo-options
   {:host (str (:mongo-host config))
@@ -27,10 +24,10 @@
 
 (connect! mongo-options)
 (set-db! (get-db (mongo-options :db)))
-(if (not (collection/exists? (mongo-options :collection)))
+(when-not (collection/exists? (mongo-options :collection))
   (do
     (collection/create (mongo-options :collection) {})
-    (collection/ensure-index (mongo-options :collection) {:modified 1} {:expireAfterSeconds 120})))
+    (collection/ensure-index (mongo-options :collection) {:modified 1} {:expireAfterSeconds 3600})))
 
 (defn retrieve
   [id]
@@ -52,11 +49,11 @@
 
 (defn- created-now
   [document]
-  (assoc document :created (time/now)))
+  (assoc document :created (now)))
 
 (defn- modified-now
   [document]
-  (assoc document :modified (time/now)))
+  (assoc document :modified (now)))
 
 (def document-validator (validation-set
                         (presence-of :_id)))
@@ -71,7 +68,7 @@
               (mongo-options :collection)
               (conv/to-db-object (stringify-keys* new-document))))
         {:id (str (new-document :_id))
-         :stored (time/now)}
+         :stored (now)}
         (throw (Exception. "Write Failed")))
       (throw (IllegalArgumentException. "Could not save invalid document set")))))
 

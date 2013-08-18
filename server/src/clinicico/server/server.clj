@@ -1,21 +1,22 @@
 (ns clinicico.server.server
   (:gen-class)
-  (:use [org.httpkit.server]
-        [clinicico.server.middleware]
-        [ring.middleware.jsonp]
-        [clojure.tools.cli :only [cli]]
-        [compojure.handler :only [api site]]
-        [compojure.core :only [context ANY GET OPTIONS routes defroutes]])
   (:require [clojure.tools.logging :as log]
             [clojure.tools.nrepl.server :only (start-server stop-server) :as repl]
+            [clojure.tools.cli :refer [cli]]
             [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
+            [ring.middleware.jsonp :refer :all]
+            [org.httpkit.server :refer :all]
+            [compojure.handler :refer [api site]]
+            [compojure.core :refer [context ANY GET OPTIONS routes defroutes]]
             [clinicico.server.domain :as domain]
             [clinicico.server.store :as store]
+            [clinicico.server.middleware :refer :all]
             [clinicico.server.http :as http]
             [clinicico.server.tasks :as tasks :only [initialize]]))
 
 (declare in-dev?)
+
 (defn assemble-routes []
   (->
     (routes
