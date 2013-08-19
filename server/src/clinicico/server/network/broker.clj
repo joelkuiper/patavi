@@ -94,7 +94,7 @@
             [client-addr _ request] (available-request service)
             worker-addr (:address (available-worker service))]
         (log/debug "[broker] dispatching!" client-addr "to" (format "%s:%s" service-name worker-addr))
-        (q/send-frame socket worker-addr q/MSG-REQ client-addr request)))))
+        (q/send! socket [worker-addr q/MSG-REQ client-addr request])))))
 
 
 (defn router-fn
@@ -107,17 +107,18 @@
       (while (not (.. Thread currentThread isInterrupted))
         (zmq/poll poller)
         (if (zmq/check-poller poller 0 :pollin)
-          (dispatch backend (q/receive frontend [String String zmq/bytes-type])))
+          (dispatch backend (q/receive! frontend [String String zmq/bytes-type])))
         (if (zmq/check-poller poller 1 :pollin)
-          (let [[worker-addr msg-type method] (q/receive backend [String Byte String])]
+          (let [msg (q/receive! backend)
+                [worker-addr msg-type method] (q/retrieve-data msg [String Byte String])]
             (condp = msg-type
               q/MSG-PING  (do (update-expiry method worker-addr)
-                              (q/send-frame backend worker-addr q/MSG-PONG))
+                              (q/send! backend [worker-addr q/MSG-PONG]))
               q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" method)
                               (put-worker method worker-addr)
                               (dispatch backend [worker-addr method]))
-              q/MSG-REP   (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
-                            (q/send-frame frontend client-addr q/STATUS-OK reply)))))))))
+              q/MSG-REP   (let [[client-addr reply] (q/retrieve-data msg [String zmq/bytes-type])]
+                            (q/send! frontend [client-addr q/STATUS-OK reply])))))))))
 
 (defn start
   [frontend-address backend-address]

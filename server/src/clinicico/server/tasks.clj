@@ -78,8 +78,8 @@
   [msg]
   (let [{:keys [method id]} msg
         socket (q/create-connected-socket context :req frontend-address id)]
-    (q/send-frame socket method (nippy/freeze msg))
-    (cons id (q/receive socket 2 zmq/bytes-type))))
+    (q/send! socket [method (nippy/freeze msg)])
+    (cons id (q/receive! socket 2 zmq/bytes-type))))
 
 (defn publish-task
   [method payload callback]

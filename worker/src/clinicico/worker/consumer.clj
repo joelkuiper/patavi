@@ -13,15 +13,6 @@
 (def ^:const interval-init 1000)
 (def ^:const interval-max 32000)
 
-(defprotocol Protocol
-  (send! [this socket messages]))
-
-(defrecord MessageProtocol [method]
-  Protocol
-  (send! [this socket messages]
-    (apply (partial q/send-frame-delim socket)
-       (insert messages 1 (.getBytes (get this :method))))))
-
 (defn- create-reconnecter
   [consumer]
   (let [interval (atom interval-init)
@@ -41,9 +32,9 @@
 (defn- with-heartbeat
   [consumer]
   (let [reconnecter (atom (create-reconnecter consumer))
-        pong (fn [_] (do (reset! reconnecter (create-reconnecter consumer))
+        pong (fn [_ _] (do (reset! reconnecter (create-reconnecter consumer))
                         (swap! consumer assoc :liveness heartbeat-liveness)))
-        ping #(send! (@consumer :protocol) (@consumer :socket) [q/MSG-PING])
+        ping #(q/send! (@consumer :socket) [q/MSG-PING (@consumer :method)] :prefix-empty)
         heartbeat (fn []
                     (when (contains? @consumer :socket)
                       (let [next-liveness (dec (get @consumer :liveness heartbeat-liveness))]
@@ -57,31 +48,31 @@
 
 (defn- handle-request
   [consumer handler]
-  (fn [_]
-    (let [protocol (@consumer :protocol)
+  (fn [_ msg]
+    (let [method (@consumer :method)
           socket (@consumer :socket)
-          [address request] (q/receive-more socket [String zmq/bytes-type])
+          [address request] (q/retrieve-data msg [String zmq/bytes-type])
           response (handler (nippy/thaw request))]
-      (send! protocol socket [q/MSG-REP address (nippy/freeze response)])
-      (send! protocol socket [q/MSG-READY]))))
+      (q/send! socket [q/MSG-REP method address (nippy/freeze response)] :prefix-empty)
+      (q/send! socket [q/MSG-READY method] :prefix-empty))))
 
 (defn- handle-incoming
   [consumer]
   (fn []
     (let [socket (@consumer :socket)
-          [msg-type] (q/receive-more socket [Byte])]
+          msg (q/receive! socket)
+          [msg-type] (q/retrieve-data msg [Byte] :drop-first)]
       (doall
         (map (fn [[type handler]]
-               (when (= msg-type type) (handler consumer)))
+               (when (= msg-type type) (handler consumer msg)))
              (@consumer :handlers))))))
 
 (defn create-consumer
   [method handler]
-  (let [protocol (MessageProtocol. method)
-        context (zmq/context)
+  (let [context (zmq/context)
         zloop (ZLoop.)
         consumer (atom {:handlers  {}
-                        :protocol protocol
+                        :method method
                         :zloop zloop
                         :socket nil})
         initialize #(let [poller (zmq/poller context 1)
@@ -93,13 +84,13 @@
                                   (.getItem poller 0)
                                   (q/zloop-handler (fn [] ((handle-incoming consumer)) 0))
                                   {})
-                      (send! protocol socket [q/MSG-READY]))]
+                      (q/send! socket [q/MSG-READY method] :prefix-empty))]
     (swap! consumer assoc
            :handlers {q/MSG-REQ (handle-request consumer handler)}
            :initialize initialize)
     ((@consumer :initialize))
 
-    ; mysterious hack required to start the zloop
+    ; Mysterious hack required to start the zloop
     (.addTimer zloop 1000 0 (q/zloop-handler #(do (Thread/sleep 1) 0)) {})
 
     (.start (Thread. #(.start zloop)))
