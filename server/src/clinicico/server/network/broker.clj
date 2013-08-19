@@ -9,7 +9,7 @@
 
 (def ^:private worker-pool (ref {}))
 (def ^:private context (zmq/context 2))
-(def ^:private max-ttl 5000) ;; in millis
+(def ^:private max-ttl 3000) ;; in millis
 (def ^:private ttl-pool (at/mk-pool))
 
 (defn- check-workers
@@ -18,47 +18,65 @@
    (map
     (fn [[method workers]]
       (dosync
-       (let [curr (:ttl workers)
+       (let [curr (:expiry workers)
              expired (select-keys curr (for [[addr ttl] curr :when (> (- (now) ttl) max-ttl)] addr))
              expired? (fn [addr] (some #(= addr %) (keys expired)))
-             queue (get-in @pool [method :queue])]
-         (when (seq expired) (log/warn (count expired) "workers were expired:" (keys expired)))
-         (alter pool assoc-in [method :ttl] (apply (partial dissoc curr) (keys expired)))
-         (alter pool assoc-in [method :queue]
+             waiting (get-in @pool [method :waiting])]
+         (when (seq expired) (log/warn "workers were expired:" (keys expired)))
+         (alter pool assoc-in [method :expiry] (apply (partial dissoc curr) (keys expired)))
+         (alter pool assoc-in [method :waiting]
                 (into PersistentQueue/EMPTY
                       (select (comp not expired?)
-                              (set (take (count queue) queue))))))))
+                              (set (take (count waiting) waiting))))))))
     @pool)))
 
 ;; Periodically check the workers
 (at/every 1000 #(check-workers worker-pool) ttl-pool)
 
-(defn bind-socket
+(defn- bind-socket
   [context type address]
   (zmq/bind (zmq/socket context type) address))
 
-(defn put-worker [pool method address]
+(defn- put-worker
+  [pool method address]
   (dosync
-   (let [queue (get-in @pool [method :queue] PersistentQueue/EMPTY)]
-     (alter pool assoc-in [method :ttl address] (now))
-     (alter pool assoc-in [method :queue] (conj queue address)))))
+   (let [requests (get-in @pool [method :requests] PersistentQueue/EMPTY)
+         queue (get-in @pool [method :waiting] PersistentQueue/EMPTY)]
+     (alter pool assoc-in [method :requests] requests)
+     (alter pool assoc-in [method :expiry address] (now))
+     (alter pool assoc-in [method :waiting] (conj queue address)))))
 
-(defn pop-worker
-  [pool method]
-  (dosync
-   (let [queue (get-in @pool [method :queue])
-         worker (peek queue)]
-     (alter pool assoc-in [method :queue] (pop queue))
-     worker)))
+(defn- pop-atom
+  [key]
+  (fn [pool method]
+    (dosync
+     (let [queue (get-in @pool [method key])
+           worker (peek queue)]
+       (alter pool assoc-in [method key] (pop queue))
+       worker))))
+
+(def pop-worker (pop-atom :waiting))
+(def pop-request (pop-atom :requests))
 
 (defn service-available?
   [service]
-  (> (count (get-in @worker-pool [service :ttl])) 0))
+  (> (count (get-in @worker-pool [service :expiry])) 0))
 
 (defn- update-ttl
-  [pool method address ttl]
+  [pool method address expiry]
   (dosync
-   (alter pool assoc-in [method :ttl address] ttl)))
+   (alter pool assoc-in [method :expiry address] expiry)))
+
+(defn- dispatch
+  [socket [_ method request :as msg]]
+  (dosync
+   (when-not (nil? request) (alter worker-pool update-in [method :requests] #(conj % msg)))
+   (while (and (not (empty? (get-in @worker-pool [method :waiting])))
+               (not (empty? (get-in @worker-pool [method :requests]))))
+     (let [[client-addr method request] (pop-request worker-pool method)
+           worker-addr (pop-worker worker-pool method)]
+       (log/debug "[broker] dispatching!" client-addr "to" (format "%s:%s" method worker-addr))
+       (q/send-frame socket worker-addr q/MSG-REQ client-addr request)))))
 
 (defn router-fn
   [frontend-address backend-address]
@@ -70,22 +88,15 @@
       (while (not (.. Thread currentThread isInterrupted))
         (zmq/poll poller)
         (if (zmq/check-poller poller 0 :pollin)
-          (let [[client-addr method request] (q/receive frontend [String String zmq/bytes-type])
-                worker-addr (pop-worker worker-pool method)]
-            (if-not (nil? worker-addr)
-              (do
-                (log/debug "[router] dispatching" method "from" client-addr "to" worker-addr)
-                (q/send-frame backend worker-addr q/MSG-REQ client-addr request))
-              (do
-                (log/debug "[router] no workers for" method)
-                (q/send-frame frontend client-addr q/STATUS-ERROR "No workers available")))))
+          (dispatch backend (q/receive frontend [String String zmq/bytes-type])))
         (if (zmq/check-poller poller 1 :pollin)
           (let [[worker-addr msg-type method] (q/receive backend [String Byte String])]
             (condp = msg-type
               q/MSG-PING  (do (update-ttl worker-pool method worker-addr (now))
                               (q/send-frame backend worker-addr q/MSG-PONG))
               q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" method)
-                              (put-worker worker-pool method worker-addr))
+                              (put-worker worker-pool method worker-addr)
+                              (dispatch backend [worker-addr method]))
               q/MSG-REP   (let [[client-addr reply] (q/receive-more backend [String zmq/bytes-type])]
                             (q/send-frame frontend client-addr q/STATUS-OK reply)))))))))
 
