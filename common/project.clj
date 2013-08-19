@@ -8,6 +8,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.async "0.1.0-SNAPSHOT"]
                  [org.clojure/tools.logging "0.2.6"]
+                 [org.clojure/tools.cli "0.2.4"]
                  [com.google.guava/guava "14.0.1"]
                  [com.taoensso/nippy "2.2.0-RC1"]
                  [log4j/log4j "1.2.17"]
