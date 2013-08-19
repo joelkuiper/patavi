@@ -80,7 +80,7 @@
           (vals @services))))
 
 ;; Periodically check the workers
-(at/every 1000 #(try (purge) (catch Exception e (log/warn (.printStackTrace e)))) ttl-pool)
+(at/every 1000 purge ttl-pool)
 
 (defn- dispatch
   [socket [_ service-name request :as msg]]
