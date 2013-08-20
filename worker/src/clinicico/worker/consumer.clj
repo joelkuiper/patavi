@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
+            [clojure.core.async :as async :refer :all]
             [clinicico.common.zeromq :as q]
             [clinicico.common.util :refer [insert]]
             [clojure.tools.logging :as log])
@@ -51,10 +52,13 @@
   (fn [_ msg]
     (let [method (@consumer :method)
           socket (@consumer :socket)
-          [address request] (q/retrieve-data msg [String zmq/bytes-type])
-          response (handler (nippy/thaw request))]
-      (q/send! socket [q/MSG-REP method address (nippy/freeze response)] :prefix-empty)
-      (q/send! socket [q/MSG-READY method] :prefix-empty))))
+          work (chan)
+          [address request] (q/retrieve-data msg [String zmq/bytes-type])]
+      (go (>! work (handler (nippy/thaw request))))
+      (go
+       (q/send! socket [q/MSG-REP method address (nippy/freeze (<! work))] :prefix-empty)
+       (q/send! socket [q/MSG-READY method] :prefix-empty)
+       (close! work)))))
 
 (defn- handle-incoming
   [consumer]

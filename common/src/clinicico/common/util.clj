@@ -1,9 +1,9 @@
 (ns clinicico.common.util
   (:gen-class)
   (:require [clojure.java.io :as io]
-            [clojure.string :as s])
-  (:use clojure.java.io
-        clojure.walk))
+            [clojure.string :as s]
+            [clojure.java.io :refer :all]
+            [clojure.walk :refer :all]))
 
 (defn update-vals [map vals f]
   "Updates multiple values in a map with function f.
@@ -13,6 +13,11 @@
 (defn now
   []
   (System/currentTimeMillis))
+
+(defn take-all
+  "Takes from seq while not nil"
+  [seq]
+  (take-while (comp not nil?) seq))
 
 (defn insert
   "Inserts item at pos in the vector vec,

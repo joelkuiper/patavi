@@ -4,7 +4,7 @@
   (:require [zeromq.zmq :as zmq]
             [overtone.at-at :as at]
             [clinicico.common.zeromq :as q]
-            [clinicico.common.util :refer [now update-vals]]
+            [clinicico.common.util :refer [now update-vals take-all]]
             [clojure.tools.logging :as log]))
 
 (def ^:private services (atom {}))
@@ -13,7 +13,7 @@
 (def ^:private ttl-pool (at/mk-pool))
 
 (defrecord Service [name waiting workers requests])
-(defrecord Worker [address service expiry])
+(defrecord Worker [address expiry])
 
 (defn- bind-socket
   [context type address]
@@ -27,16 +27,25 @@
         (swap! services assoc name new-service)))
     (get @services name)))
 
+(defn- find-worker
+  [service-name address]
+  (let [workers (:workers (request-service service-name))
+        matches (filter #(= (:address %) address) workers)]
+    (assert (<= (count matches) 1))
+    (first matches)))
+
 (defn- put-worker
   [service-name address]
   (let [service (request-service service-name)
-        worker (Worker. address service-name (now))]
+        worker (or
+                 (find-worker service-name address)
+                 (Worker. address (now)))]
     (swap! services assoc service-name
            (-> service
                (update-in [:workers] #(conj % worker))
                (update-in [:waiting] #(conj % worker))))))
 
-(defn- available?
+(defn- get-available
   [key]
   (fn [service]
     (if-let [itm (peek (get service key))]
@@ -45,8 +54,8 @@
                (pop (get service key)))
         itm))))
 
-(def ^:private available-worker (available? :waiting))
-(def ^:private available-request (available? :requests))
+(def ^:private available-worker (get-available :waiting))
+(def ^:private available-request (get-available :requests))
 
 (defn service-available?
   [service-name]
@@ -55,32 +64,33 @@
 (defn- update-expiry
   [service-name address]
   (let [service (request-service service-name)
-        worker (first (filter #(= address (get % :address)) (get service :workers)))]
+        worker (find-worker service-name address)]
     (swap! services assoc (:name service)
            (-> service
                (update-in [:workers] #(disj % worker))
                (update-in [:workers] #(conj % (assoc worker :expiry (now))))))))
 
+
+
 (defn- purge
-  []
-  (doall (map
-          (fn [service]
-            (let [workers (:workers service)
-                  expired (filter (fn [{:keys [expiry]}] (> (- (now) expiry) max-ttl)) workers)
-                  expired? (fn [worker] (some #(= (:address worker) (:address %)) expired))
-                  waiting (:waiting service)]
-              (when (seq expired)
-                (log/warn "workers were expired:" (map :address expired))
-                (swap! services assoc (:name service)
-                       (-> service
-                           (assoc :workers (apply (partial disj workers) expired))
-                           (assoc :waiting (into PersistentQueue/EMPTY
-                                                 (select (comp not expired?)
-                                                         (set (take (count waiting) waiting))))))))))
-          (vals @services))))
+  ([] (doall (map #(purge %) (vals @services))))
+  ([service]
+     (let [workers (:workers service)
+           expired (filter (fn [{:keys [expiry]}] (> (- (now) expiry) max-ttl)) workers)
+           expired? (fn [worker] (some #(= (:address worker) (:address %)) expired))
+           waiting (:waiting service)]
+       (when (seq expired)
+         (log/warn "workers were expired:" (map #(str (:address %) ":" (:name service)) expired))
+         (swap! services assoc (:name service)
+                (-> service
+                    (assoc :workers (apply (partial disj workers) expired))
+                    (assoc :waiting (into PersistentQueue/EMPTY
+                                          (select (comp not expired?)
+                                                  (set (take-all waiting)))))))))))
 
 ;; Periodically check the workers
 (at/every 1000 purge ttl-pool)
+
 
 (defn- dispatch
   [socket [_ service-name request :as msg]]
