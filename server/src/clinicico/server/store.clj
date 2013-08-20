@@ -12,6 +12,7 @@
             [monger.result :refer [ok?]]
             [monger.conversion :as conv :refer [from-db-object]]
             [monger.json]
+            [monger.joda-time]
             [monger.gridfs :as gfs]
             [monger.util :as util]))
 
@@ -50,8 +51,7 @@
   "Undos sanitize"
   (sanitize-tpl invalid-chars #(rename-keys %1 (re-pattern (val %2)) (key %2))))
 
-(defn-
-  prepare>
+(defn- prepare>
   [content]
   (->
    content

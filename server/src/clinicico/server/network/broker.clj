@@ -4,13 +4,15 @@
   (:require [zeromq.zmq :as zmq]
             [overtone.at-at :as at]
             [clinicico.common.zeromq :as q]
-            [clinicico.common.util :refer [now update-vals take-all]]
+            [clinicico.common.util :refer [update-vals take-all]]
             [clojure.tools.logging :as log]))
 
 (def ^:private services (atom {}))
 (def ^:private context (zmq/context 2))
 (def ^:private max-ttl 3000) ;; in millis
 (def ^:private ttl-pool (at/mk-pool))
+
+(defn- now [] (System/currentTimeMillis))
 
 (defrecord Service [name waiting workers requests])
 (defrecord Worker [address expiry])
@@ -70,8 +72,6 @@
                (update-in [:workers] #(disj % worker))
                (update-in [:workers] #(conj % (assoc worker :expiry (now))))))))
 
-
-
 (defn- purge
   ([] (doall (map #(purge %) (vals @services))))
   ([service]
@@ -90,7 +90,6 @@
 
 ;; Periodically check the workers
 (at/every 1000 purge ttl-pool)
-
 
 (defn- dispatch
   [socket [_ service-name request :as msg]]

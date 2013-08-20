@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [clojure.java.io :as io]
             [clojure.string :as s]
+            [clj-time.core :as time :only [now]]
             [clojure.java.io :refer :all]
             [clojure.walk :refer :all]))
 
@@ -12,7 +13,7 @@
 
 (defn now
   []
-  (System/currentTimeMillis))
+  (time/now))
 
 (defn take-all
   "Takes from seq while not nil"
