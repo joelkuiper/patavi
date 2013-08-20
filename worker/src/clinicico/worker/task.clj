@@ -24,15 +24,11 @@
         (do
           (log/debug (format "Recieved task %s" id))
           (update! id {:status "processing" :accepted (java.util.Date.)})
-          (let [results (task-fn method id (:body task) #(update! id {:progress %}))]
-            (update! id {:progress "done"
-                         :completed (java.util.Date.)})
-            results))
+          (task-fn method id (:body task) #(update! id {:progress %})))
         (catch Exception e
-          (update! id {:status "failed"
-                       :progress "none"
-                       :cause (.getMessage e)})
-          nil)))))
+          {:id id
+           :status "failed"
+           :cause (.getMessage e)})))))
 
 (defn initialize
   [method n task-fn]

@@ -3,6 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :as async :refer :all]
             [clinicico.common.zeromq :as q]
+            [clinicico.common.util :refer [now]]
             [zeromq.zmq :as zmq]
             [crypto.random :as crypto]
             [clinicico.server.network.broker :as broker]
@@ -94,8 +95,12 @@
                         :created (java.util.Date.)})
     (go (>! work (process msg)))
     (go (let [[id status result] (<! work)]
+          (log/debug (nippy/thaw result))
           (if (q/status-ok? status)
-            (save-results! (nippy/thaw result))
+            (let [results (assoc (nippy/thaw result) :completed (now))]
+              (if (= (:status results) "failed")
+                (status/update! id results)
+                (save-results! results)))
             (status/update! id {:status "failed" :cause (String. result)}))
           ((@callbacks id) (status/retrieve id))
           (cleanup id)))
