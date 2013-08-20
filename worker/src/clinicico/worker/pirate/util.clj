@@ -56,7 +56,7 @@
    [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives."
   [field]
   (cond  ;; REXPFactor is-a REXPInteger, so the order matters
-        (.isNull field) (fn [x] nil)
+        (.isNull field) (fn [_] nil)
         (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
         (instance? REXPString field) #(.asStrings ^REXPString %)
         (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
@@ -86,15 +86,6 @@
   (cond (instance? RList rexp) (into-map rexp)
         (instance? REXPGenericVector rexp) (into-clj (as-list rexp))
         :else (first-or-seq ((convert-fn rexp) rexp))))
-
-(defn- in-list
-  "Returns a field in a list as Clojure sequence (seq) using the `convert-fn`.
-   Rough equivalent to R's data$field accessor."
-  [data $field]
-  (let [members (.at ^RList (as-list data) $field)]
-    (if-not (nil? members)
-      (into-clj members)
-      nil)))
 
 (defn parse
   "Evaluates and parses the R expression cmd, and

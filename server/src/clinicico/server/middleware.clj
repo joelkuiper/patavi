@@ -1,13 +1,13 @@
 (ns clinicico.server.middleware
-  (:use compojure.core
-        ring.util.response
-        [clojure.string :only [upper-case]])
   (:require [clojure.tools.logging :as log]
             [cheshire.core :as json]
-            [clinicico.server.util :as util]))
+            [ring.util.response :refer :all]
+            [compojure.core :refer :all]
+            [clojure.string :refer [upper-case]]
+            [clinicico.common.util :as util]))
 
 (defn- wrap-exception
-  [req e]
+  [_ e]
   (log/error (.getMessage e))
   (.printStackTrace e)
   (json/encode e))
@@ -58,14 +58,13 @@
   (fn [request]
     (let [uri (:uri request)
           rewrite (f uri)]
-      (if rewrite
-        (handler (assoc request :uri rewrite))
-        nil))))
+      (when rewrite
+        (handler (assoc request :uri rewrite))))))
 
 (defn- uri-snip-slash
   "Removes a trailing slash from all uris except \"/\"."
   [uri]
-  (if (and (not (= "/" uri))
+  (if (and (not= "/" uri)
            (.endsWith uri "/"))
     (util/chop uri)
     uri))

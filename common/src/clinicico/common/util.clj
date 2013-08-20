@@ -1,10 +1,29 @@
-(ns clinicico.worker.util.util
-  (:use   clojure.java.io
-          clojure.walk
-          [cheshire.generate :refer [add-encoder encode-str remove-encoder]])
-  (:import (com.fasterxml.jackson.core JsonGenerator)
-           (org.joda.time.format.ISODateTimeFormat))
-  (:require [clojure.string :as s]))
+(ns clinicico.common.util
+  (:gen-class)
+  (:require [clojure.java.io :as io]
+            [clojure.string :as s])
+  (:use clojure.java.io
+        clojure.walk))
+
+(defn update-vals [map vals f]
+  "Updates multiple values in a map with function f.
+   like update-in but for multiple values"
+  (reduce #(update-in % [%2] f) map vals))
+
+(defn now
+  []
+  (System/currentTimeMillis))
+
+(defn insert
+  "Inserts item at pos in the vector vec,
+   moving all other elements to the left"
+  [vec pos item]
+  (apply merge (subvec vec 0 pos) item (subvec vec pos)))
+
+(defn chop
+  "Removes the last character of string."
+  [s]
+  (subs s 0 (dec (count s))))
 
 (defn map-cols-to-rows
   "Transposes maps of the form
@@ -61,14 +80,9 @@
               :else    (recur m (next ks))))
       (persistent! m))))
 
-;; Make joda.time JSONable
-(add-encoder org.joda.time.DateTime
-  (fn [^org.joda.time.DateTime date ^JsonGenerator jg]
-    (.writeString jg (.print (org.joda.time.format.ISODateTimeFormat/dateTime) date))))
-
 (defn dissoc-in
   "Dissociates an entry from a nested associative structure returning a new
-  nested structure. keys is a sequence of keys. Any empty maps that result
+  nested structure. keys is a sequence of keys. Any empty maps
   will not be present in the new structure."
   [m [k & ks :as keys]]
   (if ks

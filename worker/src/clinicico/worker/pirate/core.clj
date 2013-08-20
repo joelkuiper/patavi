@@ -1,18 +1,19 @@
 (ns clinicico.worker.pirate.core
-  (:use [clojure.java.shell :only [sh]]
-        [clojure.string :only [split join]])
   (:require [clojure.java.io :as io]
+            [clojure.core.async :as async :refer :all]
+            [clojure.string :refer [split join]]
+            [clojure.java.shell :refer [sh]]
             [clinicico.worker.pirate.util :as pirate]
-            [clinicico.worker.util.nio :as nio]
             [clojure.tools.logging :as log]
-            [cheshire.core :refer :all :as json]
+            [zeromq.zmq :as zmq]
+            [cheshire.core :as json :only [decode]]
             [crypto.random :as crypto])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
 
-(def script-file (atom nil))
+(def ^:private script-file (atom nil))
 
-(def ^:private default-packages ["RJSONIO" "Cairo"])
+(def ^:private default-packages ["RJSONIO" "rzmq" "Cairo"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
@@ -40,7 +41,7 @@
         (log/info "[Rserve]" (:out start))
         start))))
 
-(defn- source-file!
+(defn- source-script!
   "Finds the R file with the associated file
    name and load its into an RConnection."
   [^RConnection R script]
@@ -60,6 +61,26 @@
       (.getMessage cause)
       (str e))))
 
+(defn listen-for-updates
+  [callback port]
+  (let [updates (chan)]
+    (go (let [context (zmq/context)
+              socket (zmq/socket context :sub)]
+          (zmq/bind (zmq/subscribe socket "") (str "tcp://*:" port))
+          (loop [upd (zmq/receive-str socket)]
+            (if (= upd "!!term")
+              (do ; Cleanup
+                (.close socket)
+                (.term context)
+                (close! updates))
+              (do
+                (>! updates upd)
+                (recur (zmq/receive-str socket)))))))
+    (go (loop [upd (<! updates)]
+          (when-not (nil? upd)
+            (callback upd)
+            (recur (<! updates)))))))
+
 (defn execute
   "Executes, in R, the method present in the file with the given params.
    Callback is function taking one argument which can serve to
@@ -69,16 +90,15 @@
   (with-open [R (pirate/connect)]
     (try
       (do
-        (source-file! R @script-file)
+        (source-script! R @script-file)
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
-        (let [progress-file (str id ".tmp")
-              workdir (pirate/parse R "getwd()")
-              path (str workdir "/" progress-file)]
-          (pirate/create-file! R progress-file)
-          (nio/tail-file path :modify callback)
-          (let [result (pirate/parse R (format "exec(%s, '%s', params)" method id))]
-            (nio/unwatch-file path)
-            {:files (pirate/retrieve R "files")
-             :results (json/decode result)})))
+        (let [updates-port (zmq/first-free-port)
+              updates (listen-for-updates callback updates-port)
+              call (format "exec(%s, '%s', params)" method updates-port)
+              result (pirate/parse R call)]
+          {:id id
+           :method method
+           :files (pirate/retrieve R "files")
+           :results (json/decode result)}))
       (catch Exception e (throw (Exception. (cause e) e))))))

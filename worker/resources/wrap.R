@@ -1,19 +1,24 @@
-exec <- function(method, id, params) {
-  update <- function(message) {
-    file <- paste(id, ".tmp", sep="")
-    cat(message, file=file, sep="\n", append=TRUE)
+exec <- function(method, port, params) {
+  update.fn <- function() {
+    context = init.context()
+    updates.socket = init.socket(context, "ZMQ_PUB")
+    connect.socket(updates.socket, paste("tcp://localhost", port, sep=":"))
+    return(function(msg) {
+      msg <- charToRaw(enc2utf8(as.character(msg)))
+      send.socket(updates.socket, msg, serialize=FALSE)
+    })
   }
+  update <- update.fn()
   assign("update", update, envir=parent.env(environment()))
 
-  if(!is.null(params) && isValidJSON(params, asText=T)) {
+  results <- if(!is.null(params) && isValidJSON(params, asText=TRUE)) {
     params <- fromJSON(params)
     result <- do.call(method, list(params))
-    unlink(paste(id, ".tmp", sep=""))
-    toJSON(result)
   } else {
-    unlink(paste(id, ".tmp", sep=""))
     stop("Provided JSON was invalid")
   }
+  update("!!term") # fixme magic value
+  toJSON(result)
 }
 
 save.plot <- function(plot.fn, name, type="png") {
@@ -34,5 +39,3 @@ save.plot <- function(plot.fn, name, type="png") {
 
   assign("files", append(files, list(file)), envir=parent.env(environment()))
 }
-
-

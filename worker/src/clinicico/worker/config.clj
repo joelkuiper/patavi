@@ -1,11 +1,11 @@
 ;; From http://stackoverflow.com/questions/7777882/loading-configuration-file-in-clojure-as-data-structure
 
 (ns clinicico.worker.config
-  (:use [clojure.java.io]))
+  (:require [clojure.java.io :refer :all]))
 
 (defn- load-props
   [file-name]
-  (with-open [^java.io.Reader reader (clojure.java.io/reader file-name)]
+  (with-open [^java.io.Reader reader (reader file-name)]
     (let [props (java.util.Properties.)]
       (.load props reader)
       (into {} (for [[k v] props] [(keyword k) (read-string v)])))))

@@ -1,5 +1,9 @@
 **/third-party
 pom.xml
+*~
+[#]*[#]
+.\#*
+*.log
 *.jar
 *.class
 .lein-deps-sum
@@ -7,7 +11,8 @@ pom.xml
 .lein-plugins
 .lein-env
 *.sw*
-*~
 *.err
 tags
+**/target
 **/.lein-repl-history
+**/tmp

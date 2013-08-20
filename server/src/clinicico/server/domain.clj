@@ -1,46 +1,58 @@
 (ns clinicico.server.domain
-  (:gen-class)
-  (:use [org.httpkit.server]
-        [liberator.representation :only [ring-response]]
-        [liberator.core :only [resource defresource request-method-in]])
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
+            [org.httpkit.server :refer [send! with-channel on-close]]
+            [clojure.core.async :as async :refer :all]
+            [liberator.representation :refer [ring-response]]
+            [liberator.core :refer [resource defresource request-method-in]]
             [ring.util.response :as resp]
             [cheshire.core :as json]
+            [clinicico.common.util :refer [dissoc-in]]
             [clinicico.server.resource :as hal]
             [clinicico.server.http :as http]
-            [clinicico.server.store :as store]
             [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
 
-(defn add-slash
+(defn- add-slash
   [string]
   (str string (when-not (.endsWith string "/") "/")))
+
+(defn- embedded-files
+  [task url]
+  (if (task :results)
+    (let [result (task :results)
+          files (:files result)
+          embedded (map (fn [x] {:name (first (s/split (:name x) #"\."))
+                                 :href (str url "files/" (:name x))
+                                 :type (:mime x)}) files)]
+      (assoc-in (dissoc-in task [:results :files]) [:results :_embedded :_files] embedded))
+    task))
 
 (defn represent-task
   [task url]
   (let [status-url (str (add-slash url) "status")
-        resource
-        (-> (hal/new-resource url)
-            (hal/add-link :href status-url
-                          :rel "status"
-                          :websocket (s/replace status-url #"http(s)?" "ws")
-                          :comment "XHR long-polling and WebSocket for status updates")
-            (hal/add-properties task))]
-    (if (contains? task :results)
-      (hal/add-link resource
-                    :href (str (http/url-base) "/results/" (:id task))
-                    :rel "results")
-      resource)))
+        task (embedded-files task url)]
+    (-> (hal/new-resource url)
+        (hal/add-link :href status-url
+                      :rel "status"
+                      :websocket (s/replace status-url #"http(s)?" "ws")
+                      :comment "Comet long-polling and WebSocket for status updates")
+        (hal/add-properties task))))
 
-(def listeners (atom {}))
+(def ^:private listeners (atom {}))
 
 (defn broadcast-update
   [task]
   (let [id (:id task)
         method (:method task)
-        resource (represent-task task (str (http/url-base) "/tasks/" method "/" id "/"))]
+        url (str (http/url-base) "/tasks/" method "/" id "/")
+        resource (represent-task task url)]
     (doseq [client (get @listeners id)]
       (send! client (hal/resource->representation resource :json)))))
+
+(go (loop [task (<! tasks/updates)]
+      (when-not (nil? task)
+        (broadcast-update task)
+        (recur (<! tasks/updates)))))
 
 (defn task-status
   [request]
@@ -62,10 +74,7 @@
   (let [task (:task ctx)
         url (http/url-from (:request ctx) (:id task))
         resource (represent-task task url)]
-    (ring-response {:status 202
-                    :headers {"Location" url
-                              "Content-Type" "application/json"}
-                    :body (hal/resource->representation resource :json)})))
+    (hal/resource->representation resource :json)))
 
 (defresource tasks-resource
   :available-media-types ["application/json"]
@@ -73,14 +82,13 @@
   :service-available? (fn [ctx]
                         (tasks/task-available?
                           (get-in ctx [:request :route-params :method])))
-  :handle-ok (fn [ctx] (json/encode {:status "Up and running"}))
+  :handle-ok (fn [_] (json/encode {:status "Up and running"}))
   :handle-created handle-new-task
   :post! (fn [ctx]
-           (let [callback broadcast-update
-                 method (get-in ctx [:request :route-params :method])
+           (let [method (get-in ctx [:request :route-params :method])
                  body (get-in ctx [:request :body])
                  payload (when body (slurp body))]
-             (assoc ctx :task (tasks/publish-task method payload callback)))))
+             (assoc ctx :task (tasks/publish-task method payload)))))
 
 (defresource task-resource
   :available-media-types ["application/json"]
@@ -92,32 +100,4 @@
                (let [id (get-in ctx [:request :params :id])
                      task (tasks/status id)
                      resource (represent-task task (http/url-from (:request ctx)))]
-                 (if (get task :results true)
-                   (ring-response {:body nil
-                                   :status 303
-                                   :headers {"Location"
-                                             (str (http/url-base (:request ctx)) "/results/" id)}})
-                   (hal/resource->representation resource :json)))))
-
-(defn represent-result
-  [result]
-  (let [location (str (http/url-base) "/results/" (:id result) "/")
-        self {:rel "self" :href location}
-        files (:files result)
-        embedded (map (fn [x] {:name (first (s/split (:name x) #"\."))
-                               :href (str location (:name x))
-                               :type (:mime x)}) files)]
-    (assoc
-      (dissoc result :files) :_links [self] :_embedded {:_files embedded})))
-
-(defresource result-resource
-  :available-media-types ["application/json"]
-  :allowed-methods [:options :get]
-  :exists? (fn [ctx]
-             (let [id (get-in ctx [:request :params :id])
-                   result (store/get-result id)]
-               (if (nil? result)
-                 [false {}]
-                 {::result result})))
-  :handle-ok (fn [ctx] (json/encode (represent-result (::result ctx)))))
-
+                 (hal/resource->representation resource :json))))

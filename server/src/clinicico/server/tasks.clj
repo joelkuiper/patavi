@@ -1,80 +1,102 @@
 (ns clinicico.server.tasks
   (:gen-class)
   (:require [clojure.tools.logging :as log]
-            [cheshire.core :as json]
-            [clj-time.core :as time]
-            [taoensso.nippy :as nippy]
-            [langohr.exchange  :as le]
-            [langohr.core      :as rmq]
-            [langohr.channel   :as lch]
-            [langohr.queue     :as lq]
-            [langohr.consumers :as lcm]
-            [langohr.consumers :as lc]
-            [langohr.basic     :as lb]))
+            [clojure.core.async :as async :refer :all]
+            [clinicico.common.zeromq :as q]
+            [clinicico.common.util :refer [now]]
+            [zeromq.zmq :as zmq]
+            [crypto.random :as crypto]
+            [clinicico.server.network.broker :as broker]
+            [clinicico.server.store :as status]
+            [taoensso.nippy :as nippy]))
 
-(defonce ^{:private true} conn (rmq/connect))
+(def ^:private context (zmq/context 3))
+(def ^:private frontend-address "ipc://frontend.ipc")
 
-(def ^{:private true} statuses (atom {}))
-(def ^{:private true} callbacks (atom {}))
+(def updates (chan))
 
-(def ^{:const true :private true}
-  outgoing "clinicico.tasks")
+(defn- save-results!
+  [results]
+  (let [id (results :id)
+        old-status (status/retrieve id)
+        new-status {:status "completed"
+                    :results {:body (results :results)
+                              :files (map (fn [f] {:name (get f "name")
+                                                  :mime (get f "mime")})
+                                          (results :files))}}]
+    (status/save-files! id (get results :files {}))
+    (status/update! id (merge old-status new-status))))
 
-(def ^{:const true :private true}
-  incoming "clinicico.updates")
+(defn- update!
+  [content]
+  (let [id (:id content)
+        old-status (or (status/retrieve id) {})
+        new-status (merge old-status (get content :content {}))]
+    (status/update! id new-status)
+    (go (>! updates new-status))))
 
-(defn- cleanup
-  [task-id]
-  (do
-    (log/debug "Done with task " task-id (@statuses task-id))
-    (swap! callbacks dissoc task-id)))
+(defn psi [alpha beta]
+  "Infinite Stream function. Starts two go routines, one perpetually pushing
+   using a function with no arguments (alpha), and one processing then with
+   a function taking the channel output as argument (beta)."
+  (let [c (chan)]
+    (go (loop [x (alpha)]
+          (>! c x)
+          (recur (alpha))))
+    (go (loop [y (<! c)]
+          (beta y)
+          (recur (<! c))))))
 
-(defn- update-handler
-  ([ch metadata]
-   (log/debug "[consumer] without payload: " ch " " metadata))
-  ([ch metadata ^bytes payload]
-   (let [update (json/decode-smile payload true)
-         id (:id update)
-         content (into {} (filter
-                            (comp not nil? val) (:content update)))
-         old-status (or (@statuses id) {})
-         callback (or (@callbacks id) (fn [_]))]
-     (swap! statuses assoc id (merge old-status content))
-     (callback (@statuses id))
-     (when (contains? #{"failed" "completed"} (:status content)) (cleanup id)))))
+(defn- start-update-handler
+  []
+  (let [updates (chan)
+        socket (zmq/socket context :sub)]
+    (zmq/bind (zmq/subscribe socket "") "tcp://*:7720")
+    (psi #(q/receive! socket [zmq/bytes-type]) #(update! (nippy/thaw (first %))))))
 
 (defn initialize
   []
-  (with-open [ch (lch/open conn)]
-    (le/declare ch incoming "fanout")
-    (le/declare ch outgoing "direct")
-    (let [updates (.getQueue (lq/declare ch "update" :exclusive false :auto-delete true))]
-      (lq/bind ch updates incoming)
-      (lcm/subscribe (lch/open conn) updates update-handler :auto-ack true))))
+  (broker/start frontend-address "tcp://*:7740")
+  (start-update-handler))
 
 (defn task-available?
   [method]
-  (try
-    (with-open [ch (lch/open conn)]
-      (and (rmq/open? ch) (> (:consumer-count (lq/status ch method) 0))))
-    (catch Exception e
-      (do
-        (log/error (format "Could not publish task for %s : %s" method (.getMessage e)))
-        false))))
+  (broker/service-available? method))
 
 (defn status
   [id]
-  (@statuses id))
+  (status/retrieve id))
+
+(defn- process
+  "Sends the message and returns the results"
+  [msg]
+  (let [{:keys [method id]} msg
+        socket (q/create-connected-socket context :req frontend-address id)]
+    (q/send! socket [method (nippy/freeze msg)])
+    (cons id (q/receive! socket 2 zmq/bytes-type))))
+
+(defn- handle-completion
+  "Handles the results from the worker,
+   saves if nessecary or recovers from error"
+  [[id status result]]
+  (if (q/status-ok? status)
+    (let [results (nippy/thaw result)]
+      (if (= (:status results) "failed")
+        (status/update! id results)
+        (save-results! results)))
+    (status/update! id {:status "failed" :cause (String. result)}))
+  (go (>! updates (status/retrieve id))))
 
 (defn publish-task
-  [method payload callback]
-  (with-open [ch (lch/open conn)]
-    (log/debug (format "Publishing task to %s (%d workers available)" method (lq/consumer-count ch method)))
-    (let [id (str (java.util.UUID/randomUUID))
-          msg {:id id :body payload}]
-      (lb/publish ch outgoing method
-                  (nippy/freeze-to-bytes msg)
-                  :content-type "application/nippy" :type "task")
-      (swap! statuses assoc id {:id id :method method :status "pending" :created (time/now)})
-      (swap! callbacks assoc id callback)
-      (status id))))
+  [method payload]
+  (let [id (crypto.random/url-part 6)
+        msg {:id id :body payload :method method}
+        work (chan)]
+    (log/debug (format "Publishing task to %s" method))
+    (status/insert! id {:id id
+                        :method method
+                        :status "pending"
+                        :created (now)})
+    (go (>! work (process msg)))
+    (go (handle-completion (<! work)))
+    (status id)))
