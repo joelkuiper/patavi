@@ -59,7 +59,7 @@
   (let [updates (chan)
         socket (zmq/socket context :sub)]
     (zmq/bind (zmq/subscribe socket "") "tcp://*:7720")
-    (psi #(zmq/receive socket) #(update! (nippy/thaw %)))))
+    (psi #(q/receive! socket [zmq/bytes-type]) #(update! (nippy/thaw (first %))))))
 
 (defn initialize
   []
@@ -95,7 +95,6 @@
                         :created (java.util.Date.)})
     (go (>! work (process msg)))
     (go (let [[id status result] (<! work)]
-          (log/debug (nippy/thaw result))
           (if (q/status-ok? status)
             (let [results (assoc (nippy/thaw result) :completed (now))]
               (if (= (:status results) "failed")

@@ -7,28 +7,32 @@
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
 
-(defonce context (zmq/context))
-(def updates (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720"))
 
-(defn update!
-  ([id content]
-   (let [update {:content content :id id}]
-     (zmq/send updates (nippy/freeze update)))))
+(defn- updater
+  [id socket]
+  (fn [content]
+    (q/send! socket [(nippy/freeze {:content content :id id})])))
 
 (defn- task-handler
   [task-fn method]
   (fn
     [task]
-    (let [id (:id task)]
+    (let [context (zmq/context)
+          updates-socket (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720")
+          id (:id task)
+          update! (updater id updates-socket)]
       (try
         (do
           (log/debug (format "Recieved task %s" id))
-          (update! id {:status "processing" :accepted (java.util.Date.)})
-          (task-fn method id (:body task) #(update! id {:progress %})))
+          (update! {:status "processing" :accepted (java.util.Date.)})
+          (task-fn method id (:body task) #(update! {:progress %})))
         (catch Exception e
-          {:id id
-           :status "failed"
-           :cause (.getMessage e)})))))
+          (do
+            (log/warn e)
+            {:id id
+             :status "failed"
+             :cause (.getMessage e)}))
+        (finally (do (.close updates-socket) (.term context)))))))
 
 (defn initialize
   [method n task-fn]
