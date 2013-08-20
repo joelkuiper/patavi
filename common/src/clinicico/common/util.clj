@@ -70,6 +70,13 @@
     ;; only apply to maps
     (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
 
+(defn rename-keys
+  "Recursively applies the replacement regex to all map keys."
+  [m match replacement]
+  (let [f (fn [[k v]] [(s/replace k match replacement) v])]
+    ;; only apply to maps
+    (postwalk (fn [x] (if (map? x) (into {} (map f x)) x)) m)))
+
 (defn map-difference
   "Calculates the difference between to maps, returns the k v of the difference.
    Stolen from [StackOverflow](http://stackoverflow.com/questions/3387155/difference-between-two-maps)"

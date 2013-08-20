@@ -1,8 +1,7 @@
 ;; ## Store
 ;; Simple mongodb access and storage of statuses and document
 (ns clinicico.server.store
-  (:require [clojure.walk :as walk]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [clinicico.server.config :refer :all]
             [clinicico.common.util :refer :all]
             [clojure.java.io :as io :only [input-stream]]
@@ -29,15 +28,42 @@
     (collection/create (mongo-options :collection) {})
     (collection/ensure-index (mongo-options :collection) {:modified 1} {:expireAfterSeconds 3600})))
 
+(def ^:private invalid-chars
+  {"\\." "\u22c5"
+   "\\$" "\u2051"})
+
+(defn- sanitize-tpl
+  [init acc-fn]
+  (fn [doc]
+   (loop [coll init acc doc]
+     (if (seq coll)
+       (let [curr (first coll)]
+         (recur (rest coll) (acc-fn acc curr)))
+       acc))))
+
+(def ^:private sanitize
+  "Replaces characters in map keys with obscure unicode
+   such that MongoDB stops being a whiny bitch"
+  (sanitize-tpl invalid-chars #(rename-keys %1 (re-pattern (key %2)) (val %2))))
+
+(def ^:private desanitize
+  "Undos sanitize"
+  (sanitize-tpl invalid-chars #(rename-keys %1 (re-pattern (val %2)) (key %2))))
+
+(defn-
+  prepare>
+  [content]
+  (->
+   content
+   (clojure.walk/stringify-keys)
+   (desanitize)
+   (clojure.walk/keywordize-keys)))
+
 (defn retrieve
   [id]
   (let [document (collection/find-map-by-id (mongo-options :collection) id)]
     (if document
-      (assoc (dissoc document :_id) :id id))))
-
-(defn update!
-  [id content]
-  (collection/update-by-id (mongo-options :collection) id content))
+      (prepare> (assoc (dissoc document :_id) :id id)))))
 
 (defn get-file
   [id filename]
@@ -55,18 +81,35 @@
   [document]
   (assoc document :modified (now)))
 
-(def document-validator (validation-set
-                        (presence-of :_id)))
+(def ^:private
+  document-validator (validation-set
+                      (presence-of :_id)))
+
+(defn- prepare<
+  "Prepares the data for insertion"
+  [content]
+  (-> content
+      (stringify-keys*)
+      (sanitize)
+      (modified-now)))
+
+(defn update!
+  [id content]
+  (collection/update-by-id
+   (mongo-options :collection) id (prepare< content)))
 
 (defn insert!
   [id document]
-  (let [new-document (created-now
-                     (modified-now (with-oid id document)))]
+  (let [new-document (->
+                      document
+                      (prepare<)
+                      ((partial with-oid id))
+                      (created-now))]
     (if (valid? document-validator new-document)
       (if (ok?
-            (collection/insert
-              (mongo-options :collection)
-              (conv/to-db-object (stringify-keys* new-document))))
+           (collection/insert
+            (mongo-options :collection)
+            (conv/to-db-object new-document)))
         {:id (str (new-document :_id))
          :stored (now)}
         (throw (Exception. "Write Failed")))
@@ -81,7 +124,5 @@
 
 (defn save-files!
   [id files]
-  (doall
-    (map
-      (fn [file]
-        (save-file! file (str id "/" (get file "name")))) files)))
+  (doall (map
+          (fn [file]  (save-file! file (str id "/" (get file "name")))) files)))
