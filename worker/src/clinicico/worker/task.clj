@@ -7,7 +7,6 @@
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
 
-
 (defn- updater
   [id socket]
   (fn [content]

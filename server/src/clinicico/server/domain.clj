@@ -2,6 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
             [org.httpkit.server :refer [send! with-channel on-close]]
+            [clojure.core.async :as async :refer :all]
             [liberator.representation :refer [ring-response]]
             [liberator.core :refer [resource defresource request-method-in]]
             [ring.util.response :as resp]
@@ -48,6 +49,11 @@
     (doseq [client (get @listeners id)]
       (send! client (hal/resource->representation resource :json)))))
 
+(go (loop [task (<! tasks/updates)]
+      (when-not (nil? task)
+        (broadcast-update task)
+        (recur (<! tasks/updates)))))
+
 (defn task-status
   [request]
   (with-channel request channel
@@ -82,7 +88,7 @@
            (let [method (get-in ctx [:request :route-params :method])
                  body (get-in ctx [:request :body])
                  payload (when body (slurp body))]
-             (assoc ctx :task (tasks/publish-task method payload broadcast-update)))))
+             (assoc ctx :task (tasks/publish-task method payload)))))
 
 (defresource task-resource
   :available-media-types ["application/json"]

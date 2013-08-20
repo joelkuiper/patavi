@@ -10,19 +10,12 @@
             [clinicico.server.store :as status]
             [taoensso.nippy :as nippy]))
 
-(def ^{:private true} callbacks (atom {}))
+(def ^:private context (zmq/context 3))
+(def ^:private frontend-address "ipc://frontend.ipc")
 
-(def context (zmq/context 3))
+(def updates (chan))
 
-(def frontend-address "ipc://frontend.ipc")
-
-(defn- cleanup
-  [task-id]
-  (do
-    (log/debug "[tasks] done with task " task-id)
-    (swap! callbacks dissoc task-id)))
-
-(defn save-results!
+(defn- save-results!
   [results]
   (let [id (results :id)
         old-status (status/retrieve id)
@@ -40,7 +33,7 @@
         old-status (or (status/retrieve id) {})
         new-status (merge old-status (get content :content {}))]
     (status/update! id new-status)
-    ((get @callbacks id (fn [_])) new-status)))
+    (go (>! updates new-status))))
 
 (defn psi [alpha beta]
   "Infinite Stream function. Starts two go routines, one perpetually pushing
@@ -75,32 +68,35 @@
   (status/retrieve id))
 
 (defn- process
-  "Sends the message and returns a promise to results"
+  "Sends the message and returns the results"
   [msg]
   (let [{:keys [method id]} msg
         socket (q/create-connected-socket context :req frontend-address id)]
     (q/send! socket [method (nippy/freeze msg)])
     (cons id (q/receive! socket 2 zmq/bytes-type))))
 
+(defn- handle-completion
+  "Handles the results from the worker,
+   saves if nessecary or recovers from error"
+  [[id status result]]
+  (if (q/status-ok? status)
+    (let [results (nippy/thaw result)]
+      (if (= (:status results) "failed")
+        (status/update! id results)
+        (save-results! results)))
+    (status/update! id {:status "failed" :cause (String. result)}))
+  (go (>! updates (status/retrieve id))))
+
 (defn publish-task
-  [method payload callback]
-  (let [id  (crypto.random/url-part 6)
+  [method payload]
+  (let [id (crypto.random/url-part 6)
         msg {:id id :body payload :method method}
         work (chan)]
     (log/debug (format "Publishing task to %s" method))
-    (swap! callbacks assoc id callback)
     (status/insert! id {:id id
                         :method method
                         :status "pending"
-                        :created (java.util.Date.)})
+                        :created (now)})
     (go (>! work (process msg)))
-    (go (let [[id status result] (<! work)]
-          (if (q/status-ok? status)
-            (let [results (assoc (nippy/thaw result) :completed (now))]
-              (if (= (:status results) "failed")
-                (status/update! id results)
-                (save-results! results)))
-            (status/update! id {:status "failed" :cause (String. result)}))
-          ((@callbacks id) (status/retrieve id))
-          (cleanup id)))
+    (go (handle-completion (<! work)))
     (status id)))
