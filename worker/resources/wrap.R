@@ -1,23 +1,10 @@
-exec <- function(method, port, params) {
-  update.fn <- function() {
-    context = init.context()
-    updates.socket = init.socket(context, "ZMQ_PUB")
-    connect.socket(updates.socket, paste("tcp://localhost", port, sep=":"))
-    return(function(msg) {
-      msg <- charToRaw(enc2utf8(as.character(msg)))
-      send.socket(updates.socket, msg, serialize=FALSE)
-    })
-  }
-  update <- update.fn()
-  assign("update", update, envir=parent.env(environment()))
-
+exec <- function(method, params) {
   results <- if(!is.null(params) && isValidJSON(params, asText=TRUE)) {
     params <- fromJSON(params)
     result <- do.call(method, list(params))
   } else {
     stop("Provided JSON was invalid")
   }
-  update("!!term") # fixme magic value
   toJSON(result)
 }
 

@@ -11,8 +11,8 @@
   (:require [clojure.java.io :as io])
   (:import (com.google.common.primitives Ints)
            (org.rosuda.REngine)
-           (org.rosuda.REngine REXP RList)
-           (org.rosuda.REngine REXPDouble REXPLogical
+           (org.rosuda.REngine REXP RList
+                               REXPDouble REXPLogical
                                REXPFactor REXPInteger
                                REXPString REXPGenericVector
                                REXPNull REngineException
@@ -22,19 +22,6 @@
 
 ;(set! *warn-on-reflection* true)
 
-(defn connect
-  "Connect to an RServe instance. Each connection creates its own workspace
-   and forks the existing R process, effectively sandboxing the R operations.
-
-   Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html)
-   which is referred to as R in the code."
-  ([] (connect "localhost" 6311))
-  ([host port]
-  (let [conn (try
-               (RConnection. host (Integer. port))
-               (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
-    (if (.isConnected ^RConnection conn)
-      ^RConnection conn))))
 
 (defn create-file!
   [^RConnection R filename]
@@ -146,9 +133,26 @@
 (defn assign
   "Assigns the given value as converted by into-r
    into an RConnection with a given name"
-  [R varname m]
-  (.assign ^RConnection R varname ^REXP (into-r m)))
+  [^RConnection R varname m]
+  (.assign R varname ^REXP (into-r m)))
 
 (defn retrieve
-  [R varname]
-  (into-clj (.get ^RConnection R varname nil true)))
+  [^RConnection R varname]
+  (into-clj (.get R varname nil true)))
+
+(defn connect
+  "Connect to an RServe instance. Each connection creates its own workspace
+   and forks the existing R process, effectively sandboxing the R operations.
+
+   Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html)
+   which is referred to as R in the code."
+  ([callback] (connect "localhost" 6311 callback))
+  ([host port callback]
+  (let [wrapped-callback (proxy [org.rosuda.REngine.Rserve.RConnection$OutOfBandCallback] []
+                           (update [msg] (callback (into-clj msg))))
+        ^RConnection conn (try
+               (RConnection. host (Integer. port))
+               (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
+    (when (.isConnected conn)
+      (.addOutOfBandCallback conn wrapped-callback)
+      conn))))

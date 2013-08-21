@@ -3,7 +3,7 @@ slow <- function(params) {
   N <- 100;
   x <- abs(rnorm(N, 0.001, 0.05))
   for(i in as.single(1:N)) {
-    update(i);
+    self.oobSend(i);
     Sys.sleep(x[[i]])
   }
 

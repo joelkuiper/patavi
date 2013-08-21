@@ -61,41 +61,19 @@
       (.getMessage cause)
       (str e))))
 
-(defn listen-for-updates
-  [callback port]
-  (let [updates (chan)]
-    (go (let [context (zmq/context)
-              socket (zmq/socket context :sub)]
-          (zmq/bind (zmq/subscribe socket "") (str "tcp://*:" port))
-          (loop [upd (zmq/receive-str socket)]
-            (if (= upd "!!term")
-              (do ; Cleanup
-                (.close socket)
-                (.term context)
-                (close! updates))
-              (do
-                (>! updates upd)
-                (recur (zmq/receive-str socket)))))))
-    (go (loop [upd (<! updates)]
-          (when-not (nil? upd)
-            (callback upd)
-            (recur (<! updates)))))))
-
 (defn execute
   "Executes, in R, the method present in the file with the given params.
    Callback is function taking one argument which can serve to
    allow OOB updates from the R session
    See resources/wrap.R for details."
   [method id params callback]
-  (with-open [R (pirate/connect)]
+  (with-open [R (pirate/connect callback)]
     (try
       (do
         (source-script! R @script-file)
         (pirate/assign R "params" params)
         (pirate/assign R "files" [])
-        (let [updates-port (zmq/first-free-port)
-              updates (listen-for-updates callback updates-port)
-              call (format "exec(%s, '%s', params)" method updates-port)
+        (let [call (format "exec(%s, params)" method)
               result (pirate/parse R call)]
           {:id id
            :method method
