@@ -131,6 +131,5 @@
 
 (defn start
   [frontend-address backend-address]
-  (let [router-fn (router-fn frontend-address backend-address)
-        router (agent 0)]
+  (let [router-fn (router-fn frontend-address backend-address)]
     (.start (Thread. router-fn))))

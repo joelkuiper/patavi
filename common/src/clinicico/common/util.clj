@@ -6,9 +6,10 @@
             [clojure.java.io :refer :all]
             [clojure.walk :refer :all]))
 
-(defn update-vals [map vals f]
+(defn update-vals
   "Updates multiple values in a map with function f.
    like update-in but for multiple values"
+  [map vals f]
   (reduce #(update-in % [%2] f) map vals))
 
 (defn now
