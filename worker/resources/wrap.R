@@ -1,5 +1,6 @@
 exec <- function(method, params) {
   results <- if(!is.null(params) && isValidJSON(params, asText=TRUE)) {
+    assign("update", Rserve::self.oobSend, envir=parent.env(environment()))
     params <- fromJSON(params)
     result <- do.call(method, list(params))
   } else {
