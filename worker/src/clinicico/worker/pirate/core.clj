@@ -13,7 +13,7 @@
 
 (def ^:private script-file (atom nil))
 
-(def ^:private default-packages ["RJSONIO" "rzmq" "Cairo"])
+(def ^:private default-packages ["Rserve" "RJSONIO" "Cairo"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
@@ -25,9 +25,8 @@
   [extra-packages]
   (let [packages (concat extra-packages default-packages)
         commands (map #(format load-template %) packages)
-        wrapper (io/as-relative-path "resources/wrap.R")
-        bootstrap (str (format bootstrap-template wrapper) (join "\n" commands))]
-    (spit (io/resource "bootstrap.R") bootstrap)))
+        wrapper (io/as-relative-path "resources/wrap.R")]
+    (str (format bootstrap-template wrapper) (join "\n" commands))))
 
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell

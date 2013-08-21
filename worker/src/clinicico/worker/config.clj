@@ -10,4 +10,4 @@
       (.load props reader)
       (into {} (for [[k v] props] [(keyword k) (read-string v)])))))
 
-(def config (load-props (resource "worker.properties")))
+(def config (load-props (resource "config.properties")))
