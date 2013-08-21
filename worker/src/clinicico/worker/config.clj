@@ -1,5 +1,4 @@
 ;; From http://stackoverflow.com/questions/7777882/loading-configuration-file-in-clojure-as-data-structure
-
 (ns clinicico.worker.config
   (:require [clojure.java.io :refer :all]))
 

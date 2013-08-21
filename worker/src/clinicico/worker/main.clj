@@ -1,5 +1,4 @@
 (ns clinicico.worker.main
-  (:gen-class)
   (:require [clinicico.worker.task :as tasks :only [initialize]]
             [clinicico.worker.pirate.core :as pirate]
             [clojure.tools.cli :refer [cli]]

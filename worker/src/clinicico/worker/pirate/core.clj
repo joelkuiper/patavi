@@ -4,8 +4,10 @@
             [clojure.string :refer [split join]]
             [clojure.java.shell :refer [sh]]
             [clinicico.worker.pirate.util :as pirate]
+            [clinicico.worker.config :refer [config]]
             [clojure.tools.logging :as log]
             [zeromq.zmq :as zmq]
+            [me.raynes.fs :as fs]
             [cheshire.core :as json :only [decode]]
             [crypto.random :as crypto])
   (:import (org.rosuda.REngine REngineException)
@@ -22,23 +24,41 @@
 (def ^:private bootstrap-template "#AUTO-GENERATED\nsource('%s')\n")
 
 (defn- create-bootstrap
-  [extra-packages]
+  [extra-packages wrapper]
   (let [packages (concat extra-packages default-packages)
-        commands (map #(format load-template %) packages)
-        wrapper (io/as-relative-path "resources/wrap.R")]
-    (str (format bootstrap-template wrapper) (join "\n" commands))))
+        commands (map #(format load-template %) packages)]
+    (str (format bootstrap-template (fs/absolute-path wrapper)) (join "\n" commands))))
+
+(def ^:private start-cmd
+  "R CMD Rserve --RS-conf %1$s --vanilla > %2$s 2>&1 &")
+
+(defn- make-cmd
+  [config-file]
+  (let [log-dir (fs/expand-home (:rserve-logs config))
+        config-path (fs/absolute-path config-file)
+        executable (fs/temp-file "rserve")]
+    (io/copy (format start-cmd config-path log-dir) executable)
+    (fs/chmod "u+x" executable)
+    executable))
+
+(defn- start-server
+  [packages]
+  (let [[bootstrap
+         wrapper
+         config-file] (map fs/temp-file ["bootstrap" "wrapper" "config"])]
+    (io/copy (io/as-file (io/resource "wrap.R")) wrapper)
+    (io/copy (create-bootstrap packages wrapper) bootstrap)
+    (io/copy (io/as-file (io/resource "Rserve.conf")) config-file)
+    (spit config-file (str "source " (fs/absolute-path bootstrap)) :append true)
+    (log/info (fs/exec (fs/absolute-path (make-cmd config-file))))))
 
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
    Typically starting a new RServe with the generated file 'sourced'"
   [file packages start?]
-  (do
-    (reset! script-file (io/as-file file))
-    (when start?
-      (create-bootstrap packages)
-      (let [start (sh (io/as-relative-path "scripts/start.sh"))]
-        (log/info "[Rserve]" (:out start))
-        start))))
+  (reset! script-file (io/as-file file))
+  (when start?
+    (start-server packages)))
 
 (defn- source-script!
   "Finds the R file with the associated file
