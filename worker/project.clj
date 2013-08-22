@@ -9,6 +9,9 @@
                  [clinicico.common "0.1.0-SNAPSHOT"]
                  [cheshire "5.2.0"]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
+  :plugins [[lein-daemon "0.5.4"]]
+  :daemon {:server {:ns clinicico.worker.main
+                    :pidfile "/tmp/worker.pid"}}
   :profiles {:uberjar {:aot :all}
              :dev {:resource-paths ["resources-dev" "resources"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]]}
