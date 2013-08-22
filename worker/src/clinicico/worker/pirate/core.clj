@@ -46,11 +46,11 @@
   (let [[bootstrap
          wrapper
          config-file] (map fs/temp-file ["bootstrap" "wrapper" "config"])]
-    (io/copy (io/as-file (io/resource "wrap.R")) wrapper)
+    (io/copy (slurp (io/resource "wrap.R")) wrapper)
     (io/copy (create-bootstrap packages wrapper) bootstrap)
-    (io/copy (io/as-file (io/resource "Rserve.conf")) config-file)
+    (io/copy (slurp (io/resource "Rserve.conf")) config-file)
     (spit config-file (str "source " (fs/absolute-path bootstrap)) :append true)
-    (log/info (fs/exec (fs/absolute-path (make-cmd config-file))))))
+    (fs/exec (fs/absolute-path (make-cmd config-file)))))
 
 (defn initialize
   "Generates a bootstrap.R file and executes scripts/start.sh in a shell
