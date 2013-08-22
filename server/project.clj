@@ -19,7 +19,7 @@
                  [com.novemberain/monger "1.6.0"]]
   :plugins [[lein-daemon "0.5.4"]]
   :daemon {:server {:ns clinicico.server.server
-                    :pidfile "server.pid"}}
+                    :pidfile "./server.pid"}}
   :profiles {:dev {:resource-paths ["resources-dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]]}
              :production {:resource-paths ["resources-prod"]
