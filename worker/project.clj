@@ -13,5 +13,4 @@
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]]}
              :production {:resource-paths ["resources-prod" "resources"]
                           :jvm-opts ["-Xmx1g" "-server"]}}
-  :aot [clinicico.worker.main]
   :main clinicico.worker.main)
