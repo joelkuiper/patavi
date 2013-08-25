@@ -3,6 +3,7 @@
             [zeromq.zmq :as zmq]
             [clinicico.common.zeromq :as q]
             [clinicico.worker.consumer :as consumer]
+            [clinicico.worker.config :refer [config]]
             [crypto.random :as crypto]
             [clojure.string :as s :only [blank?]]
             [clojure.tools.logging :as log]))
@@ -17,7 +18,7 @@
   (fn
     [task]
     (let [context (zmq/context)
-          updates-socket (zmq/connect (zmq/socket context :pub) "tcp://localhost:7720")
+          updates-socket (zmq/connect (zmq/socket context :pub) (:updates-socket config))
           id (:id task)
           update! (updater id updates-socket)]
       (try

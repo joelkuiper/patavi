@@ -8,10 +8,11 @@
             [crypto.random :as crypto]
             [clinicico.server.network.broker :as broker]
             [clinicico.server.store :as status]
+            [clinicico.server.config :refer [config]]
             [taoensso.nippy :as nippy]))
 
 (def ^:private context (zmq/context 3))
-(def ^:private frontend-address "ipc://frontend.ipc")
+(def ^:private frontend-address (:broker-frontend-socket config))
 
 (def updates (chan))
 
@@ -51,12 +52,12 @@
   []
   (let [updates (chan)
         socket (zmq/socket context :sub)]
-    (zmq/bind (zmq/subscribe socket "") "tcp://*:7720")
+    (zmq/bind (zmq/subscribe socket "") (:updates-socket config))
     (psi #(q/receive! socket [zmq/bytes-type]) #(update! (nippy/thaw (first %))))))
 
 (defn initialize
   []
-  (broker/start frontend-address "tcp://*:7740")
+  (broker/start frontend-address (:broker-backend-socket config))
   (start-update-handler))
 
 (defn task-available?

@@ -5,14 +5,15 @@
             [clojure.core.async :as async :refer :all]
             [clinicico.common.zeromq :as q]
             [clinicico.common.util :refer [insert]]
+            [clinicico.worker.config :refer [config]]
             [clojure.tools.logging :as log])
   (:import [org.zeromq ZLoop]))
 
-(def ^:const heartbeat-interval 1000)
-(def ^:const heartbeat-liveness 3)
+(def ^:const heartbeat-interval (:heartbeat-interval config))
+(def ^:const heartbeat-liveness (:expire-broker-after config))
 
-(def ^:const interval-init 1000)
-(def ^:const interval-max 32000)
+(def ^:const interval-init (:initial-reconnect-interval config))
+(def ^:const interval-max (:maximum-reconnect-interval config))
 
 (defn- create-reconnecter
   [consumer]
@@ -81,7 +82,7 @@
                         :socket nil})
         initialize #(let [poller (zmq/poller context 1)
                           socket (q/create-connected-socket
-                                  context :dealer "tcp://localhost:7740")]
+                                  context :dealer (:broker-socket config))]
                       (swap! consumer assoc :socket socket :poller poller)
                       (zmq/register poller socket :pollin)
                       (.addPoller (@consumer :zloop)
