@@ -22,14 +22,15 @@
 
 ;(set! *warn-on-reflection* true)
 
-
 (defn create-file!
+  "Creates a file in R"
   [^RConnection R filename]
   (.createFile R filename))
 
 (defn copy!
-  [^RConnection R file filename]
-  (with-open [r-file (create-file! R filename)]
+  "Copies (using io/copy) the file into the file with filename"
+  [^RConnection R ^java.io.Closeable file filename]
+  (with-open [^java.io.Closeable r-file (create-file! R filename)]
     (io/copy (slurp file) r-file)))
 
 (defn- as-list
@@ -38,19 +39,14 @@
    to an [RList](http://rforge.net/org/doc/org/rosuda/REngine/RList.html)."
   ([data] (.asList ^REXPGenericVector data)))
 
-(defn- convert-fn
-  "Conditionally converts a
-   [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html) to primitives."
-  [field]
-  (cond  ;; REXPFactor is-a REXPInteger, so the order matters
-        (.isNull field) (fn [_] nil)
-        (instance? REXPFactor field) (comp #(.asStrings %) #(.asFactor ^REXPFactor %))
-        (instance? REXPString field) #(.asStrings ^REXPString %)
-        (instance? REXPInteger field) #(.asIntegers ^REXPInteger %)
-        (instance? REXPDouble field) #(.asDoubles ^REXPDouble %)
-        (instance? REXPLogical field) #(.isTrue ^REXPLogical %)
-        (instance? REXPRaw field) #(.asBytes ^REXPRaw %)
-        :else (throw (Exception. (str (class field))))))
+(defmulti convert-from (fn [field] [(type field)]))
+(defmethod convert-from [nil] [_] nil)
+(defmethod convert-from [REXPFactor] [field] (.asStrings ^REXPFactor field))
+(defmethod convert-from [REXPString] [field] (.asStrings ^REXPString field))
+(defmethod convert-from [REXPInteger] [field] (.asIntegers ^REXPInteger field))
+(defmethod convert-from [REXPDouble] [field] (.asDoubles ^REXPDouble field))
+(defmethod convert-from [REXPLogical] [field] (.isTrue ^REXPLogical field))
+(defmethod convert-from [REXPRaw] [field] (.asBytes ^REXPRaw field))
 
 (defn- first-or-seq
   [array]
@@ -62,17 +58,17 @@
     (let [values (map (fn [field]
                         (if (instance? REXPGenericVector field)
                           (into-map (as-list field))
-                          (first-or-seq ((convert-fn field) field)))) data)]
+                          (first-or-seq (convert-from field)))) data)]
       (if (.isNamed ^RList data)
         (zipmap (.keys ^RList data) values)
         (vec values)))))
 
 (defn into-clj
   "Converts the given REXP to a Clojure representation"
-  [rexp]
+  [^REXP rexp]
   (cond (instance? RList rexp) (into-map rexp)
         (instance? REXPGenericVector rexp) (into-clj (as-list rexp))
-        :else (first-or-seq ((convert-fn rexp) rexp))))
+        :else (first-or-seq (convert-from rexp))))
 
 (defn parse
   "Evaluates and parses the R expression cmd, and
@@ -97,6 +93,35 @@
   [number]
   (Ints/checkedCast number))
 
+(defmulti convert-to (fn [field]
+                       (if (sequential? field)
+                         [(type (first field)) true]
+                         [(type field) false])))
+(defmethod convert-to [nil] [_ _] (REXPNull.))
+(defmethod convert-to [Integer false] [field]
+  (REXPInteger. (int field)))
+(defmethod convert-to [Integer true] [field]
+  (REXPInteger. (int-array field)))
+(defmethod convert-to [Long false] [field]
+  (REXPInteger. (cast-long field)))
+(defmethod convert-to [Long true] [field]
+  (REXPInteger. (int-array (map cast-long field))))
+(defmethod convert-to [Boolean true] [field]
+  (REXPLogical. (boolean-array field)))
+(defmethod convert-to [Boolean false] [field]
+  (REXPLogical. (boolean field)))
+(defmethod convert-to [Double true] [field]
+  (REXPDouble. (double-array field)))
+(defmethod convert-to [Double false] [field]
+  (REXPDouble. (double field)))
+(defmethod convert-to [String true] [field]
+  (if (every? #(re-matches #"\w*" %) field)
+    (REXPFactor. (int-array (factor-indexes field))
+                 (into-array String (sort (distinct field))))
+    (REXPString. (into-array String field))))
+(defmethod convert-to [String false] [field]
+  (REXPString. field))
+
 (defn into-r
   "Converts Clojure data-structures into
    subclass of [REXPVector](http://rforge.net/org/doc/org/rosuda/REngine/REXPVector.html).
@@ -105,36 +130,17 @@
   [data-seq]
   (if (and (counted? data-seq) (every? (or associative? sequential?) data-seq))
     (REXPGenericVector.
-      (if (map? data-seq)
-        (RList. (map into-r (vals data-seq))
-                (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
-        (RList. (map into-r data-seq))))
-    (let [is-seq (sequential? data-seq)
-          el (if is-seq (first data-seq) data-seq)]
-      (cond
-        (nil? el) (REXPNull.)
-        (instance? Integer el)
-        (REXPInteger. (if is-seq (int-array data-seq) (int el)))
-        (instance? Long el)
-        (REXPInteger. (if is-seq (int-array (map cast-long data-seq)) (cast-long el)))
-        (instance? Boolean el)
-        (REXPLogical. (if is-seq (boolean-array data-seq) (boolean el)))
-        (instance? Number el)
-        (REXPDouble. (if is-seq (double-array data-seq) (double el)))
-        (and (instance? String el) is-seq (every? #(re-matches #"\w*" %) data-seq))
-        (REXPFactor. (int-array (factor-indexes data-seq))
-                     (into-array String (sort (distinct data-seq))))
-        (instance? String el)
-        (REXPString. (if is-seq (into-array String data-seq) el))
-        :else (throw
-                (IllegalArgumentException.
-                  (str "Error parsing" (class el) " " data-seq)))))))
+     (if (map? data-seq)
+       (RList. (map into-r (vals data-seq))
+               (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
+       (RList. (map into-r data-seq))))
+    (convert-to data-seq)))
 
 (defn assign
   "Assigns the given value as converted by into-r
    into an RConnection with a given name"
   [^RConnection R varname m]
-  (.assign R varname ^REXP (into-r m)))
+  (.assign R ^String varname ^REXP (into-r m)))
 
 (defn retrieve
   [^RConnection R varname]
@@ -146,6 +152,7 @@
 
    Returns an [RConnection](http://rforge.net/org/doc/org/rosuda/REngine/Rserve/RConnection.html)
    which is referred to as R in the code."
+  ([] (connect #()))
   ([callback] (connect "localhost" 6311 callback))
   ([host port callback]
   (let [wrapped-callback (proxy [org.rosuda.REngine.Rserve.RConnection$OutOfBandCallback] []
