@@ -3,16 +3,13 @@
   (:require [clojure.tools.logging :as log]
             [clojure.tools.nrepl.server :only (start-server stop-server) :as repl]
             [clojure.tools.cli :refer [cli]]
-            [ring.util.response :as resp]
             [ring.middleware.reload :as reload]
-            [ring.middleware.jsonp :refer :all]
             [org.httpkit.server :refer :all]
+            [clinicico.server.http :as http]
             [compojure.handler :refer [api site]]
             [compojure.core :refer [context ANY GET OPTIONS routes defroutes]]
             [clinicico.server.domain :as domain]
-            [clinicico.server.store :as store]
             [clinicico.server.middleware :refer :all]
-            [clinicico.server.http :as http]
             [clinicico.server.tasks :as tasks :only [initialize]]))
 
 (declare in-dev?)
@@ -20,32 +17,16 @@
 (defn assemble-routes []
   (->
     (routes
-      (context "/tasks" []
-               ;; Resources managed by liberator
-               (ANY "/:method" [method] domain/tasks-resource)
-               (ANY ["/:method/:id"] [method id] domain/task-resource)
-               ;; Handle retrieval of file
-               (GET "/:method/:id/files/:file" [id file]
-                    (let [record (store/get-file id file)]
-                      (if (nil? record)
-                        (resp/not-found nil)
-                        (-> (resp/response (.getInputStream record))
-                            (resp/content-type (:content-type (.getContentType record)))
-                            (resp/header "Content-Length" (.getLength record))))))
-               ;; Handle status routes (for WebSockets / Comet)
-               (OPTIONS ["/:method/:id/status"] [] (http/options #{:options :get}))
-               (GET ["/:method/:id/status"] [method id] domain/task-status)))))
+      (GET "/service/:method/ws" [:as req] (domain/handle-tasks req))
+      (OPTIONS "/service/:method/ws" [] (http/options #{:options :get})))))
 
 (def app
   (->
-    (assemble-routes)
-    (wrap-json-with-padding)
-    (api)
-    (ignore-trailing-slash)
-    (wrap-cors-request)
-    (wrap-request-logger)
-    (wrap-exception-handler)
-    (wrap-response-logger)))
+   (assemble-routes)
+   (api)
+   (wrap-request-logger)
+   (wrap-exception-handler)
+   (wrap-response-logger)))
 
 (defn -main
   [& args]

@@ -10,6 +10,7 @@
                  [ring/ring-devel "1.2.0"]
                  [ring.middleware.jsonp "0.1.3"]
                  [http-kit "2.1.9"]
+                 [clj-wamp "1.0.0"]
                  [cheshire "5.2.0"]
                  [overtone/at-at "1.2.0"]
                  [liberator "0.9.0"]
