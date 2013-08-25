@@ -8,21 +8,6 @@
   (:require [ring.util.response :refer :all]
             [clojure.string :refer [upper-case blank? join]]))
 
-
-(def base (atom ""))
-(defn url-base
-  ([] @base)
-  ([{scheme :scheme server-name :server-name server-port :server-port}]
-   (let [base-url (str (subs (str scheme) 1) "://" server-name ":" server-port)]
-     (when  (blank? @base)
-       (reset! base base-url))
-     base-url)))
-
-(defn url-from
-  [{:keys [scheme server-name server-port uri] :as req}
-   & path-elements]
-  (str (url-base req) uri "/" (join "/" path-elements)))
-
 (defn options
   "The OPTIONS method represents a request for information about the communication
    options available on the request/response chain identified by the Request-URI.

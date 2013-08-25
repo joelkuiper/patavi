@@ -1,4 +1,4 @@
-(ns clinicico.server.tasks
+(ns clinicico.server.service
   (:gen-class)
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :as async :refer :all]
@@ -14,8 +14,6 @@
 (def ^:private context (zmq/context 3))
 (def ^:private frontend-address (:broker-frontend-socket config))
 
-(def updates (chan))
-
 (defn- save-results!
   [results]
   (let [id (results :id)
@@ -25,16 +23,14 @@
                               :files (map (fn [f] {:name (get f "name")
                                                   :mime (get f "mime")})
                                           (results :files))}}]
-    (status/save-files! id (get results :files {}))
-    (status/update! id (merge old-status new-status))))
+    (status/save-files! id (get results :files {}))))
 
-(defn- update!
+(defn- save-update!
   [content]
   (let [id (:id content)
         old-status (or (status/retrieve id) {})
         new-status (merge old-status (get content :content {}))]
-    (status/update! id new-status)
-    (go (>! updates new-status))))
+    (status/update! id new-status)))
 
 (defn psi [alpha beta]
   "Infinite Stream function. Starts two go routines, one perpetually pushing
@@ -48,17 +44,20 @@
           (beta y)
           (recur (<! c))))))
 
-(defn- start-update-handler
-  []
+(defn- update-reciever
+  [id]
   (let [updates (chan)
+        on-update (fn [u] (let [update (nippy/thaw (first u))]
+                            (save-update! update)
+                            (go (>! updates update))))
         socket (zmq/socket context :sub)]
     (zmq/bind (zmq/subscribe socket "") (:updates-socket config))
-    (psi #(q/receive! socket [zmq/bytes-type]) #(update! (nippy/thaw (first %))))))
+    (psi #(q/receive! socket [zmq/bytes-type]) on-update)
+    updates))
 
 (defn initialize
   []
-  (broker/start frontend-address (:broker-backend-socket config))
-  (start-update-handler))
+  (broker/start frontend-address (:broker-backend-socket config)))
 
 (defn task-available?
   [method]
@@ -85,12 +84,12 @@
       (if (= (:status results) "failed")
         (status/update! id results)
         (save-results! results)))
-    (status/update! id {:status "failed" :cause (String. result)}))
-  (go (>! updates (status/retrieve id))))
+    (status/update! id {:status "failed" :cause (String. result)})))
 
-(defn publish-task
+(defn publish
   [method payload]
   (let [id (crypto.random/url-part 6)
+        updates (update-reciever id)
         msg {:id id :body payload :method method}
         work (chan)]
     (log/debug (format "Publishing task to %s" method))
@@ -100,4 +99,4 @@
                         :created (now)})
     (go (>! work (process msg)))
     (go (handle-completion (<! work)))
-    (status id)))
+    {:updates updates :id id :status (status/retrieve id)}))

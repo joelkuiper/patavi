@@ -7,23 +7,16 @@ function TaskCtrl($scope) {
   $scope.submit = function(method, input) {
     var task = clinicico.submit(method, angular.fromJson(input));
 
-    var progressHandler = function(progress) {
-      $scope.$apply(function() {
-        $scope.status = progress;
-      });
+    var handlerFactory = function(type) {
+      return function(x) {
+        $scope.$apply(function() {
+          $scope[type] = x;
+        });
+      }
     }
-
-    var successHandler = function(results) {
-      $scope.$apply(function() {
-        $scope.results = results;
-      });
-    }
-
-    var errorHandler = function(error) {
-      $scope.$apply(function() {
-        $scope.results = error;
-      });
-    }
+    var progressHandler = handlerFactory("status");
+    var errorHandler = handlerFactory("error");
+    var successHandler = handlerFactory("results");
 
     task.results.then(successHandler, errorHandler, progressHandler);
   }

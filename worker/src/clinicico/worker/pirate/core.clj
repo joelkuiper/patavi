@@ -8,7 +8,7 @@
             [clojure.tools.logging :as log]
             [zeromq.zmq :as zmq]
             [me.raynes.fs :as fs]
-            [cheshire.core :as json :only [decode]]
+            [cheshire.core :as json :only [encode decode]]
             [crypto.random :as crypto])
   (:import (org.rosuda.REngine REngineException)
            (org.rosuda.REngine.Rserve RConnection)))
@@ -90,7 +90,7 @@
     (try
       (do
         (source-script! R @script-file)
-        (pirate/assign R "params" params)
+        (pirate/assign R "params" (json/encode params))
         (pirate/assign R "files" [])
         (let [call (format "exec(%s, params)" method)
               result (pirate/parse R call)]

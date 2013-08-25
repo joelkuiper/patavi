@@ -1,4 +1,4 @@
-(ns clinicico.server.domain
+(ns clinicico.server.handlers
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
             [clojure.core.async :as async :refer :all]
@@ -7,35 +7,25 @@
             [org.httpkit.server :as http-kit]
             [clinicico.server.store :as store]
             [clinicico.common.util :refer [dissoc-in]]
-            [clinicico.server.tasks :only [publish-task status task-available?] :as tasks]))
-
-(defn- embedded-files
-  [task url]
-  (if (task :results)
-    (let [result (task :results)
-          files (:files result)
-          embedded (map (fn [x] {:name (first (s/split (:name x) #"\."))
-                                 :href (str url "files/" (:name x))
-                                 :type (:mime x)}) files)]
-      (assoc-in (dissoc-in task [:results :files]) [:results :_embedded :_files] embedded))
-    task))
+            [clinicico.server.service :only [publish-task status task-available?] :as service]))
 
 (def base "http://myapp/")
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 
 (defn service-run-rpc [method data]
-  (log/info "Long Run RPC called" data method)
-  (doseq [i (range 10)]
-    (Thread/sleep 600)
-    ; Only send status to the client who called
-    (log/debug wamp/*call-sess-id*)
-    (wamp/emit-event! service-status-uri (* i 10) [wamp/*call-sess-id*]))
-  {:result true})
+  (let [{:keys [updates status]} (service/publish method data)]
+    (go (loop [update (<!! updates)]
+          (if (contains? #("completed" "failed" "canceled") updates)
+            update ;; Last on probably is the result
+            (do
+              (log/debug update)
+              (wamp/emit-event! service-status-uri update [wamp/*call-sess-id*])
+              (recur (<!! update))))))))
 
 (def origin-re #"http://.*")
 
-(defn handle-tasks
+(defn handle-service
   "Returns a http-kit websocket handler with wamp subprotocol"
   [request]
   (let [method (get-in request [:route-params :method])]

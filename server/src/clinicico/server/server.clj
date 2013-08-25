@@ -8,16 +8,16 @@
             [clinicico.server.http :as http]
             [compojure.handler :refer [api site]]
             [compojure.core :refer [context ANY GET OPTIONS routes defroutes]]
-            [clinicico.server.domain :as domain]
+            [clinicico.server.handlers :as handlers]
             [clinicico.server.middleware :refer :all]
-            [clinicico.server.tasks :as tasks :only [initialize]]))
+            [clinicico.server.service :as service :only [initialize]]))
 
 (declare in-dev?)
 
 (defn assemble-routes []
   (->
     (routes
-      (GET "/service/:method/ws" [:as req] (domain/handle-tasks req))
+      (GET "/service/:method/ws" [:as req] (handlers/handle-service req))
       (OPTIONS "/service/:method/ws" [] (http/options #{:options :get})))))
 
 (def app
@@ -43,5 +43,5 @@
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
       (log/info "Running server on :" (:port options) "and nREPL running on :" (:repl options))
       (if (not in-dev?) (defonce repl-server (repl/start-server :port (:repl options))))
-      (tasks/initialize)
+      (service/initialize)
       (run-server handler {:port (:port options)}))))

@@ -30,7 +30,8 @@ window.clinicico = (function () {
         );
 
     }, function(code, reason) {
-      console.log(reason);
+      resultsPromise.reject(reason);
+      console.log(code, reason);
     });
 
 

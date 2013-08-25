@@ -25,7 +25,7 @@
         (do
           (log/debug (format "Recieved task %s" id))
           (update! {:status "processing" :accepted (java.util.Date.)})
-          (task-fn method id (:body task) #(update! {:progress %})))
+          (task-fn method id task #(update! {:progress %})))
         (catch Exception e
           (do
             (log/warn e)

@@ -33,6 +33,10 @@
           <h2 class="subheader">Results</h2>
           <div class="panel"><pre>{{results | json}}</pre></div>
         </div>
+        <div class="columns" ng-show="error">
+          <h2 class="subheader">Error</h2>
+          <div class="panel"><pre>{{error | json}}</pre></div>
+        </div>
       </div>
       <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"></script>
       <script src="//autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
