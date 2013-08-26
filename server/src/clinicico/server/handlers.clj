@@ -13,7 +13,7 @@
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 
-(defn dispatch
+(defn dispatch-rpc
   [method data]
   (let [{:keys [updates close results]} (service/publish method data)]
     (go (loop [update (<! updates)]
@@ -23,12 +23,12 @@
               (recur (<! updates))))))
     (try @results
          (catch Exception e
-           (do (log/error e)
-               (throw e))))))
+           {:error {:uri service-rpc-uri
+                    :message (.getMessage e)}}))))
 
 (defn service-run-rpc [method data]
   (if (service/available? method)
-    (dispatch method data)
+    (dispatch-rpc method data)
     {:error {:uri service-rpc-uri
              :message (str "service " method " not avaiable")}}))
 
@@ -42,5 +42,4 @@
       (wamp/http-kit-handler channel
                              {:on-call {service-rpc-uri (partial service-run-rpc method)}
                               :on-subscribe {service-status-uri true}
-                              :on-publish {service-status-uri true
-                                           (str service-status-uri "pub-only") true}}))))
+                              :on-publish {service-status-uri true}}))))
