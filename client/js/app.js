@@ -9,17 +9,15 @@ function TaskCtrl($scope) {
 
     var handlerFactory = function(type) {
       return function(x) {
-        $scope.$apply(function() {
-          $scope[type] = x;
-        });
+        $scope[type] = x;
+        $scope.$apply();
       }
     }
     var progressHandler = handlerFactory("status");
     var errorHandler = handlerFactory("error");
     var successHandler = handlerFactory("results");
 
-    task.results.then(successHandler, errorHandler, progressHandler);
+    task.results.then(undefined, errorHandler, progressHandler);
   }
-
 }
 TaskCtrl.$inject = ['$scope'];

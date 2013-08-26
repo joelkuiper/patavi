@@ -7,7 +7,6 @@
   :repositories {"drugis" "http://drugis.org/mvn"}
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [clinicico.common "0.1.0-SNAPSHOT"]
-                 [cheshire "5.2.0"]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
   :profiles {:uberjar {:aot :all}
              :dev {:resource-paths ["resources-dev" "resources"]

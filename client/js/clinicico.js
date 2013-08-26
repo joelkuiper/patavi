@@ -10,31 +10,29 @@ window.clinicico = (function () {
     this.results = resultsPromise.promise;
 
     var session = ab.connect(wsuri +  "/" + method + "/ws", function(session) {
-        console.log("Connected to " + wsuri, session.sessionid());
-        // Subscribe to updates
-        session.subscribe("http://myapp/status#", function(topic, event) {
-          resultsPromise.notify(event);
-        });
+      console.log("Connected to " + wsuri, session.sessionid());
+      // Subscribe to updates
+      session.subscribe("http://myapp/status#", function(topic, event) {
+        resultsPromise.notify(event);
+      });
 
-        // Send-off RPC
-        self.results = session.call("http://myapp/rpc#", payload).then(
-          function(result) {
-            resultsPromise.resolve(result);
-            session.close();
-          },
-          function(code, reason) {
-            console.log(code + " " + reason);
-            resultsPromise.reject(reason)
-            session.close();
-          }
-        );
+      // Send-off RPC
+      self.results = session.call("http://myapp/rpc#", payload).then(
+        function(result) {
+          resultsPromise.resolve(result);
+          session.close();
+        },
+        function(reason, code) {
+          console.log("error", code, reason);
+          resultsPromise.reject(reason);
+          session.close();
+        }
+      );
 
     }, function(code, reason) {
       resultsPromise.reject(reason);
       console.log(code, reason);
     });
-
-
   }
 
   var clinicico = {

@@ -14,10 +14,7 @@
                  [cheshire "5.2.0"]
                  [overtone/at-at "1.2.0"]
                  [liberator "0.9.0"]
-                 [org.clojure/tools.nrepl "0.2.3"]
-                 [inflections "0.8.1"]
-                 [org.clojure/data.xml "0.0.7"]
-                 [com.novemberain/monger "1.6.0"]]
+                 [org.clojure/tools.nrepl "0.2.3"]]
   :profiles {:dev {:resource-paths ["resources-dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]]}
              :production {:resource-paths ["resources-prod"]

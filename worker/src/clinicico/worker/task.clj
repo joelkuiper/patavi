@@ -11,14 +11,14 @@
 (defn- updater
   [id socket]
   (fn [content]
-    (q/send! socket [(nippy/freeze {:content content :id id})])))
+    (q/send! socket [id (nippy/freeze (merge content {:id id}))])))
 
 (defn- task-handler
   [task-fn method]
   (fn
     [task]
     (let [context (zmq/context)
-          updates-socket (zmq/connect (zmq/socket context :pub) (:updates-socket config))
+          updates-socket (zmq/bind (zmq/socket context :pub) (:updates-socket config))
           id (:id task)
           update! (updater id updates-socket)]
       (try
