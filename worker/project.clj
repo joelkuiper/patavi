@@ -1,11 +1,21 @@
-(defproject clinicico.worker "0.1.0-SNAPSHOT"
-  :url "http://example.com/FIXME"
-  :description ""
-  :repositories {"drugis" "http://drugis.org/mvn"}
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+(defproject patavi.worker "0.2.0"
+  :url "http://patavi.com"
+  :license {:name "The MIT License"
+            :url "http://opensource.org/licenses/MIT"
+            :distribution :repo}
+  :description "Workers listen for tasks and dispatch them to RServe"
+  :repositories {"sonatype-nexus-snapshots" "https://oss.sonatype.org/content/repositories/snapshots"
+                 "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
+                 "drugis" "http://drugis.org/mvn"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [clinicico.common "0.1.0-SNAPSHOT"]
-                 [cheshire "5.2.0"]
+                 [patavi.common "0.1.0-SNAPSHOT"]
+                 [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
-  :main clinicico.worker.main)
+  :profiles {:uberjar {:aot :all}
+             :dev {:resource-paths ["resources-dev" "resources"]
+                   :dependencies [[org.clojure/tools.namespace "0.2.4"]
+                                  [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
+             :production {:dependencies [[org.zeromq/jzmq "2.2.2"]]
+                          :resource-paths ["resources-prod" "resources"]
+                          :jvm-opts ["-server" "-Djava.library.path=/usr/lib:/usr/local/lib" ]}}
+  :main patavi.worker.main)

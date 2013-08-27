@@ -1,22 +1,23 @@
-angular.module('example', ["clinicico"]);
+angular.module('example', []);
 
-function TaskCtrl($scope, tasks) {
+function TaskCtrl($scope) {
   $scope.method = "slow";
   $scope.input = "{}";
 
   $scope.submit = function(method, input) {
-    var task = tasks.submit(method, angular.fromJson(input));
+    var task = patavi.submit(method, angular.fromJson(input));
 
-    task.on("update", function(status) {
-      $scope.status = status;
-    });
+    var handlerFactory = function(type) {
+      return function(x) {
+        $scope[type] = x;
+        $scope.$apply();
+      }
+    }
+    var progressHandler = handlerFactory("status");
+    var errorHandler = handlerFactory("error");
+    var successHandler = handlerFactory("results");
 
-
-    task.results.then(function(results) {
-      $scope.results = results;
-    });
-
+    task.results.then(successHandler, errorHandler, progressHandler);
   }
-
 }
-TaskCtrl.$inject = ['$scope', 'clinicico.tasks'];
+TaskCtrl.$inject = ['$scope'];

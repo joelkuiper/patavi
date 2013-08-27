@@ -22,7 +22,7 @@ save.plot <- function(plot.fn, name, type="png") {
   content <- readBin(tmp, 'raw', 1024*1024) #1MB filesize limit
   unlink(tmp)
   file <- list(name=paste(name, type, sep="."),
-               content=content,
+               content=dataURI(data=content, mime=mimes[[type]]),
                mime=mimes[[type]])
 
   assign("files", append(files, list(file)), envir=parent.env(environment()))
