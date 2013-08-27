@@ -1,5 +1,5 @@
-(defproject clinicico.worker "0.1.0-SNAPSHOT"
-  :url "http://clinici.co"
+(defproject patavi.worker "0.1.0-SNAPSHOT"
+  :url "http://patavi.com"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
             :distribution :repo}
@@ -8,7 +8,7 @@
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
                  "drugis" "http://drugis.org/mvn"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [clinicico.common "0.1.0-SNAPSHOT"]
+                 [patavi.common "0.1.0-SNAPSHOT"]
                  [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
   :profiles {:uberjar {:aot :all}
@@ -18,4 +18,4 @@
              :production {:dependencies [[org.zeromq/jzmq "2.2.2"]]
                           :resource-paths ["resources-prod" "resources"]
                           :jvm-opts ["-server" "-Djava.library.path=/usr/lib:/usr/local/lib" ]}}
-  :main clinicico.worker.main)
+  :main patavi.worker.main)

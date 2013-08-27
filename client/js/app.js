@@ -5,7 +5,7 @@ function TaskCtrl($scope) {
   $scope.input = "{}";
 
   $scope.submit = function(method, input) {
-    var task = clinicico.submit(method, angular.fromJson(input));
+    var task = patavi.submit(method, angular.fromJson(input));
 
     var handlerFactory = function(type) {
       return function(x) {

@@ -1,6 +1,6 @@
-(defproject clinicico.common "0.1.0-SNAPSHOT"
+(defproject patavi.common "0.1.0-SNAPSHOT"
   :description "Library with common functions and dependencies for server and worker"
-  :url "http://clinici.co"
+  :url "http://patavi.com"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
             :distribution :repo}

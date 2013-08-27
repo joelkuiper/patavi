@@ -1,6 +1,6 @@
 Introduction
 ============
-clinicico is a distributed system for exposing R scripts as web services. It was created out of the need to run potentially very long running R scripts tasks in a web browser while providing an interface to see the status updates. We currently use it to do Multi Criteria Decision Analysis (MCDA), see [our demo](http://mcda.clinici.co). It is written in Clojure.
+patavi is a distributed system for exposing R scripts as web services. It was created out of the need to run potentially very long running R scripts tasks in a web browser while providing an interface to see the status updates. We currently use it to do Multi Criteria Decision Analysis (MCDA), see [our demo](http://mcda.patavi.com). It is written in Clojure.
 
 Alternatives
 ------------
@@ -11,7 +11,7 @@ Installation
 
 Method 1 (Chef cookbook)
 ------------------------
-The simplest way to try out clinicico is in a vagrant virtual machine
+The simplest way to try out patavi is in a vagrant virtual machine
 provisioned with our Chef cookbook. This has been tested on Ubuntu 12.04 and 13.04, but should also work on Mac OS X provided you know how to get the dependencies through [Homebrew](http://brew.sh/).
 
 You'll need to:
@@ -26,8 +26,8 @@ Install [Vagrant](http://www.vagrantup.com/) from their site and install [Berksh
 
 Clone the cookbook and run the Virtual Machine 
 
-     git clone https://github.com/joelkuiper/clinicico-cookbook.git
-     cd clinicico-cookbook
+     git clone https://github.com/joelkuiper/patavi-cookbook.git
+     cd patavi-cookbook
      vagrant up 
 
 Now you have time to grab a cup of coffee, go out with friends, find the love of your life, climb the mount everest or see the aurora borealis. After a hopefully successful run the demo should be available at `33.33.33.10`
