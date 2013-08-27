@@ -23,7 +23,7 @@ options](http://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Web-Interfaces).
 
 ## Usage
 Start the server with `lein run` in the server folder then start one or more workers
-with `lein run` you can provide the method name and file in the options (run
+with `lein run`. You can provide the method name and file in the options (run
 `lein --help` for details).
 
 The R script takes exactly one argument `params` which is the deserialzed JSON
@@ -91,5 +91,5 @@ you'll need the following set-up and configured:
 * Leiningen (> 2.0)
 
 clone the repository and `lein install` the common folder. Then start
-the server and worker by running `lein run --`, see `'lein run --
+the server and worker by running `lein run --`, see `lein run --
 --help` for options
