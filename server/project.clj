@@ -1,4 +1,4 @@
-(defproject patavi.server "0.1.0-SNAPSHOT"
+(defproject patavi.server "0.2.0"
   :description "Clinici.co is a distributed system for exposing R as RESTful web services"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
