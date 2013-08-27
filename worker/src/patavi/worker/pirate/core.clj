@@ -85,7 +85,7 @@
    Callback is function taking one argument which can serve to
    allow OOB updates from the R session
    See resources/wrap.R for details."
-  [method id params callback]
+  [method params callback]
   (with-open [R (pirate/connect callback)]
     (try
       (do
@@ -94,8 +94,7 @@
         (pirate/assign R "files" [])
         (let [call (format "exec(%s, params)" method)
               result (pirate/parse R call)]
-          {:id id
-           :method method
+          {:method method
            :results (assoc (json/decode result)
                       :_embedded (pirate/retrieve R "files"))}))
       (catch Exception e (throw (Exception. (cause e) e))))))

@@ -8,11 +8,16 @@
             [clojure.string :as s :only [blank? replace]]
             [clojure.tools.logging :as log]))
 
+(def ^:const processing "processing")
+(def ^:const accepted "accepted")
+(def ^:const failed "failed")
+
 (defn- updater
   [id socket]
   (fn [content]
-    (zmq/send socket (.getBytes id) zmq/send-more)
-    (zmq/send socket (nippy/freeze (or content {})))))
+    (let [base-update {:status processing}]
+      (zmq/send socket (.getBytes id) zmq/send-more)
+      (zmq/send socket (nippy/freeze (merge base-update (or content {})))))))
 
 (defn- task-handler
   [updates-socket method task-fn]
@@ -22,13 +27,12 @@
       (try
         (do
           (log/info (format "[handler] recieved task %s" id))
-          (update! {:status "processing" :accepted (java.util.Date.)})
-          (task-fn method id task #(update! {:progress %})))
+          (update! {:status accepted})
+          (task-fn method task #(update! {:progress %})))
         (catch Exception e
           (do
             (log/warn e)
-            {:id id
-             :status "failed"
+            {:status failed
              :cause (.getMessage e)}))))))
 
 (defn initialize
