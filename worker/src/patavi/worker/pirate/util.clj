@@ -130,10 +130,10 @@
   [data-seq]
   (if (and (counted? data-seq) (every? (or associative? sequential?) data-seq))
     (REXPGenericVector.
-     (if (map? data-seq)
-       (RList. (map into-r (vals data-seq))
-               (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
-       (RList. (map into-r data-seq))))
+      (if (map? data-seq)
+        (RList. (map into-r (vals data-seq))
+                (into-array String (map #(if (keyword? %) (name %) (str %)) (keys data-seq))))
+        (RList. (map into-r data-seq))))
     (convert-to data-seq)))
 
 (defn assign
@@ -155,11 +155,11 @@
   ([] (connect #()))
   ([callback] (connect "localhost" 6311 callback))
   ([host port callback]
-  (let [wrapped-callback (proxy [org.rosuda.REngine.Rserve.RConnection$OutOfBandCallback] []
-                           (update [msg] (callback (into-clj msg))))
-        ^RConnection conn (try
-               (RConnection. host (Integer. port))
-               (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
-    (when (.isConnected conn)
-      (.addOutOfBandCallback conn wrapped-callback)
-      conn))))
+   (let [wrapped-callback (proxy [org.rosuda.REngine.Rserve.RConnection$OutOfBandCallback] []
+                            (update [msg] (callback (into-clj msg))))
+         ^RConnection conn (try
+                             (RConnection. host (Integer. port))
+                             (catch Exception e (throw (Exception. "Could not connect to RServe" e))))]
+     (when (.isConnected conn)
+       (.addOutOfBandCallback conn wrapped-callback)
+       conn))))
