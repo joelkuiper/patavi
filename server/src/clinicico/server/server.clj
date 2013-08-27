@@ -15,8 +15,8 @@
 (defn assemble-routes []
   (->
     (routes
-      (GET "/service/:method/ws" [:as req] (handlers/handle-service req))
-      (OPTIONS "/service/:method/ws" [] (http/options #{:options :get})))))
+      (GET "/ws" [:as req] (handlers/handle-service req))
+      (OPTIONS "/ws" [] (http/options #{:options :get})))))
 
 (def app
   (->

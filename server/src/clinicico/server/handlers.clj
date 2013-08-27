@@ -15,16 +15,17 @@
 
 (defn dispatch-rpc
   [method data]
-  (let [{:keys [updates close results]} (service/publish method data)]
-    (go (loop [update (<! updates)]
-          (when ((comp not nil?) update)
-            (do
-              (wamp/emit-event! service-status-uri update [wamp/*call-sess-id*])
-              (recur (<! updates))))))
-    (try @results
-         (catch Exception e
-           {:error {:uri service-rpc-uri
-                    :message (.getMessage e)}}))))
+  (let [listeners [wamp/*call-sess-id*]
+        {:keys [updates close results]} (service/publish method data)]
+    (try
+      (go (loop [update (<! updates)]
+            (when ((comp not nil?) update)
+              (wamp/emit-event! service-status-uri update listeners)
+              (recur (<! updates)))))
+      @results
+      (catch Exception e
+        {:error {:uri service-rpc-uri
+                 :message (.getMessage e)}}))))
 
 (defn service-run-rpc [method data]
   (if (service/available? method)
@@ -37,9 +38,8 @@
 (defn handle-service
   "Returns a http-kit websocket handler with wamp subprotocol"
   [request]
-  (let [method (get-in request [:route-params :method])]
-    (wamp/with-channel-validation request channel origin-re
-      (wamp/http-kit-handler channel
-                             {:on-call {service-rpc-uri (partial service-run-rpc method)}
-                              :on-subscribe {service-status-uri true}
-                              :on-publish {service-status-uri true}}))))
+  (wamp/with-channel-validation request channel origin-re
+    (wamp/http-kit-handler channel
+                           {:on-call {service-rpc-uri service-run-rpc}
+                            :on-subscribe {service-status-uri true}
+                            :on-publish {service-status-uri true}})))

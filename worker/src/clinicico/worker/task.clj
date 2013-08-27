@@ -5,21 +5,20 @@
             [clinicico.worker.consumer :as consumer]
             [clinicico.worker.config :refer [config]]
             [crypto.random :as crypto]
-            [clojure.string :as s :only [blank?]]
+            [clojure.string :as s :only [blank? replace]]
             [clojure.tools.logging :as log]))
+
 
 (defn- updater
   [id socket]
   (fn [content]
-    (q/send! socket [id (nippy/freeze (merge content {:id id}))])))
+    (zmq/send socket (.getBytes id) zmq/send-more)
+    (zmq/send socket (nippy/freeze (or content {})))))
 
 (defn- task-handler
-  [task-fn method]
-  (fn
-    [task]
-    (let [context (zmq/context)
-          updates-socket (zmq/bind (zmq/socket context :pub) (:updates-socket config))
-          id (:id task)
+  [updates-socket method task-fn]
+  (fn [task]
+    (let [id (:id task)
           update! (updater id updates-socket)]
       (try
         (do
@@ -31,11 +30,12 @@
             (log/warn e)
             {:id id
              :status "failed"
-             :cause (.getMessage e)}))
-        (finally (do (.close updates-socket) (.term context)))))))
+             :cause (.getMessage e)}))))))
 
 (defn initialize
   [method n task-fn]
-  (dotimes [n n]
-    (consumer/start method (task-handler task-fn method))
-    (log/info (format "[main] started worker for %s" method))))
+  (let [context (zmq/context n)
+        updates-socket (zmq/bind (zmq/socket context :pub) (:updates-socket config))]
+    (dotimes [n n]
+      (consumer/start method (task-handler updates-socket method task-fn))
+      (log/info (format "[main] started worker for %s" method)))))

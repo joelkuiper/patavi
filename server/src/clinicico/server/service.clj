@@ -1,6 +1,7 @@
 (ns clinicico.server.service
   (:require [clojure.tools.logging :as log]
             [clojure.core.async :as async :refer :all]
+            [clojure.string :as s :only [replace]]
             [clinicico.common.zeromq :as q]
             [clinicico.common.util :refer [now]]
             [zeromq.zmq :as zmq]
@@ -10,6 +11,10 @@
             [taoensso.nippy :as nippy]))
 
 (def ^:private frontend-address (:broker-frontend-socket config))
+
+(defn initialize
+  []
+  (broker/start frontend-address (:broker-backend-socket config)))
 
 (defn psi [alpha beta]
   "Infinite Stream function. Starts two go routines, one perpetually pushing
@@ -27,16 +32,15 @@
 (defn- update-reciever
   [id]
   (let [context (zmq/context)
-        updates (chan)
-        socket (zmq/socket context :sub)]
+        socket (zmq/socket context :sub)
+        updates (chan)]
     (zmq/subscribe (zmq/connect socket (:updates-socket config)) id)
-    (psi #(q/receive! socket [String zmq/bytes-type])
-       #(go (>! updates (nippy/thaw (second %)))))
+    (psi #(zmq/receive-all socket)
+       #(go (>! updates
+                (try
+                  (nippy/thaw (second %))
+                  (catch Exception e {})))))
     updates))
-
-(defn initialize
-  []
-  (broker/start frontend-address (:broker-backend-socket config)))
 
 (defn available?
   [method]
@@ -57,15 +61,14 @@
               (throw (Exception. (:cause results)))
               results))
           (throw (Exception. (String. result)))))
-      (catch Exception e (do (log/error e) (throw e))) ; log and rethrow
-      (finally (do (.close socket) (.term context))))))
+      (catch Exception e (do (log/error e) (throw e))))))
 
 (defn publish
   [method payload]
   (let [id (crypto.random/url-part 6)
         channel (update-reciever id)
         msg {:id id :body payload :method method}]
-    (log/debug (format "Publishing task to %s" method))
+    (log/info (format "[service] publishing %s task to %s" id method))
     (go (>! channel {:id id
                      :method method
                      :status "pending"

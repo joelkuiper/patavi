@@ -19,6 +19,4 @@
                  [com.google.guava/guava "14.0.1"]
                  [clj-time "0.6.0"]
                  [crypto-random "1.1.0"]
-                 [me.raynes/fs "1.4.4"]
-                 [org.jeromq/jeromq "0.3.0-SNAPSHOT"]
-                 [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]])
+                 [me.raynes/fs "1.4.4"]])
