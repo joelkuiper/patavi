@@ -11,6 +11,7 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.cli "0.2.4"]
                  [com.taoensso/nippy "2.2.0-RC1"]
+                 [cheshire "5.2.0"]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
@@ -18,6 +19,4 @@
                  [com.google.guava/guava "14.0.1"]
                  [clj-time "0.6.0"]
                  [crypto-random "1.1.0"]
-                 [me.raynes/fs "1.4.4"]
-                 [org.jeromq/jeromq "0.3.0-SNAPSHOT"]
-                 [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]])
+                 [me.raynes/fs "1.4.4"]])

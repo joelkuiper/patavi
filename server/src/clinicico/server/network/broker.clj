@@ -80,7 +80,7 @@
            expired? (fn [worker] (some #(= (:address worker) (:address %)) expired))
            waiting (:waiting service)]
        (when (seq expired)
-         (log/warn "workers were expired:" (map #(str (:address %) ":" (:name service)) expired))
+         (log/warn "[broker] workers were expired:" (map #(str (:address %) ":" (:name service)) expired))
          (swap! services assoc (:name service)
                 (-> service
                     (assoc :workers (apply (partial disj workers) expired))
@@ -102,7 +102,7 @@
       (let [service (request-service service-name)
             [client-addr _ request] (available-request service)
             worker-addr (:address (available-worker service))]
-        (log/debug "[broker] dispatching!" client-addr "to" (format "%s:%s" service-name worker-addr))
+        (log/info "[broker] dispatching!" client-addr "to" (format "%s:%s" service-name worker-addr))
         (q/send! socket [worker-addr q/MSG-REQ client-addr request])))))
 
 
@@ -123,7 +123,7 @@
             (condp = msg-type
               q/MSG-PING  (do (update-expiry method worker-addr)
                               (q/send! backend [worker-addr q/MSG-PONG]))
-              q/MSG-READY (do (log/debug "[router] READY from" worker-addr "for" method)
+              q/MSG-READY (do (log/info "[router] READY from" worker-addr "for" method)
                               (put-worker method worker-addr)
                               (dispatch backend [worker-addr method]))
               q/MSG-REP   (let [[client-addr reply] (q/retrieve-data msg [String zmq/bytes-type])]

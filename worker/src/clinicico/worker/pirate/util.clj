@@ -31,7 +31,7 @@
   "Copies (using io/copy) the file into the file with filename"
   [^RConnection R ^java.io.Closeable file filename]
   (with-open [^java.io.Closeable r-file (create-file! R filename)]
-    (io/copy (slurp file) r-file)))
+    (io/copy file r-file)))
 
 (defn- as-list
   "Converts a

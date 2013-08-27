@@ -1,132 +1,46 @@
 'use strict';
 
-/* Services */
-angular.module('clinicico', []).
-  value('version', '0.1').
-  factory('clinicico.tasks', function ($q, $rootScope, $http) {
+window.clinicico = (function () {
+  var config = window.clinicico || {};
+  var WS_URI = typeof config['WS_URI'] !== 'undefined' ? config['WS_URI'] : "ws://localhost:3000/ws";
+  var BASE_URI = typeof config['BASE_URI'] !== 'undefined' ? config['BASE_URI'] : "http://api.clinici.co/";
 
-  var clinicico = {};
-  // Load default config if none found
-  if(!angular.isDefined(window.clinicico)) {
-    clinicico = angular.extend(clinicico, { config: { baseUrl: "http://localhost:3000/tasks/" } })
-  } else {
-    clinicico = window.clinicico;
-  }
-
-  var Task = function(method, data) {
+  var Task = function(method, payload) {
+    var resultsPromise = when.defer();
     var self = this;
-    var scope = $rootScope.$new(true);
-    var resultsFuture = $q.defer();
+    this.results = resultsPromise.promise;
 
-    this.method = method;
-    this.url = clinicico.config.baseUrl + method;
-    this.results = resultsFuture.promise;
-    this.lastStatus = null;
-
-    this.on = function(eventName, callback) {
-      scope.$on(eventName, function(e, data) {
-        self.status = data;
-        callback(data);
+    var session = ab.connect(WS_URI, function(session) {
+      console.log("Connected to " + WS_URI, session.sessionid());
+      // Subscribe to updates
+      session.subscribe(BASE_URI + "status#", function(topic, event) {
+        resultsPromise.notify(event);
       });
-    }
 
-    /* Needed because WebSocket does not trigger
-       a digest but $http does
-       see https://coderwall.com/p/ngisma */
-    scope.safeApply = function(fn) {
-      var phase = this.$root.$$phase;
-      if(phase == '$apply' || phase == '$digest') {
-        if(fn && (typeof(fn) === 'function')) {
-          fn();
+      // Send-off RPC
+      self.results = session.call(BASE_URI + "rpc#", method, payload).then(
+        function(result) {
+          resultsPromise.resolve(result);
+          session.close();
+        },
+        function(reason, code) {
+          console.log("error", code, reason);
+          resultsPromise.reject(reason);
+          session.close();
         }
-      } else {
-        this.$apply(fn);
-      }
-    };
+      );
 
-    /* Thanks to Modernizr
-     https://github.com/Modernizr/Modernizr/blob/master/feature-detects/websockets/binary.js */
-    function hasWebsockets() {
-      var protocol = 'https:'==location.protocol?'wss':'ws',
-      protoBin;
-
-      if("WebSocket" in window) {
-        if( protoBin = "binaryType" in WebSocket.prototype ) {
-          return protoBin;
-        }
-        try {
-          return !!(new WebSocket(protocol+'://.').binaryType);
-        } catch (e){}
-      }
-
-      return false;
-    }
-
-
-    function update(eventName, data) {
-      scope.safeApply(function() {
-        scope.$broadcast(eventName, data);
-        self.lastStatus = data;
-
-        if(data.status === "failed") {
-          resultsFuture.reject(data);
-        }
-        if(data.results) {
-          resultsFuture.resolve(data.results);
-        }
-      });
-    }
-
-    var __nonPoll = ["failed", "completed", "canceled"];
-    var longPoll = function(url) {
-      (function doPoll() {
-        $http.get(url).success(function(data) {
-          update("update", data);
-          if(__nonPoll.indexOf(data.status) === -1) {
-            doPoll();
-          }
-        });
-      })();
-    }
-
-    var webSocket = function(url) {
-      var socket = new WebSocket(url);
-
-      socket.onmessage = function(event) {
-        var data = angular.fromJson(event.data);
-        if(__nonPoll.indexOf(data.status) !== -1) {
-          socket.close();
-        }
-        update("update", data);
-      };
-    }
-
-    $http.post(this.url, data)
-    .success(function(data) {
-      angular.forEach(data._links, function(link) {
-        if(link.rel === "self") {
-          $http.get(link.href).success(function(data) {
-            update("update", data);
-          });
-        } else if (link.rel === "status") {
-          var done = self.lastStatus && __nonPoll.indexOf(self.lastStatus.status) !== -1;
-          if(!done) {
-            if(hasWebsockets() && link.websocket) {
-              webSocket(link.websocket);
-            } else {
-              longPoll(link.href);
-            }
-          }
-        }
-      });
-    })
-    .error(function(data, status) {
-      scope.$broadcast("error", data);
-      resultsFuture.reject("Failed to fetch results" + status);
+    }, function(reason, code) {
+      resultsPromise.reject(reason);
+      console.log(code, reason);
     });
   }
 
-  return {
-    submit: function(method, data) { return new Task(method, data); }
-  }
-});
+  var clinicico = {
+    submit: function (method, payload) {
+      return new Task(method, payload);
+    }
+  };
+
+  return clinicico;
+}());
