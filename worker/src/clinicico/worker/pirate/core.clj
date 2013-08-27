@@ -96,6 +96,6 @@
               result (pirate/parse R call)]
           {:id id
            :method method
-           :files (pirate/retrieve R "files")
-           :results (json/decode result)}))
+           :results (assoc (json/decode result)
+                      :_embedded (pirate/retrieve R "files"))}))
       (catch Exception e (throw (Exception. (cause e) e))))))
