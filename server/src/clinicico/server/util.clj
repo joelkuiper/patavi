@@ -1,6 +1,6 @@
 (ns clinicico.server.util
   (:gen-class)
-  (:require [cheshire.generate :refer [add-encoder encode-str remove-encoder]]
+  (:require [cheshire.generate :refer [add-encoder remove-encoder]]
             [cheshire.core :refer :all])
   (:import [com.fasterxml.jackson.core JsonGenerator]
            [org.joda.time.format DateTimeFormat ISODateTimeFormat] ))

@@ -17,7 +17,7 @@ function TaskCtrl($scope) {
     var errorHandler = handlerFactory("error");
     var successHandler = handlerFactory("results");
 
-    task.results.then(undefined, errorHandler, progressHandler);
+    task.results.then(successHandler, errorHandler, progressHandler);
   }
 }
 TaskCtrl.$inject = ['$scope'];

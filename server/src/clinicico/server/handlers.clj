@@ -7,9 +7,10 @@
             [ring.util.response :as resp]
             [org.httpkit.server :as http-kit]
             [clinicico.common.util :refer [dissoc-in]]
+            [clinicico.server.config :refer [config]]
             [clinicico.server.service :only [publish available?] :as service]))
 
-(def base "http://myapp/")
+(def base (:ws-base-uri config))
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 

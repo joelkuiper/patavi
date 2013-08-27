@@ -15,7 +15,7 @@
 
 (def ^:private script-file (atom nil))
 
-(def ^:private default-packages ["Rserve" "RJSONIO" "Cairo"])
+(def ^:private default-packages ["Rserve" "RJSONIO" "base64enc" "Cairo"])
 
 (def ^:private load-template
   (str "l = tryCatch(require('%1$s'), warning=function(w) w);"
