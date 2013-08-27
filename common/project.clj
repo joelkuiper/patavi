@@ -1,4 +1,4 @@
-(defproject patavi.common "0.2.0"
+(defproject patavi.common "0.2.1"
   :description "Library with common functions and dependencies for server and worker"
   :url "http://patavi.com"
   :license {:name "The MIT License"
