@@ -18,7 +18,7 @@
              ["-m" "--method" "R method name" :default "echo"]
              ["-p" "--packages" "Comma seperated list of additional R packages to load"
               :parse-fn #(split % #",\s?")]
-             ["-f" "--file" "R file to execute" :default "resources/pirate/echo.R"])
+             ["-f" "--file" "R file to execute" :default "resources-dev/pirate/echo.R"])
         method (:method options)
         file (:file options)]
     (when (:help options)
