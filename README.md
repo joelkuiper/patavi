@@ -21,6 +21,33 @@ want to expose R scripts as HTTP see
 [FastRWeb](https://www.rforge.net/FastRWeb/) or one of the [many other
 options](http://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Web-Interfaces).
 
+
+## Usage
+Start the server with `lein run` in the server folder then start one or more workers
+with `lein run` you can provide the method name and file in the options (run
+`lein --help` for details).
+
+The R script takes exactly one argument `params` which is the deserialzed JSON
+(through [RJSONIO](http://cran.r-project.org/web/packages/RJSONIO/index.html)). The following script emulates a long running process:
+
+    slow <- function(params) {
+      N <- 100;
+      x <- abs(rnorm(N, 0.001, 0.05))
+      for(i in as.single(1:N)) {
+        update(i); # send an out of band progress update
+        Sys.sleep(x[[i]])
+      }
+
+      # The plot will be converted to base64 (url encoded)
+      save.plot(function() hist(x), "duration", type="png")
+
+      params
+    }
+
+The server is exposed as WAMP which can be accessed with, for example,
+[Autobahn](http://autobahn.ws/) (see `client` folder for an example using
+[AngularJS](http://www.angularjs.org/)).
+
 ## Installation
 
 ### Method 1 (Chef cookbook)
