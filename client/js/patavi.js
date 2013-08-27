@@ -30,7 +30,7 @@ window.patavi = (function () {
         }
       );
 
-    }, function(reason, code) {
+    }, function(code, reason) {
       resultsPromise.reject(reason);
       console.log(code, reason);
     });
