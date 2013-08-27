@@ -1,5 +1,5 @@
 <img src="https://raw.github.com/joelkuiper/patavi/gh-pages/assets/img/patavi_small.png" alt="logo" align="right" width="250" />
-# Patavi: exposing R as WAMP
+# Expose R as WAMP
 
 **This is an alpha release.  We are using it internally in production,
   but the API and organizational structure are subject to change.
