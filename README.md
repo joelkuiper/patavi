@@ -1,12 +1,11 @@
-# Patavi: a distributed system for exposing R as WAMP
 <img src="https://raw.github.com/joelkuiper/patavi/gh-pages/assets/img/patavi_small.png" alt="logo" align="right" width="250" />
+# Patavi: exposing R as WAMP
 
 **This is an alpha release.  We are using it internally in production,
   but the API and organizational structure are subject to change.
   Comments and suggestions are much appreciated.**
 
-Introduction
-============
+## Introduction
 Patavi is a distributed system for exposing
 R scripts as web services (through [WAMP](http://wamp.ws/) RPC).
 It was created out of the need to run
@@ -15,19 +14,16 @@ providing an interface to see the status updates. We currently use it
 to do Multi Criteria Decision Analysis (MCDA), see [our
 demo](http://mcda.clinici.co). It is written in Clojure.
 
-Alternatives
-------------
+## Alternatives
 If you are looking for just a web-based interactive R environment
 checkout [RStudio Shiny](http://www.rstudio.com/shiny/). If you just
 want to expose R scripts as HTTP see
 [FastRWeb](https://www.rforge.net/FastRWeb/) or one of the [many other
 options](http://cran.r-project.org/doc/FAQ/R-FAQ.html#R-Web-Interfaces).
 
-Installation
-============
+## Installation
 
-Method 1 (Chef cookbook)
-------------------------
+### Method 1 (Chef cookbook)
 The simplest way to
 try out Patavi is in a vagrant virtual machine provisioned with our
 Chef cookbook. This has been tested on Ubuntu 12.04 and 13.04, but
@@ -59,8 +55,7 @@ and pointing the configuration to `33.33.33.10`, or whatever you set the Vagrant
 Note that the base box is Ubuntu 12.04 (precise) 64-bit. For 32-bit
 change the variable accordingly in the Vagrantfile
 
-Method 2 (manual)
------------------
+### Method 2 (manual)
 To manually set up an environment
 you'll need the following set-up and configured:
 
@@ -68,9 +63,6 @@ you'll need the following set-up and configured:
 * Java (>= 1.7)
 * ZeroMQ (preferably >= 3.0)
 * Leiningen (> 2.0)
-
-
-
 
 clone the repository and `lein install` the common folder. Then start
 the server and worker by running `lein run --`, see `'lein run --
