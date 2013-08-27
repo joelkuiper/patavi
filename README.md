@@ -1,3 +1,6 @@
+# Patavi: a distributed system for exposing R as WAMP
+<img src="https://raw.github.com/joelkuiper/patavi/gh-pages/assets/img/patavi_small.png" alt="logo" align="right" width="250" />
+
 **This is an alpha release.  We are using it internally in production,
   but the API and organizational structure are subject to change.
   Comments and suggestions are much appreciated.**
@@ -7,7 +10,7 @@ Introduction
 Patavi is a distributed system for exposing
 R scripts as web services (through [WAMP](http://wamp.ws/) RPC).
 It was created out of the need to run
-potentially very long running R scripts tasks in a web browser while
+potentially very long running R scripts in a web browser while
 providing an interface to see the status updates. We currently use it
 to do Multi Criteria Decision Analysis (MCDA), see [our
 demo](http://mcda.clinici.co). It is written in Clojure.
