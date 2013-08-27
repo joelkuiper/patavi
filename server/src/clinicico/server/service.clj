@@ -68,7 +68,6 @@
   (let [id (crypto.random/url-part 6)
         channel (update-reciever id)
         msg {:id id :body payload :method method}]
-    (log/info (format "[service] publishing %s task to %s" id method))
     (go (>! channel {:id id
                      :method method
                      :status "pending"
