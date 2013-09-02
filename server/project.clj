@@ -1,5 +1,5 @@
 (defproject patavi.server "0.2.1"
-  :description "Clinici.co is a distributed system for exposing R as WAMP"
+  :description "Patavi is a distributed system for exposing R as WAMP"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
             :distribution :repo}
