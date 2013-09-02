@@ -15,7 +15,8 @@
                  [overtone/at-at "1.2.0"]
                  [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]
                  [liberator "0.9.0"]]
-  :profiles {:dev {:resource-paths ["resources-dev"]
+  :profiles {:uberjar {:aot :all}
+             :dev {:resource-paths ["resources-dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]
                                   [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
              :production {:dependencies [[org.zeromq/jzmq "2.2.2"]]
