@@ -105,8 +105,7 @@
         (log/info "[broker] dispatching!" client-addr "to" (format "%s:%s" service-name worker-addr))
         (q/send! socket [worker-addr q/MSG-REQ client-addr request])))))
 
-
-(defn router-fn
+(defn- router-fn
   [frontend-address backend-address]
   (let [[frontend backend :as sides]
         (map (partial bind-socket context :router) [frontend-address backend-address])
