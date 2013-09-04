@@ -1,6 +1,6 @@
 (ns patavi.worker.main
   (:gen-class)
-  (:require [patavi.worker.task :as tasks :only [initialize]]
+  (:require [patavi.worker.consumer :as consumer]
             [patavi.worker.pirate.core :as pirate]
             [clojure.tools.cli :refer [cli]]
             [clojure.string :refer [split trim capitalize]]
@@ -19,11 +19,13 @@
              ["-p" "--packages" "Comma seperated list of additional R packages to load"
               :parse-fn #(split % #",\s?")]
              ["-f" "--file" "R file to execute" :default "resources-dev/pirate/echo.R"])
-        method (:method options)
-        file (:file options)]
+        {:keys [file packages rserve
+                nworkers method]} options]
     (when (:help options)
       (println banner)
       (System/exit 0))
-    (pirate/initialize (:file options) (:packages options) (:rserve options))
-    (tasks/initialize method (:nworkers options) pirate/execute)
+    (pirate/initialize file packages rserve)
+    (dotimes [n nworkers]
+      (log/info "[main] started worker for" method)
+      (consumer/start method (partial pirate/execute method)))
     (while true (Thread/sleep 100))))

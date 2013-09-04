@@ -11,10 +11,13 @@
             [taoensso.nippy :as nippy]))
 
 (def ^:private frontend-address (:broker-frontend-socket config))
+(def ^:private updates-address (:broker-updates-socket config))
 
 (defn initialize
   []
-  (broker/start frontend-address (:broker-backend-socket config)))
+  (broker/start frontend-address
+                (:broker-backend-socket config)
+                updates-address))
 
 (defn psi [alpha beta]
   "Infinite Stream function. Starts two go routines, one perpetually pushing
@@ -34,12 +37,11 @@
   (let [context (zmq/context)
         socket (zmq/socket context :sub)
         updates (chan)]
-    (zmq/subscribe (zmq/connect socket (:updates-socket config)) id)
+    (zmq/subscribe (zmq/connect socket updates-address) id)
     (psi #(zmq/receive-all socket)
-       #(go (>! updates
-                (try
-                  (nippy/thaw (second %))
-                  (catch Exception e {})))))
+         (fn [msg] (go (>! updates
+                           (let [[_ _ update] msg]
+                             (nippy/thaw update))))))
     updates))
 
 (defn available?
