@@ -1,4 +1,4 @@
-(defproject patavi.server "0.2.1"
+(defproject patavi.server "0.2.2-SNAPSHOT"
   :description "Patavi is a distributed system for exposing R as WAMP"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
@@ -8,7 +8,7 @@
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/" }
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
-                 [patavi.common "0.2.1"]
+                 [patavi.common "0.2.2-SNAPSHOT"]
                  [ring/ring-devel "1.2.0"]
                  [http-kit "2.1.9"]
                  [clj-wamp "1.0.0"]
