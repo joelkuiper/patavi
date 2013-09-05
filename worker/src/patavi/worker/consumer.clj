@@ -68,9 +68,9 @@
     (let [{:keys [service socket]} @consumer
           work (chan)
           [address request] (q/retrieve-data msg [String zmq/bytes-type])
-          {:keys [id] :as content} (nippy/thaw request)
+          {:keys [id body] :as content} (nippy/thaw request)
           updater (partial send-update! socket service id)]
-      (go (>! work (wrap-exception handler content updater)))
+      (go (>! work (wrap-exception handler body updater)))
       (go
        (q/send! socket [q/MSG-REP service address (nippy/freeze (<! work))] :prefix-empty)
        (q/send! socket [q/MSG-READY service] :prefix-empty)
