@@ -73,6 +73,7 @@
       (go (>! work (wrap-exception handler body updater)))
       (go
        (q/send! socket [q/MSG-REP service address (nippy/freeze (<! work))] :prefix-empty)
+       (updater {id "terminate"})
        (q/send! socket [q/MSG-READY service] :prefix-empty)
        (close! work)))))
 
