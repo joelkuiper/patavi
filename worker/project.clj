@@ -1,4 +1,4 @@
-(defproject patavi.worker "0.2.2-SNAPSHOT"
+(defproject patavi.worker "0.2.2"
   :url "http://patavi.com"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"
@@ -8,7 +8,7 @@
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
                  "drugis" "http://drugis.org/mvn"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [patavi.common "0.2.2-SNAPSHOT"]
+                 [patavi.common "0.2.2"]
                  [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
   :profiles {:uberjar {:aot :all}
