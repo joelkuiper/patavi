@@ -8,7 +8,6 @@
             [clojure.tools.logging :as log]))
 
 (def ^:private services (atom {}))
-(def ^:private context (zmq/context 2))
 (def ^:private max-ttl 3000) ;; in millis
 (def ^:private ttl-pool (at/mk-pool))
 
@@ -80,7 +79,8 @@
            expired? (fn [worker] (some #(= (:address worker) (:address %)) expired))
            waiting (:waiting service)]
        (when (seq expired)
-         (log/warn "[broker] workers were expired:" (map #(str (:address %) ":" (:name service)) expired))
+         (log/warn "[broker] workers were expired:"
+                   (map #(str (:address %) ":" (:name service)) expired))
          (swap! services assoc (:name service)
                 (-> service
                     (assoc :workers (apply (partial disj workers) expired))
@@ -105,11 +105,13 @@
         (log/info "[broker] dispatching!" client-addr "to" (format "%s:%s" service-name worker-addr))
         (q/send! socket [worker-addr q/MSG-REQ client-addr request])))))
 
-
-(defn router-fn
-  [frontend-address backend-address]
-  (let [[frontend backend :as sides]
-        (map (partial bind-socket context :router) [frontend-address backend-address])
+(defn- broker-fn
+  [frontend-address backend-address updates-address]
+  (let [context (zmq/context 3)
+        updates (bind-socket context :pub updates-address)
+        [frontend backend :as sides]
+        (map (partial bind-socket context :router)
+             [frontend-address backend-address])
         poller (zmq/poller context 2)]
     (fn []
       (doseq [side sides] (zmq/register poller side :pollin))
@@ -121,15 +123,18 @@
           (let [msg (q/receive! backend)
                 [worker-addr msg-type method] (q/retrieve-data msg [String Byte String])]
             (condp = msg-type
-              q/MSG-PING  (do (update-expiry method worker-addr)
-                              (q/send! backend [worker-addr q/MSG-PONG]))
-              q/MSG-READY (do (log/info "[router] READY from" worker-addr "for" method)
-                              (put-worker method worker-addr)
-                              (dispatch backend [worker-addr method]))
-              q/MSG-REP   (let [[client-addr reply] (q/retrieve-data msg [String zmq/bytes-type])]
-                            (q/send! frontend [client-addr q/STATUS-OK reply])))))))))
+              q/MSG-UPDATE (let [[process-id update]
+                                 (q/retrieve-data msg [String zmq/bytes-type])]
+                             (q/send! updates [process-id update]))
+              q/MSG-PING   (do (update-expiry method worker-addr)
+                               (q/send! backend [worker-addr q/MSG-PONG]))
+              q/MSG-READY  (do (log/info "[broker] READY from" worker-addr "for" method)
+                               (put-worker method worker-addr)
+                               (dispatch backend [worker-addr method]))
+              q/MSG-REP    (let [[client-addr reply] (q/retrieve-data msg [String zmq/bytes-type])]
+                             (q/send! frontend [client-addr q/STATUS-OK reply])))))))))
 
 (defn start
-  [frontend-address backend-address]
-  (let [router-fn (router-fn frontend-address backend-address)]
-    (.start (Thread. router-fn))))
+  [frontend-address backend-address updates-address]
+  (let [broker-fn (broker-fn frontend-address backend-address updates-address)]
+    (.start (Thread. broker-fn))))

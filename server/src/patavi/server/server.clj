@@ -1,4 +1,5 @@
 (ns patavi.server.server
+  (:gen-class)
   (:require [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [cli]]
             [ring.middleware.reload :as reload]

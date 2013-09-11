@@ -34,7 +34,7 @@
     {:error {:uri service-rpc-uri
              :message (str "service " method " not avaiable")}}))
 
-(def origin-re (:ws-origin-re config))
+(def origin-re (re-pattern (:ws-origin-re config)))
 
 (defn handle-service
   "Returns a http-kit websocket handler with wamp subprotocol"

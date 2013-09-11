@@ -2,21 +2,26 @@
   (:require [zeromq.zmq :as zmq]
             [patavi.common.util :refer :all]
             [crypto.random :as crypto])
-  (:import [org.zeromq ZMQ ZMQ$Socket ZMQ$PollItem ZMsg ZFrame ZLoop ZLoop$IZLoopHandler]))
+  (:import [org.zeromq ZMQ ZMQ$Socket
+                       ZMQ$PollItem ZMsg ZFrame
+                       ZLoop ZLoop$IZLoopHandler]))
 
-(def STATUS-OK (byte-array (byte 1)))
-(def STATUS-ERROR (byte-array (byte 2)))
+(def STATUS-OK (byte-array (byte 0x1)))
+(def STATUS-ERROR (byte-array (byte 0x2)))
 
 ; message types for router/dealer with ping/pong heart beats
-(def ^:const MSG-READY (byte 1))
-(def ^:const MSG-PING (byte 2))
-(def ^:const MSG-PONG (byte 3))
-(def ^:const MSG-REQ (byte 4))
-(def ^:const MSG-REP (byte 5))
+(def ^:const MSG-READY (byte 0x1))
+(def ^:const MSG-PING (byte 0x2))
+(def ^:const MSG-PONG (byte 0x3))
+(def ^:const MSG-REQ (byte 0x4))
+(def ^:const MSG-REP (byte 0x5))
+(def ^:const MSG-UPDATE (byte 0x6))
 
 (defn status-ok? [status] (java.util.Arrays/equals status STATUS-OK))
 
 (defn create-connected-socket
+  "Creates a connected ZMQ socket, optionally
+   identified with ident, set a random ident if none provided"
   ([context type address]
      (create-connected-socket context type address (crypto.random/hex 8)))
   ([context type address ident]
@@ -37,6 +42,8 @@
 (def ^:private empty-frame (ZFrame. (byte-array 0)))
 
 (defn send!
+  "Sends a vector of parts over the ZMQ socket as a `ZMsg`.
+   Optionally receives :prefix-empty which adds a zero byte as first part"
   [^ZMQ$Socket socket parts & flags]
   (let [frames (map #(ZFrame. (bytes-from %)) parts)
         content (interleave frames (repeat empty-frame))

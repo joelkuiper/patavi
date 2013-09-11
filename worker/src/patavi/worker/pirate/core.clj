@@ -95,6 +95,6 @@
         (let [call (format "exec(%s, params)" method)
               result (pirate/parse R call)]
           {:method method
-           :results (assoc (json/decode result)
-                      :_embedded (pirate/retrieve R "files"))}))
+           :results (json/decode result)
+           :_embedded (pirate/retrieve R "files")}))
       (catch Exception e (throw (Exception. (cause e) e))))))
