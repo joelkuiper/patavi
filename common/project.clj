@@ -7,7 +7,7 @@
   :repositories {"sonatype-nexus-snapshots" "https://oss.sonatype.org/content/repositories/snapshots"
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/" }
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/core.async "0.1.0-SNAPSHOT"]
+                 [org.clojure/core.async "0.1.0-20130827.050117-78"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.cli "0.2.4"]
                  [com.taoensso/nippy "2.2.0-RC1"]
