@@ -69,8 +69,9 @@ install [Berkshelf](http://berkshelf.com/) with:
 
 Clone the cookbook and run the Virtual Machine
 
-     git clone https://github.com/joelkuiper/patavi-cookbook.git cd
-     patavi-cookbook vagrant up
+     git clone https://github.com/joelkuiper/patavi-cookbook.git 
+     cd patavi-cookbook 
+     vagrant up
 
 Now you have time to grab a cup of coffee, go out with friends, find
 the love of your life, climb the mount everest or see the aurora
