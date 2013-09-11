@@ -31,7 +31,8 @@
             (if (= update {id "terminate"})
               (do
                 (close! updates)
-                (.close socket))
+                (.close socket)
+                (.term context))
               (do
                 (>! updates update)
                 (recur (zmq/receive-all socket)))))))
