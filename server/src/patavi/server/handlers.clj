@@ -32,7 +32,7 @@
   (if (service/available? method)
     (dispatch-rpc method data)
     {:error {:uri service-rpc-uri
-             :message (str "service " method " not avaiable")}}))
+             :message (str "service " method " not available")}}))
 
 (def origin-re (re-pattern (:ws-origin-re config)))
 
