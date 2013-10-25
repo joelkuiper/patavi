@@ -10,16 +10,16 @@
                  [compojure "1.1.5"]
                  [patavi.common "0.2.3"]
                  [ring/ring-devel "1.2.0"]
-                 [http-kit "2.1.9"]
+                 [http-kit "2.1.13"]
                  [clj-wamp "1.0.0"]
                  [overtone/at-at "1.2.0"]
-                 [org.zeromq/cljzmq "0.1.1" :exclusions [org.zeromq/jzmq]]
+                 [org.zeromq/cljzmq "0.1.3" :exclusions [org.zeromq/jzmq]]
                  [liberator "0.9.0"]]
   :profiles {:uberjar {:aot :all}
              :dev {:resource-paths ["resources-dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.4"]
                                   [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
-             :production {:dependencies [[org.zeromq/jzmq "2.2.2"]]
+             :production {:dependencies [[org.zeromq/jzmq "3.0.1"]]
                           :resource-paths ["resources-prod"]
                           :jvm-opts ["-server" "-Djava.library.path=/usr/lib:/usr/local/lib"]}}
   :main patavi.server.server)
