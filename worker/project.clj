@@ -8,7 +8,7 @@
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
                  "drugis" "http://drugis.org/mvn"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [patavi.common "0.2.3"]
+                 [patavi.common "0.2.4-SNAPSHOT"]
                  [org.zeromq/cljzmq "0.1.3" :exclusions [org.zeromq/jzmq]]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
   :profiles {:uberjar {:aot :all}

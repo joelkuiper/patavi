@@ -8,7 +8,7 @@
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/" }
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
-                 [patavi.common "0.2.3"]
+                 [patavi.common "0.2.4-SNAPSHOT"]
                  [ring/ring-devel "1.2.0"]
                  [http-kit "2.1.13"]
                  [clj-wamp "1.0.0"]
