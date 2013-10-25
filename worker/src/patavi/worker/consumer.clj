@@ -1,7 +1,7 @@
 (ns patavi.worker.consumer
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :refer [go >! <! close! chan]]
             [patavi.common.zeromq :as q]
             [patavi.common.util :refer [insert]]
             [patavi.worker.config :refer [config]]
@@ -73,7 +73,6 @@
       (go (>! work (wrap-exception handler body updater)))
       (go
        (q/send! socket [q/MSG-REP service address (nippy/freeze (<! work))] :prefix-empty)
-       (updater {id "terminate"})
        (q/send! socket [q/MSG-READY service] :prefix-empty)
        (close! work)))))
 

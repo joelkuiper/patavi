@@ -2,7 +2,7 @@
   (:use patavi.server.util)
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :as async :refer [go <! >! chan]]
             [clj-wamp.server :as wamp]
             [ring.util.response :as resp]
             [org.httpkit.server :as http-kit]
@@ -21,7 +21,7 @@
     (try
       (go (loop [update (<! updates)]
             (when ((comp not nil?) update)
-              (wamp/emit-event! service-status-uri update listeners)
+              (wamp/emit-event! service-status-uri (:msg update) listeners)
               (recur (<! updates)))))
       @results
       (catch Exception e

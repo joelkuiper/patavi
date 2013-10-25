@@ -1,6 +1,6 @@
 (ns patavi.worker.pirate.core
   (:require [clojure.java.io :as io]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :refer [go >! <! filter< chan]]
             [clojure.string :refer [split join]]
             [clojure.java.shell :refer [sh]]
             [patavi.worker.pirate.util :as pirate]
