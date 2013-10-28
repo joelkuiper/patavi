@@ -58,13 +58,13 @@
   [^ZMsg msg types & flags]
   (when (contains? (set flags) :drop-first)
     (.destroy (.pop msg)))
-  (loop [acc [] msg msg types types]
-    (if (and (seq types) (not (empty? msg)))
+  (loop [acc (transient []) msg msg types types]
+    (if (and (seq types) (seq msg))
       (let [^ZFrame frame (.unwrap msg)
             content (bytes-to (.getData frame) (first types))]
         (.destroy frame)
-        (recur (conj acc content) msg (rest types)))
-      acc)))
+        (recur (conj! acc content) msg (rest types)))
+      (persistent! acc))))
 
 (defn receive!
   ([^ZMQ$Socket socket]
