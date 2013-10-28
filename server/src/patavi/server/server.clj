@@ -39,6 +39,6 @@
       (println banner)
       (System/exit 0))
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
-      (log/info "Running server on:" (:port options))
+      (log/info "running server on:" (:port options))
       (service/initialize)
       (run-server handler {:port (:port options)}))))
