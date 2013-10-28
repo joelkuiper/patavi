@@ -11,13 +11,14 @@ function TaskCtrl($scope) {
       return function(x) {
         $scope[type] = x;
         $scope.$apply();
-      }
-    }
+      };
+    };
+
     var progressHandler = handlerFactory("status");
     var errorHandler = handlerFactory("error");
     var successHandler = handlerFactory("results");
 
     task.results.then(successHandler, errorHandler, progressHandler);
-  }
+  };
 }
 TaskCtrl.$inject = ['$scope'];

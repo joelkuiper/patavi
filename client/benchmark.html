@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  </head>
+
+  <body>
+
+  </body>
+
+  <script src="//autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
+  <script src="js/patavi.js"></script>
+
+  <script type="text/javascript">
+   var task = patavi.submit("benchmark", {});
+   task.results.then(function(results) {
+     console.log(results);
+   });
+
+  </script>
+</html>
