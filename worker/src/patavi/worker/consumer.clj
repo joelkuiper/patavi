@@ -1,7 +1,7 @@
 (ns patavi.worker.consumer
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
-            [clojure.core.async :refer [go >! <! close! chan]]
+            [clojure.core.async :refer [thread >!! <!! close! chan]]
             [patavi.common.zeromq :as q]
             [patavi.common.util :refer [insert]]
             [patavi.worker.config :refer [config]]
@@ -58,7 +58,7 @@
   (try
     (apply fn params)
     (catch Exception e
-      (do (log/warn e)
+      (do (log/error e)
           {:status failed
            :cause (.getMessage e)}))))
 
@@ -70,9 +70,9 @@
           [address request] (q/retrieve-data msg [String zmq/bytes-type])
           {:keys [id body] :as content} (nippy/thaw request)
           updater (partial send-update! socket service id)]
-      (go (>! work (wrap-exception handler body updater)))
-      (go
-       (q/send! socket [q/MSG-REP service address (nippy/freeze (<! work))] :prefix-empty)
+      (thread (>!! work (wrap-exception handler body updater)))
+      (thread
+       (q/send! socket [q/MSG-REP service address (nippy/freeze (<!! work))] :prefix-empty)
        (q/send! socket [q/MSG-READY service] :prefix-empty)
        (close! work)))))
 
@@ -91,11 +91,11 @@
   [service handler]
   (let [context (zmq/context)
         zloop (ZLoop.)
-        consumer (atom {:handlers  {}
+        consumer (atom {:handlers {}
                         :service service
                         :zloop zloop
                         :socket nil})
-        initialize #(let [poller (zmq/poller context 2)
+        initialize #(let [poller (zmq/poller context 1)
                           socket (q/create-connected-socket
                                   context :dealer (:broker-socket config))]
                       (swap! consumer assoc
@@ -111,7 +111,6 @@
            :handlers {q/MSG-REQ (handle-request consumer handler)}
            :initialize initialize)
     ((@consumer :initialize))
-
     ; Mysterious hack required to start the zloop
     (.addTimer zloop 1000 0 (q/zloop-handler #(do (Thread/sleep 1) 0)) {})
     (.start (Thread. #(.start zloop)))

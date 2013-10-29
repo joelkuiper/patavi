@@ -17,7 +17,8 @@
                  [liberator "0.9.0"]]
   :profiles {:uberjar {:aot :all}
              :dev {:resource-paths ["resources-dev"]
-                   :dependencies [[org.clojure/tools.namespace "0.2.4"]
+                   :dependencies [[criterium "0.4.2"]
+                                  [org.clojure/tools.namespace "0.2.4"]
                                   [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
              :production {:dependencies [[org.zeromq/jzmq "3.0.1"]]
                           :resource-paths ["resources-prod"]

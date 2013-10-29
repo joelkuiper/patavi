@@ -97,4 +97,4 @@
           {:method method
            :results (json/decode result)
            :_embedded (pirate/retrieve R "files")}))
-      (catch Exception e (throw (Exception. (cause e) e))))))
+      (catch Exception e (do (log/error e) (throw (Exception. (cause e) e)))))))

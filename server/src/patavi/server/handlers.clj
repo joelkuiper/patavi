@@ -25,8 +25,10 @@
               (recur (<! updates)))))
       @results
       (catch Exception e
-        {:error {:uri service-rpc-uri
-                 :message (.getMessage e)}}))))
+        (do
+          (log/error e)
+          {:error {:uri service-rpc-uri
+                   :message (.getMessage e)}})))))
 
 (defn service-run-rpc [method data]
   (if (service/available? method)
