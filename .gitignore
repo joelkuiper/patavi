@@ -16,3 +16,5 @@ tags
 **/target
 **/.lein-repl-history
 **/tmp
+.DS_Store
+

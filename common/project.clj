@@ -11,6 +11,7 @@
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.cli "0.2.4"]
                  [com.taoensso/nippy "2.4.1"]
+                 [com.taoensso/carmine "2.3.1"]
                  [cheshire "5.2.0"]
                  [log4j "1.2.17" :exclusions [javax.mail/mail
                                               javax.jms/jms

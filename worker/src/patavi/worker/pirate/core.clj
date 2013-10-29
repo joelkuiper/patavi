@@ -1,12 +1,10 @@
 (ns patavi.worker.pirate.core
   (:require [clojure.java.io :as io]
-            [clojure.core.async :refer [go >! <! filter< chan]]
             [clojure.string :refer [split join]]
             [clojure.java.shell :refer [sh]]
             [patavi.worker.pirate.util :as pirate]
             [patavi.worker.config :refer [config]]
             [clojure.tools.logging :as log]
-            [zeromq.zmq :as zmq]
             [me.raynes.fs :as fs]
             [cheshire.core :as json :only [encode decode]]
             [crypto.random :as crypto])
@@ -94,7 +92,7 @@
         (pirate/assign R "files" [])
         (let [call (format "exec(%s, params)" method)
               result (pirate/parse R call)]
-          {:method method
+          {:status :success
            :results (json/decode result)
            :_embedded (pirate/retrieve R "files")}))
       (catch Exception e (do (log/error e) (throw (Exception. (cause e) e)))))))
