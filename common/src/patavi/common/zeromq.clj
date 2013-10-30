@@ -45,16 +45,16 @@
 
 (defn send!
   "Sends a vector of parts over the ZMQ socket as a `ZMsg`.
-   Optionally receives :prefix-empty which adds a zero byte as first frame"
+   Optionally receives :prefix-empty which adds a zero byte as first part"
   [^ZMQ$Socket socket parts & flags]
   (let [frames (map #(ZFrame. (bytes-from %)) parts)
         content (interleave frames (repeat empty-frame))
         msg (ZMsg.)]
-    (doall (map #(.add msg %)
-                (if (contains? (set flags) :prefix-empty)
-                  (concat [empty-frame] content)
-                  content)))
-    (.send msg socket true)))
+    (if (contains? (set flags) :prefix-empty)
+      (.addAll msg (concat [empty-frame] content))
+      (.addAll msg content))
+    (.send msg socket)))
+
 
 (defn- parse-frame
   [^ZFrame frame type]
