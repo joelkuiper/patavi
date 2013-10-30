@@ -1,11 +1,11 @@
 (ns patavi.worker.pirate.core
   (:require [clojure.java.io :as io]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :refer [go >! <! filter< chan]]
             [clojure.string :refer [split join]]
             [clojure.java.shell :refer [sh]]
             [patavi.worker.pirate.util :as pirate]
-            [patavi.worker.config :refer [config]]
             [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
             [zeromq.zmq :as zmq]
             [me.raynes.fs :as fs]
             [cheshire.core :as json :only [encode decode]]
@@ -34,7 +34,7 @@
 
 (defn- make-cmd
   [config-file]
-  (let [log-dir (fs/expand-home (:rserve-logs config))
+  (let [log-dir (fs/expand-home (env :rserve-logs))
         config-path (fs/absolute-path config-file)
         executable (fs/temp-file "rserve")]
     (io/copy (format start-cmd config-path log-dir) executable)
@@ -97,4 +97,4 @@
           {:method method
            :results (json/decode result)
            :_embedded (pirate/retrieve R "files")}))
-      (catch Exception e (throw (Exception. (cause e) e))))))
+      (catch Exception e (do (log/error e) (throw (Exception. (cause e) e)))))))

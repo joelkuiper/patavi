@@ -2,39 +2,41 @@
   (:use patavi.server.util)
   (:require [clojure.tools.logging :as log]
             [clojure.string :only [replace split] :as s]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :as async :refer [go <! >! chan]]
             [clj-wamp.server :as wamp]
             [ring.util.response :as resp]
             [org.httpkit.server :as http-kit]
+            [environ.core :refer [env]]
             [patavi.common.util :refer [dissoc-in]]
-            [patavi.server.config :refer [config]]
-            [patavi.server.service :only [publish available?] :as service]))
+            [patavi.server.service :only [publish available? eta] :as service]))
 
-(def base (:ws-base-uri config))
+(def base (env :ws-base-uri))
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 
 (defn dispatch-rpc
-  [method data]
+  [service data]
   (let [listeners [wamp/*call-sess-id*]
-        {:keys [updates close results]} (service/publish method data)]
+        {:keys [updates close results]} (service/publish service data)]
     (try
       (go (loop [update (<! updates)]
             (when ((comp not nil?) update)
-              (wamp/emit-event! service-status-uri update listeners)
+              (wamp/emit-event! service-status-uri (:msg update) listeners)
               (recur (<! updates)))))
-      @results
+      (deref results (service/eta service) {:error {:uri service-rpc-uri :message "this took way too long"}})
       (catch Exception e
-        {:error {:uri service-rpc-uri
-                 :message (.getMessage e)}}))))
+        (do
+          (log/error e)
+          {:error {:uri service-rpc-uri
+                   :message (.getMessage e)}})))))
 
-(defn service-run-rpc [method data]
-  (if (service/available? method)
-    (dispatch-rpc method data)
+(defn service-run-rpc [service data]
+  (if (service/available? service)
+    (dispatch-rpc service data)
     {:error {:uri service-rpc-uri
-             :message (str "service " method " not avaiable")}}))
+             :message (str "service " service " not available")}}))
 
-(def origin-re (re-pattern (:ws-origin-re config)))
+(def origin-re (re-pattern (env :ws-origin-re)))
 
 (defn handle-service
   "Returns a http-kit websocket handler with wamp subprotocol"

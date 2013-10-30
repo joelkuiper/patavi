@@ -1,10 +1,12 @@
 (ns patavi.common.zeromq
   (:require [zeromq.zmq :as zmq]
             [patavi.common.util :refer :all]
+            [clojure.tools.logging :as log]
             [crypto.random :as crypto])
-  (:import [org.zeromq ZMQ ZMQ$Socket
-                       ZMQ$PollItem ZMsg ZFrame
-                       ZLoop ZLoop$IZLoopHandler]))
+  (:import [org.zeromq
+            ZMQ ZMQ$Socket
+            ZMQ$PollItem ZMsg ZFrame
+            ZLoop ZLoop$IZLoopHandler]))
 
 (def STATUS-OK (byte-array (byte 0x1)))
 (def STATUS-ERROR (byte-array (byte 0x2)))
@@ -53,18 +55,26 @@
       (.addAll msg content))
     (.send msg socket)))
 
+
+(defn- parse-frame
+  [^ZFrame frame type]
+  (try (when (.hasData frame) (bytes-to (.getData frame) type))
+       (catch Exception e
+         (do (log/error "failed to process" (.strhex frame) type) nil))))
+
 (defn retrieve-data
-  "Retrieves the data from a ZMsg"
+  "Retrieves the data from a ZMsg, optionally dropping the first frame
+   with drop-first"
   [^ZMsg msg types & flags]
   (when (contains? (set flags) :drop-first)
     (.destroy (.pop msg)))
-  (loop [acc [] msg msg types types]
-    (if (and (seq types) (not (empty? msg)))
+  (loop [acc (transient []) msg msg types types]
+    (if (and (seq msg) (seq types))
       (let [^ZFrame frame (.unwrap msg)
-            content (bytes-to (.getData frame) (first types))]
+            content (parse-frame frame (first types))]
         (.destroy frame)
-        (recur (conj acc content) msg (rest types)))
-      acc)))
+        (recur (conj! acc content) msg (rest types)))
+      (persistent! acc))))
 
 (defn receive!
   ([^ZMQ$Socket socket]

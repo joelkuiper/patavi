@@ -26,7 +26,7 @@ Start the server with `lein run` in the server folder then start one or more wor
 with `lein run`. You can provide the method name and file in the options (run
 `lein --help` for details).
 
-The R script takes exactly one argument `params` which is the deserialzed JSON
+The R script takes exactly one argument `params` which is the de-serialized JSON
 (through [RJSONIO](http://cran.r-project.org/web/packages/RJSONIO/index.html)). The following script emulates a long running process:
 
     slow <- function(params) {
@@ -48,41 +48,6 @@ The server is exposed as WAMP which can be accessed with, for example,
 [AngularJS](http://www.angularjs.org/)).
 
 ## Installation
-
-### Method 1 (Chef cookbook)
-The simplest way to
-try out Patavi is in a vagrant virtual machine provisioned with our
-Chef cookbook. This has been tested on Ubuntu 12.04 and 13.04, but
-should also work on Mac OS X provided you know how to get the
-dependencies through [Homebrew](http://brew.sh/).
-
-You'll need to:
-
-Install [Vagrant](http://www.vagrantup.com/) from their site and
-install [Berkshelf](http://berkshelf.com/) with:
-
-     sudo apt-get install ruby-dev gem libxslt-dev gem install
-     berkshelf
-
-     # Install the vagrant-berkshelf plugin
-     vagrant plugin install vagrant-berkshelf
-
-Clone the cookbook and run the Virtual Machine
-
-     git clone https://github.com/joelkuiper/patavi-cookbook.git 
-     cd patavi-cookbook 
-     vagrant up
-
-Now you have time to grab a cup of coffee, go out with friends, find
-the love of your life, climb the mount everest or see the aurora
-borealis. The demo can be started by running the client
-(for example with `Python -m SimpleHTTPServer`)
-and pointing the configuration to `33.33.33.10`, or whatever you set the Vagrantfile to.
-
-Note that the base box is Ubuntu 12.04 (precise) 64-bit. For 32-bit
-change the variable accordingly in the Vagrantfile
-
-### Method 2 (manual)
 To manually set up an environment
 you'll need the following set-up and configured:
 
@@ -92,5 +57,46 @@ you'll need the following set-up and configured:
 * Leiningen (> 2.0)
 
 clone the repository and `lein install` the common folder. Then start
-the server and worker by running `lein run --`, see `lein run --
+the server and worker by running `lein run`, see `lein run --
 --help` for options
+
+
+## Performance
+Using [criterium](https://github.com/hugoduncan/criterium) to benchmark an echo service (one worker) the following results were obtained:
+
+*Evaluation count : 3480 in 60 samples of 58 calls.*
+
+| Name                          | Measurement          |
+| ----------------------------- | --------------------:|
+| Execution time mean           | 16.029490 ms         |
+| Execution time std-deviation  | 2.065263 ms          |
+| Execution time lower quantile | 12.122101 ms ( 2.5%) |
+| Execution time upper quantile | 19.261436 ms (97.5%) |
+| Overhead used                 | 1.058769 ns          |
+
+Note, however, that the 16 ms is a severe underestimate since it does
+not take into account network latency or the overhead of serializing /
+deserializing the input data.
+
+## Licence
+Copyright 2013 Joel Kuiper and other contributors
+http://patavi.com/
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

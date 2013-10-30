@@ -1,18 +1,18 @@
 (ns patavi.worker.consumer
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
-            [clojure.core.async :as async :refer :all]
+            [clojure.core.async :refer [thread >!! <!! close! chan]]
+            [environ.core :refer [env]]
             [patavi.common.zeromq :as q]
             [patavi.common.util :refer [insert]]
-            [patavi.worker.config :refer [config]]
             [clojure.tools.logging :as log])
   (:import [org.zeromq ZLoop]))
 
-(def ^:const heartbeat-interval (:heartbeat-interval config))
-(def ^:const heartbeat-liveness (:expire-broker-after config))
+(def ^:const heartbeat-interval (env :heartbeat-interval))
+(def ^:const heartbeat-liveness (env :expire-broker-after))
 
-(def ^:const interval-init (:initial-reconnect-interval config))
-(def ^:const interval-max (:maximum-reconnect-interval config))
+(def ^:const interval-init (env :initial-reconnect-interval))
+(def ^:const interval-max (env :maximum-reconnect-interval))
 
 (def ^:const failed "failed")
 
@@ -58,7 +58,7 @@
   (try
     (apply fn params)
     (catch Exception e
-      (do (log/warn e)
+      (do (log/error e)
           {:status failed
            :cause (.getMessage e)}))))
 
@@ -70,10 +70,9 @@
           [address request] (q/retrieve-data msg [String zmq/bytes-type])
           {:keys [id body] :as content} (nippy/thaw request)
           updater (partial send-update! socket service id)]
-      (go (>! work (wrap-exception handler body updater)))
-      (go
-       (q/send! socket [q/MSG-REP service address (nippy/freeze (<! work))] :prefix-empty)
-       (updater {id "terminate"})
+      (thread (>!! work (wrap-exception handler body updater)))
+      (thread
+       (q/send! socket [q/MSG-REP service address (nippy/freeze (<!! work))] :prefix-empty)
        (q/send! socket [q/MSG-READY service] :prefix-empty)
        (close! work)))))
 
@@ -92,13 +91,13 @@
   [service handler]
   (let [context (zmq/context)
         zloop (ZLoop.)
-        consumer (atom {:handlers  {}
+        consumer (atom {:handlers {}
                         :service service
                         :zloop zloop
                         :socket nil})
-        initialize #(let [poller (zmq/poller context 2)
+        initialize #(let [poller (zmq/poller context 1)
                           socket (q/create-connected-socket
-                                  context :dealer (:broker-socket config))]
+                                  context :dealer (env :broker-socket))]
                       (swap! consumer assoc
                              :socket socket
                              :poller poller)
@@ -112,7 +111,6 @@
            :handlers {q/MSG-REQ (handle-request consumer handler)}
            :initialize initialize)
     ((@consumer :initialize))
-
     ; Mysterious hack required to start the zloop
     (.addTimer zloop 1000 0 (q/zloop-handler #(do (Thread/sleep 1) 0)) {})
     (.start (Thread. #(.start zloop)))

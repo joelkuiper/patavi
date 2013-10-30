@@ -10,9 +10,16 @@ pom.xml
 .lein-failures
 .lein-plugins
 .lein-env
+.nrepl-port
 *.sw*
 *.err
 tags
 **/target
 **/.lein-repl-history
 **/tmp
+.lein-env
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
