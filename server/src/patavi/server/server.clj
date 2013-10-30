@@ -41,4 +41,4 @@
     (let [handler (if in-dev? (reload/wrap-reload app) app)]
       (log/info "running server on:" (:port options))
       (service/initialize)
-      (run-server handler {:port (:port options)}))))
+      (run-server handler {:port (:port options) :thread 256}))))
