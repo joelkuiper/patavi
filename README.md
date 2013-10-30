@@ -67,7 +67,7 @@ Using [criterium](https://github.com/hugoduncan/criterium) to benchmark an echo 
 *Evaluation count : 3480 in 60 samples of 58 calls.*
 
 | Name                          | Measurement          |
-| _____________________________ | ____________________ |
+| ----------------------------- | --------------------:|
 | Execution time mean           | 16.029490 ms         |
 | Execution time std-deviation  | 2.065263 ms          |
 | Execution time lower quantile | 12.122101 ms ( 2.5%) |
