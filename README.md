@@ -48,41 +48,6 @@ The server is exposed as WAMP which can be accessed with, for example,
 [AngularJS](http://www.angularjs.org/)).
 
 ## Installation
-
-### Method 1 (Chef cookbook)
-The simplest way to
-try out Patavi is in a vagrant virtual machine provisioned with our
-Chef cookbook. This has been tested on Ubuntu 12.04 and 13.04, but
-should also work on Mac OS X provided you know how to get the
-dependencies through [Homebrew](http://brew.sh/).
-
-You'll need to:
-
-Install [Vagrant](http://www.vagrantup.com/) from their site and
-install [Berkshelf](http://berkshelf.com/) with:
-
-     sudo apt-get install ruby-dev gem libxslt-dev gem install
-     berkshelf
-
-     # Install the vagrant-berkshelf plugin
-     vagrant plugin install vagrant-berkshelf
-
-Clone the cookbook and run the Virtual Machine
-
-     git clone https://github.com/joelkuiper/patavi-cookbook.git 
-     cd patavi-cookbook 
-     vagrant up
-
-Now you have time to grab a cup of coffee, go out with friends, find
-the love of your life, climb the mount everest or see the aurora
-borealis. The demo can be started by running the client
-(for example with `Python -m SimpleHTTPServer`)
-and pointing the configuration to `33.33.33.10`, or whatever you set the Vagrantfile to.
-
-Note that the base box is Ubuntu 12.04 (precise) 64-bit. For 32-bit
-change the variable accordingly in the Vagrantfile
-
-### Method 2 (manual)
 To manually set up an environment
 you'll need the following set-up and configured:
 
@@ -92,5 +57,5 @@ you'll need the following set-up and configured:
 * Leiningen (> 2.0)
 
 clone the repository and `lein install` the common folder. Then start
-the server and worker by running `lein run --`, see `lein run --
+the server and worker by running `lein run`, see `lein run --
 --help` for options
