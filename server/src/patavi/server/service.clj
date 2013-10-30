@@ -3,7 +3,7 @@
             [clojure.core.async :refer [go >! <! filter< chan close! mult tap untap]]
             [clojure.string :as s :only [replace]]
             [patavi.common.zeromq :as q]
-            [patavi.common.util :refer [now]]
+            [clj-time.core :refer [interval in-millis now]]
             [zeromq.zmq :as zmq]
             [crypto.random :as crypto]
             [patavi.server.network.broker :as broker]
@@ -36,19 +36,38 @@
   (broker/start frontend-address (env :broker-backend-socket) updates-address))
 
 (defn available?
-  [method]
-  (broker/service-available? method))
+  [service]
+  (broker/service-available? service))
+
+
+(def ^:private etas (atom {}))
+(def ^:private default-eta 36000)
+
+(defn ^:private update-eta
+  [service duration]
+  (swap! etas update-in [service]
+         (fn [average]
+           (if-not (nil? average)
+             (double (/ (+ average duration) 2))
+             default-eta))))
+
+(defn eta
+  "Returns the estimated time of arrival in msec"
+  [service]
+  (get @etas service default-eta))
 
 (defn- process
   "Sends the message and returns the results"
   [msg updates]
-  (let [{:keys [method id]} msg]
+  (let [start-time (now)
+        {:keys [service id]} msg]
     (with-open [socket (cached-socket context :req frontend-address id)]
-      (q/send! socket [method (nippy/freeze msg)])
+      (q/send! socket [service (nippy/freeze msg)])
       (try
         (let [[status result] (q/receive! socket 2 zmq/bytes-type)]
           (if (q/status-ok? status)
             (let [results (nippy/thaw result)]
+              (update-eta service (in-millis (interval start-time (now))))
               (if (= (:status results) "failed")
                 (throw (Exception. (:cause results)))
                 results))
@@ -57,10 +76,10 @@
         (finally (close! updates))))))
 
 (defn publish
-  [method payload]
+  [service payload]
   (let [id (crypto.random/url-part 6)
         updates ((:tap updates-stream) id)
-        msg {:id id :body payload :method method}]
+        msg {:id id :body payload :service service}]
     (go (>! updates {:status "pending"
                      :created (now)}))
     {:updates updates :id id :results (future (process msg updates))}))

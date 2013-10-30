@@ -8,33 +8,33 @@
             [org.httpkit.server :as http-kit]
             [environ.core :refer [env]]
             [patavi.common.util :refer [dissoc-in]]
-            [patavi.server.service :only [publish available?] :as service]))
+            [patavi.server.service :only [publish available? eta] :as service]))
 
 (def base (env :ws-base-uri))
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 
 (defn dispatch-rpc
-  [method data]
+  [service data]
   (let [listeners [wamp/*call-sess-id*]
-        {:keys [updates close results]} (service/publish method data)]
+        {:keys [updates close results]} (service/publish service data)]
     (try
       (go (loop [update (<! updates)]
             (when ((comp not nil?) update)
               (wamp/emit-event! service-status-uri (:msg update) listeners)
               (recur (<! updates)))))
-      @results
+      (deref results (service/eta service) {:error {:uri service-rpc-uri :message "this took way too long"}})
       (catch Exception e
         (do
           (log/error e)
           {:error {:uri service-rpc-uri
                    :message (.getMessage e)}})))))
 
-(defn service-run-rpc [method data]
-  (if (service/available? method)
-    (dispatch-rpc method data)
+(defn service-run-rpc [service data]
+  (if (service/available? service)
+    (dispatch-rpc service data)
     {:error {:uri service-rpc-uri
-             :message (str "service " method " not available")}}))
+             :message (str "service " service " not available")}}))
 
 (def origin-re (re-pattern (env :ws-origin-re)))
 
