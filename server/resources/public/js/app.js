@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('example', []);
 
 function TaskCtrl($scope) {
@@ -6,6 +8,9 @@ function TaskCtrl($scope) {
 
   $scope.submit = function(method, input) {
     var task = patavi.submit(method, angular.fromJson(input));
+    $scope.error = null;
+    $scope.status = null;
+    $scope.results = null;
 
     var handlerFactory = function(type) {
       return function(x) {

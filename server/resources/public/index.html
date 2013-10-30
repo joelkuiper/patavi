@@ -3,47 +3,56 @@
   <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width" />
-    <title>Client example using AngularJS</title>
+    <title>Patavi is running!</title>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/foundation/4.3.2/css/foundation.min.css" />
   </head>
   <body>
-    <div>
-      <div ng-controller="TaskCtrl" class="row">
-        <h1>Client example using AngularJS</h1>
-        <div class="columns large-4">
-          <label>Method</label>
-          <input type="text" ng-model="method">
-          <label>Input (JSON)</label>
-          <textarea ng-model="input">
-          </textarea>
-          <button class="small.button" ng-click="submit(method, input)">Submit new task</button>
-        </div>
-        <div class="columns large-offset-1 large-7">
-          <h5>progress</h5>
-          <div class="progress large-6">
-            <span class="meter" ng-style="{width: (status.progress || 0) + '%'}"></span>
-          </div>
-        </div>
-        <hr>
-        <div class="columns" ng-show="status">
-          <h2 class="subheader">Status</h2>
-          <div class="panel"><pre>{{status | json}}</pre></div>
-        </div>
-        <div class="columns" ng-show="results">
-          <h2 class="subheader">Results</h2>
-          <div class="panel"><pre>{{results | json}}</pre></div>
-        </div>
-        <div class="columns" ng-show="error">
-          <h2 class="subheader">Error</h2>
-          <div class="panel"><pre>{{error | json}}</pre></div>
+    <div class="row">
+      <div class="columns large-12"><h4><img src="img/patavi_small.png" alt="patavi logo"><small>up and running!</small></h4></div>
+    </div>
+    <div class="row">
+      <div class="columns large-12">
+        <p>
+          <strong>Congratulations!</strong> It looks like you have configured the server correctly. You can now start any number of workers and access
+          their tasks by using <a href="http://wamp.ws/">WAMP</a>.
+        </p>
+      </div>
+    </div>
+    <div ng-controller="TaskCtrl" class="row">
+      <div class="columns large-4">
+
+        <label>Method</label>
+        <input type="text" ng-model="method">
+        <label>Input (JSON)</label>
+        <textarea ng-model="input">
+        </textarea>
+        <button class="small secondary button" ng-click="submit(method, input)">Submit new task</button>
+      </div>
+      <div class="columns large-offset-1 large-7">
+        <label>progress</label>
+        <div class="secondary radius progress large-6">
+          <span class="meter" ng-style="{width: (status.progress || 0) + '%'}"></span>
         </div>
       </div>
-
-      <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"></script>
-      <script src="//autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
-
-      <script src="js/patavi.js"></script>
-      <script src="js/app.js"></script>
+      <hr>
+      <div class="columns" ng-show="status">
+        <h2 class="subheader">Status</h2>
+        <div class="panel"><pre>{{status | json}}</pre></div>
+      </div>
+      <div class="columns" ng-show="results">
+        <h2 class="subheader">Results</h2>
+        <div class="panel"><pre>{{results | json}}</pre></div>
+      </div>
+      <div class="columns" ng-show="error">
+        <h2 class="subheader">Error</h2>
+        <div class="panel"><pre>{{error | json}}</pre></div>
+      </div>
     </div>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.1.5/angular.min.js"></script>
+    <script src="//autobahn.s3.amazonaws.com/js/autobahn.min.js"></script>
+
+    <script src="js/patavi.js"></script>
+    <script src="js/app.js"></script>
   </body>
 </html>
