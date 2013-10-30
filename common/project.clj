@@ -17,7 +17,7 @@
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
                                               com.sun.jmx/jmxri]]
+                 [org.zeromq/cljzmq "0.1.3" :exclusions [org.zeromq/jzmq]]
                  [com.google.guava/guava "15.0"]
                  [clj-time "0.6.0"]
-                 [crypto-random "1.1.0"]
-                 [me.raynes/fs "1.4.5"]])
+                 [crypto-random "1.1.0"]])

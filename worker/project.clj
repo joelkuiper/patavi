@@ -10,7 +10,7 @@
   :plugins [[lein-environ "0.4.0"]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [patavi.common "0.2.4-SNAPSHOT"]
-                 [org.zeromq/cljzmq "0.1.3" :exclusions [org.zeromq/jzmq]]
+                 [me.raynes/fs "1.4.5"]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
   :env {:rserve-logs "log/rserve.log"
         :expire-broker-after 5
@@ -19,8 +19,8 @@
         :maximum-reconnect-interval 32000
         :broker-socket "tcp://localhost:7740"}
   :profiles {:uberjar {:aot :all}
-             :dev { :dependencies [[org.clojure/tools.namespace "0.2.4"]
-                                   [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
+             :dev {:dependencies [[org.clojure/tools.namespace "0.2.4"]
+                                  [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
              :production {:dependencies [[org.zeromq/jzmq "3.0.1"]]
                           :jvm-opts ["-server" "-Djava.library.path=/usr/lib:/usr/local/lib" ]}}
   :main patavi.worker.main)
