@@ -10,6 +10,7 @@ pom.xml
 .lein-failures
 .lein-plugins
 .lein-env
+.nrepl-port
 *.sw*
 *.err
 tags
