@@ -16,3 +16,9 @@ tags
 **/target
 **/.lein-repl-history
 **/tmp
+.lein-env
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon

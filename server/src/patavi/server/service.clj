@@ -7,11 +7,11 @@
             [zeromq.zmq :as zmq]
             [crypto.random :as crypto]
             [patavi.server.network.broker :as broker]
-            [patavi.server.config :refer [config]]
+            [environ.core :refer [env]]
             [taoensso.nippy :as nippy]))
 
-(def ^:private frontend-address (:broker-frontend-socket config))
-(def ^:private updates-address (:broker-updates-socket config))
+(def ^:private frontend-address (env :broker-frontend-socket))
+(def ^:private updates-address (env :broker-updates-socket))
 
 (def context (zmq/context 2))
 (def cached-socket
@@ -33,7 +33,7 @@
 
 (defn initialize
   []
-  (broker/start frontend-address (:broker-backend-socket config) updates-address))
+  (broker/start frontend-address (env :broker-backend-socket) updates-address))
 
 (defn available?
   [method]

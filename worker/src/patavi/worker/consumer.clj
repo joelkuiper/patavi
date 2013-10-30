@@ -2,17 +2,17 @@
   (:require [taoensso.nippy :as nippy]
             [zeromq.zmq :as zmq]
             [clojure.core.async :refer [thread >!! <!! close! chan]]
+            [environ.core :refer [env]]
             [patavi.common.zeromq :as q]
             [patavi.common.util :refer [insert]]
-            [patavi.worker.config :refer [config]]
             [clojure.tools.logging :as log])
   (:import [org.zeromq ZLoop]))
 
-(def ^:const heartbeat-interval (:heartbeat-interval config))
-(def ^:const heartbeat-liveness (:expire-broker-after config))
+(def ^:const heartbeat-interval (env :heartbeat-interval))
+(def ^:const heartbeat-liveness (env :expire-broker-after))
 
-(def ^:const interval-init (:initial-reconnect-interval config))
-(def ^:const interval-max (:maximum-reconnect-interval config))
+(def ^:const interval-init (env :initial-reconnect-interval))
+(def ^:const interval-max (env :maximum-reconnect-interval))
 
 (def ^:const failed "failed")
 
@@ -97,7 +97,7 @@
                         :socket nil})
         initialize #(let [poller (zmq/poller context 1)
                           socket (q/create-connected-socket
-                                  context :dealer (:broker-socket config))]
+                                  context :dealer (env :broker-socket))]
                       (swap! consumer assoc
                              :socket socket
                              :poller poller)

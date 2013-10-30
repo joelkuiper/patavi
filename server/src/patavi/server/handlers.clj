@@ -6,11 +6,11 @@
             [clj-wamp.server :as wamp]
             [ring.util.response :as resp]
             [org.httpkit.server :as http-kit]
+            [environ.core :refer [env]]
             [patavi.common.util :refer [dissoc-in]]
-            [patavi.server.config :refer [config]]
             [patavi.server.service :only [publish available?] :as service]))
 
-(def base (:ws-base-uri config))
+(def base (env :ws-base-uri))
 (def service-rpc-uri (str base "rpc#"))
 (def service-status-uri (str base "status#"))
 
@@ -36,7 +36,7 @@
     {:error {:uri service-rpc-uri
              :message (str "service " method " not available")}}))
 
-(def origin-re (re-pattern (:ws-origin-re config)))
+(def origin-re (re-pattern (env :ws-origin-re)))
 
 (defn handle-service
   "Returns a http-kit websocket handler with wamp subprotocol"

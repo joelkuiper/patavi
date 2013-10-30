@@ -7,15 +7,20 @@
   :repositories {"sonatype-nexus-snapshots" "https://oss.sonatype.org/content/repositories/snapshots"
                  "sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"
                  "drugis" "http://drugis.org/mvn"}
+  :plugins [[lein-environ "0.4.0"]]
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [patavi.common "0.2.4-SNAPSHOT"]
                  [org.zeromq/cljzmq "0.1.3" :exclusions [org.zeromq/jzmq]]
                  [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
+  :env {:rserve-logs "log/rserve.log"
+        :expire-broker-after 5
+        :heartbeat-interval 1000
+        :initial-reconnect-interval 1000
+        :maximum-reconnect-interval 32000
+        :broker-socket "tcp://localhost:7740"}
   :profiles {:uberjar {:aot :all}
-             :dev {:resource-paths ["resources-dev" "resources"]
-                   :dependencies [[org.clojure/tools.namespace "0.2.4"]
-                                  [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
+             :dev { :dependencies [[org.clojure/tools.namespace "0.2.4"]
+                                   [org.jeromq/jeromq "0.3.0-SNAPSHOT"]]}
              :production {:dependencies [[org.zeromq/jzmq "3.0.1"]]
-                          :resource-paths ["resources-prod" "resources"]
                           :jvm-opts ["-server" "-Djava.library.path=/usr/lib:/usr/local/lib" ]}}
   :main patavi.worker.main)
