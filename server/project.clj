@@ -19,7 +19,8 @@
         :broker-updates-socket "ipc://updates.ipc"
         :broker-backend-socket "tcp://*:7740"
         :ws-origin-re "https?://.*"
-        :ws-base-uri "http://api.patavi.com/"}
+        :ws-base-uri "http://api.patavi.com/"
+        :task-timeout 36000}
   :profiles {:uberjar {:aot :all}
              :dev {:dependencies [[criterium "0.4.2"]
                                   [org.clojure/tools.namespace "0.2.4"]
