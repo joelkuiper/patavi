@@ -23,7 +23,7 @@
             (when ((comp not nil?) update)
               (wamp/emit-event! service-status-uri (:msg update) listeners)
               (recur (<! updates)))))
-      (deref results (service/eta service) {:error {:uri service-rpc-uri :message "this took way too long"}})
+      (deref results (env :task-timeout) {:error {:uri service-rpc-uri :message "this took way too long"}})
       (catch Exception e
         (do
           (log/error e)
