@@ -39,23 +39,6 @@
   [service]
   (broker/service-available? service))
 
-
-(def ^:private etas (atom {}))
-(def ^:private default-eta 36000)
-
-(defn ^:private update-eta
-  [service duration]
-  (swap! etas update-in [service]
-         (fn [average]
-           (if-not (nil? average)
-             (double (/ (+ average duration) 2))
-             default-eta))))
-
-(defn eta
-  "Returns the estimated time of arrival in msec"
-  [service]
-  (get @etas service default-eta))
-
 (defn- process
   "Sends the message and returns the results"
   [msg updates]
@@ -67,7 +50,6 @@
         (let [[status result] (q/receive! socket 2 zmq/bytes-type)]
           (if (q/status-ok? status)
             (let [results (nippy/thaw result)]
-              (update-eta service (in-millis (interval start-time (now))))
               (if (= (:status results) "failed")
                 (throw (Exception. (:cause results)))
                 results))
