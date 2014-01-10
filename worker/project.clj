@@ -11,7 +11,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [patavi.common "0.2.4"]
                  [me.raynes/fs "1.4.5"]
-                 [org.rosuda/REngine "1.7.1-SNAPSHOT"]]
+                 [org.rosuda/REngine "1.7.1-20130821.152906-1"]]
   :env {:rserve-logs "log/rserve.log"
         :expire-broker-after 5
         :heartbeat-interval 1000
